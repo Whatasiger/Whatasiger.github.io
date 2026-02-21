@@ -1057,3 +1057,128 @@ article em, .post-content em {
 .home-social a i.fa-bili-icon {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1129 1024'%3E%3Cpath d='M234.9 9.7a80.5 80.5 0 0 1 68.4 0c16 8.5 30.1 18.9 41.8 30.6l160.9 140.8h115.1l160.9-140.8a169 169 0 0 1 41.8-30.6 80.5 80.5 0 0 1 107.1 66.8 80.5 80.5 0 0 1-17.7 53.9 449.8 449.8 0 0 1-35.4 32.2 232.6 232.6 0 0 1-22.5 18.5h100.6a170.6 170.6 0 0 1 118.3 53.1 171.4 171.4 0 0 1 53.9 118.3v462.7a325.9 325.9 0 0 1-4 70 178.6 178.6 0 0 1-80.5 112.7 173 173 0 0 1-92.5 25.7h-738.7a341.2 341.2 0 0 1-72.4-4 177.8 177.8 0 0 1-105.5-51.5 172.2 172.2 0 0 1-27.4-92.5V388.7a360.5 360.5 0 0 1 0-66.8A177 177 0 0 1 162.5 178.6h105.4a268 268 0 0 1-46.7-39.4 80.5 80.5 0 0 1-25.7-66 80.5 80.5 0 0 1 39.4-63.5M216.4 321.9a80.5 80.5 0 0 0-63.6 57.9c-2.3 9.9-3.4 20.2-3.4 30.6v380.6a80.5 80.5 0 0 0 55.5 80.5c11.2 4 22.9 5.8 34.6 5.6h654.2a80.5 80.5 0 0 0 76.4-47.5c5.3-11.8 8.1-24.5 8.1-53.1v-354.1a135.2 135.2 0 0 0 0-38.6 80.5 80.5 0 0 0-52.3-54.7 129.6 129.6 0 0 0-49.9-7.2h-654.2z' fill='%2320B0E3'/%3E%3Cpath d='M348.4 447.4a80.5 80.5 0 0 1 55.5 18.5 80.5 80.5 0 0 1 28.2 59.5v80.5a80.5 80.5 0 0 1-16.1 51.5 80.5 80.5 0 0 1-132-9.7 104.6 104.6 0 0 1-10.4-54.7v-80.5a80.5 80.5 0 0 1 70-67.6z m416 0a80.5 80.5 0 0 1 86.1 75.6v80.5a94.1 94.1 0 0 1-12.1 53.1 80.5 80.5 0 0 1-132.8 0 95.8 95.8 0 0 1-12.8-57.1V519a80.5 80.5 0 0 1 70-70.8z' fill='%2320B0E3'/%3E%3C/svg%3E");
 }
+/* =========================================
+   自定义主页文章卡片样式
+   ========================================= */
+
+/* 卡片整体容器 */
+.post-item.card-style {
+    position: relative;
+    height: 240px; /* 你可以根据喜好修改卡片高度 */
+    border-radius: 12px; /* 圆角 */
+    overflow: hidden; /* 超出卡片的部分裁掉，保证圆角和放大效果不溢出 */
+    margin-bottom: 2.5em;
+    cursor: pointer;
+    padding: 0;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* 微微的阴影 */
+    background: #000; /* 底色 */
+}
+
+/* 隐藏原有 post-item 产生的影响 */
+.post-item.card-style > h2 { display: none; }
+
+/* 卡片背景图 */
+.post-card-bg {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+    /* transition 实现非线性的平滑过渡动画：放大和模糊 */
+    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1),
+    filter 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 1;
+}
+
+/* 遮罩层，用于放置文字并确保白字能看清 */
+.post-card-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    /* 初始状态稍微变暗，让标题清晰 */
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* 默认居中 */
+    align-items: center;
+    padding: 2em;
+    box-sizing: border-box;
+    transition: background 0.6s ease;
+}
+
+/* 卡片标题 */
+.post-card-title {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    text-align: center;
+    /* 标题上升的动画准备 */
+    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.post-card-title a {
+    color: #fff !important; /* 强制标题纯白 */
+    font-size: 1.2em;
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: none !important;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.6); /* 文字加点阴影防止背景过亮看不清 */
+}
+
+/* 悬停浮现的信息层（简介和标签） */
+.post-card-info {
+    opacity: 0; /* 默认完全透明隐藏 */
+    transform: translateY(20px); /* 默认偏下一点 */
+    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    color: #fff;
+    margin-top: 15px;
+    width: 100%;
+}
+
+/* 简介文字样式 */
+.post-card-description {
+    font-size: 0.9em;
+    color: #eee;
+    margin-bottom: 12px;
+    line-height: 1.6;
+    text-indent: 0 !important; /* 覆盖你在正文设置的首行缩进 */
+    /* 以下属性限制简介最多显示两行，超出显示省略号 */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 底部 Meta 标签样式 */
+.post-card-meta {
+    font-size: 0.85em;
+    color: #ccc;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* =========================================
+   动画触发器：当鼠标悬停（Hover）在卡片上时
+   ========================================= */
+
+/* 1. 背景图非线性放大 1.1倍，并且虚化加深变暗 */
+.post-item.card-style:hover .post-card-bg {
+    transform: scale(1.1);
+    filter: blur(5px) brightness(0.6);
+}
+
+/* 2. 遮罩层变得更暗一点，突出底部的长文本 */
+.post-item.card-style:hover .post-card-overlay {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+/* 3. 标题平滑上移，给简介腾出空间 */
+.post-item.card-style:hover .post-card-title {
+    transform: translateY(-25px);
+}
+
+/* 4. 简介与标签向上浮现，透明度变为不透明 */
+.post-item.card-style:hover .post-card-info {
+    opacity: 1;
+    transform: translateY(-10px);
+}
