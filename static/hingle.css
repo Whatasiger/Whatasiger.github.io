@@ -1426,90 +1426,73 @@ article table tr:hover, .post-content table tr:hover {
     }
 }
 
+/* 强制抹除搜索框的占位文字（彻底解决“搜索什么？”删不掉的问题） */
+.head-search input::-webkit-input-placeholder { color: transparent !important; }
+.head-search input::placeholder { color: transparent !important; }
+
 /* =========================================
-   顶栏 (Header) 毛玻璃模糊特效与穿透修复
+   终极修复：顶栏层级与毛玻璃，彻底防止文章穿透
    ========================================= */
-
 header {
-    /* 1. 强制将顶栏层级提到最高（999），确保没有任何东西能盖住它 */
-    z-index: 999 !important;
-
-    /* 2. 白天模式：半透明白底（0.65是透明度，可调） */
-    background-color: rgba(255, 255, 255, 0.65) !important;
-
-    /* 3. 核心魔法：背景高斯模糊 */
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    /* 将层级拉到极限的 99999，绝对压制卡片的动画层级 */
+    z-index: 99999 !important;
+    background-color: rgba(255, 255, 255, 0.7) !important;
     backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important; /* 兼容苹果 Safari 浏览器 */
-
-    /* 加一点极其微弱的底部阴影，让毛玻璃边缘更清晰 */
+    -webkit-backdrop-filter: blur(12px) !important;
     box-shadow: 0 1px 10px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* 夜间模式的顶栏适配 */
 .dark-theme header {
-    /* 夜间模式：半透明黑底 */
-    background-color: rgba(30, 30, 30, 0.65) !important;
+    background-color: rgba(30, 30, 30, 0.7) !important;
     box-shadow: 0 1px 15px rgba(0, 0, 0, 0.3) !important;
 }
 
+
 /* =========================================
-   移动端（手机）专属适配与修复
+   移动端（手机）专属适配紧急修复
    ========================================= */
 @media screen and (max-width: 599px) {
 
-    /* ------ 搜索栏移动端修复 ------ */
-
-    /* 1. 召唤回原本被隐藏的单独搜索图标 */
-    .search-btn {
-        display: block !important;
+    /* 1. 解决手机顶栏重叠：直接隐藏左上角新增的 Logo，保持手机端清爽 */
+    .header-logo {
+        display: none !important;
     }
 
-    /* 2. 隐藏常驻的搜索框，使其恢复“点击图标后才出现”的逻辑 */
-    .head-search {
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
-    /* 激活状态下的搜索框显示 */
-    .head-search.active {
-        opacity: 1 !important;
-        pointer-events: auto !important;
-    }
-
-    /* 3. 手机端输入框展开时占满可用宽度，并去掉框内的放大镜背景防止显得拥挤 */
+    /* 2. 搜索栏恢复为纯图标模式 */
+    .search-btn { display: block !important; }
+    .head-search { opacity: 0 !important; pointer-events: none !important; }
+    .head-search.active { opacity: 1 !important; pointer-events: auto !important; }
     .head-search input {
         width: 100% !important;
         background-image: none !important;
         padding-right: 15px !important;
     }
 
-
-    /* ------ 文章卡片移动端修复 ------ */
-
-    /* 4. 取消固定高度，将卡片比例强制锁定为 2.5 : 1 */
+    /* 3. 解决卡片挤压重叠：废弃 2.5:1 的死板比例，改用固定的安全高度 */
     .post-item.card-style {
-        height: auto !important;
-        aspect-ratio: 2.5 / 1 !important;
+        height: 200px !important;
+        aspect-ratio: auto !important; /* 强制解除比例锁定 */
     }
 
-    /* 5. 缩小标题字号，防止长标题换行后占用过多垂直空间 */
+    /* 4. 解决长标题换行后的重叠：缩小字号，限制标题上移的幅度 */
     .post-card-title a {
-        font-size: 1.05em !important;
+        font-size: 1.1em !important;
+        line-height: 1.3 !important;
     }
-
-    /* 6. 减小鼠标移上/手指点击时标题上移的幅度，防止与顶栏或边距撞车 */
     .post-item.card-style:hover .post-card-title {
-        transform: translateY(-10px) !important;
+        transform: translateY(-5px) !important;
     }
 
-    /* 7. 将浮现的简介和标签层稍微往下压一点，给两行标题留足呼吸空间 */
+    /* 5. 压缩底部信息的空间占用 */
     .post-card-info {
         bottom: 12px !important;
     }
-
-    /* 缩小移动端简介文字并缩减间距 */
     .post-card-description {
         font-size: 0.8em !important;
-        margin-bottom: 8px !important;
+        margin-bottom: 5px !important;
+        /* 手机端强制只显示 1 行简介，绝对防止顶到标题 */
+        -webkit-line-clamp: 1 !important;
     }
 }
