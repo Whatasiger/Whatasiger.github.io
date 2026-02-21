@@ -1451,3 +1451,65 @@ header {
     background-color: rgba(30, 30, 30, 0.65) !important;
     box-shadow: 0 1px 15px rgba(0, 0, 0, 0.3) !important;
 }
+
+/* =========================================
+   移动端（手机）专属适配与修复
+   ========================================= */
+@media screen and (max-width: 599px) {
+
+    /* ------ 搜索栏移动端修复 ------ */
+
+    /* 1. 召唤回原本被隐藏的单独搜索图标 */
+    .search-btn {
+        display: block !important;
+    }
+
+    /* 2. 隐藏常驻的搜索框，使其恢复“点击图标后才出现”的逻辑 */
+    .head-search {
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    /* 激活状态下的搜索框显示 */
+    .head-search.active {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+
+    /* 3. 手机端输入框展开时占满可用宽度，并去掉框内的放大镜背景防止显得拥挤 */
+    .head-search input {
+        width: 100% !important;
+        background-image: none !important;
+        padding-right: 15px !important;
+    }
+
+
+    /* ------ 文章卡片移动端修复 ------ */
+
+    /* 4. 取消固定高度，将卡片比例强制锁定为 2.5 : 1 */
+    .post-item.card-style {
+        height: auto !important;
+        aspect-ratio: 2.5 / 1 !important;
+    }
+
+    /* 5. 缩小标题字号，防止长标题换行后占用过多垂直空间 */
+    .post-card-title a {
+        font-size: 1.05em !important;
+    }
+
+    /* 6. 减小鼠标移上/手指点击时标题上移的幅度，防止与顶栏或边距撞车 */
+    .post-item.card-style:hover .post-card-title {
+        transform: translateY(-10px) !important;
+    }
+
+    /* 7. 将浮现的简介和标签层稍微往下压一点，给两行标题留足呼吸空间 */
+    .post-card-info {
+        bottom: 12px !important;
+    }
+
+    /* 缩小移动端简介文字并缩减间距 */
+    .post-card-description {
+        font-size: 0.8em !important;
+        margin-bottom: 8px !important;
+    }
+}
