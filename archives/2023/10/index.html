@@ -25,7 +25,9 @@
     <header>
     <a href="/" class="header-logo">Whatasiger.XYZ - Beta</a>
     <div class="head-title">
-        <h4>Whatasiger</h4>
+        <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
+            <h4>Whatasiger</h4>
+        </a>
     </div>
     <div class="head-action">
         <div class="toggle-btn"></div>
@@ -130,6 +132,26 @@
           toTopBtn.addEventListener('click', function(e) {
             e.preventDefault(); // 阻止默认行为
             window.scrollTo({ top: 0, behavior: 'smooth' }); // 平滑滚动到顶部
+          });
+        }
+      });
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const searchBox = document.querySelector('.head-search');
+        const searchBtn = document.querySelector('.search-btn');
+
+        if (searchBox && searchBtn) {
+          // 监听整个网页的点击事件
+          document.addEventListener('click', function(event) {
+            // 如果搜索框当前是展开状态 (active)
+            if (searchBox.classList.contains('active')) {
+              // 且手指点击的位置既不在搜索框内部，也不在放大镜图标上
+              if (!searchBox.contains(event.target) && !searchBtn.contains(event.target)) {
+                // 移除 active 状态，触发 CSS 动画收回搜索框
+                searchBox.classList.remove('active');
+              }
+            }
           });
         }
       });
