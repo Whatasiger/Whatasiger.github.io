@@ -1449,34 +1449,66 @@ header {
     box-shadow: 0 1px 15px rgba(0, 0, 0, 0.3) !important;
 }
 
-
 /* =========================================
-   移动端（手机）专属适配紧急修复
+   移动端（手机）专属适配与终极交互修复
    ========================================= */
 @media screen and (max-width: 599px) {
 
-    /* 1. 解决手机顶栏重叠：直接隐藏左上角新增的 Logo，保持手机端清爽 */
+    /* 1. 解决手机顶栏重叠：直接隐藏左上角新增的专属 Logo */
     .header-logo {
         display: none !important;
     }
 
-    /* 2. 搜索栏恢复为纯图标模式 */
-    .search-btn { display: block !important; }
-    .head-search { opacity: 0 !important; pointer-events: none !important; }
-    .head-search.active { opacity: 1 !important; pointer-events: auto !important; }
+    /* 2. 召唤回单独的搜索图标按钮 */
+    .search-btn {
+        display: block !important;
+    }
+
+    /* 3. 核心魔法：搜索框的绝对定位与向左伸展动画 */
+    .head-search {
+        position: absolute !important; /* 脱离文档流，不再把顶栏撑高 */
+        top: 0 !important;
+        right: 7em !important; /* 初始位置定在右侧搜索和日夜图标的左边 */
+        margin: 0.6em 0 !important;
+        width: 0 !important; /* 初始宽度为 0，完全隐藏 */
+        opacity: 0 !important;
+        pointer-events: none !important;
+        overflow: hidden !important; /* 防止伸缩过程中文字溢出 */
+
+        /* 丝滑的宽度伸缩与透明度双重过渡动画 */
+        transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease !important;
+    }
+
+    /* 当点击搜索图标，搜索框被激活时的状态 */
+    .head-search.active {
+        opacity: 1 !important;
+        width: calc(100% - 11em) !important; /* 向左展开，但避开左侧汉堡菜单和右侧图标 */
+        pointer-events: auto !important;
+    }
+
     .head-search input {
         width: 100% !important;
-        background-image: none !important;
+        background-image: none !important; /* 手机端输入框内不需要放大镜 */
+        padding-left: 15px !important;
         padding-right: 15px !important;
     }
 
-    /* 3. 解决卡片挤压重叠：废弃 2.5:1 的死板比例，改用固定的安全高度 */
-    .post-item.card-style {
-        height: 200px !important;
-        aspect-ratio: auto !important; /* 强制解除比例锁定 */
+    /* 4. 联动交互：搜索框展开时，中间的标题渐变消失 */
+    .head-title {
+        transition: opacity 0.4s ease !important;
+    }
+    /* 使用现代 CSS 的 :has() 选择器，侦测到搜索框激活就隐藏标题 */
+    header:has(.head-search.active) .head-title {
+        opacity: 0 !important;
+        pointer-events: none !important;
     }
 
-    /* 4. 解决长标题换行后的重叠：缩小字号，限制标题上移的幅度 */
+
+    /* ------ 以下为卡片修复部分，保持之前的完美状态 ------ */
+    .post-item.card-style {
+        height: 200px !important;
+        aspect-ratio: auto !important;
+    }
     .post-card-title a {
         font-size: 1.1em !important;
         line-height: 1.3 !important;
@@ -1484,15 +1516,12 @@ header {
     .post-item.card-style:hover .post-card-title {
         transform: translateY(-5px) !important;
     }
-
-    /* 5. 压缩底部信息的空间占用 */
     .post-card-info {
         bottom: 12px !important;
     }
     .post-card-description {
         font-size: 0.8em !important;
         margin-bottom: 5px !important;
-        /* 手机端强制只显示 1 行简介，绝对防止顶到标题 */
         -webkit-line-clamp: 1 !important;
     }
 }
