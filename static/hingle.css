@@ -985,7 +985,7 @@ body {
 /* 自定义：调高背景图片的可见度 */
 body:before {
     /* 原主题默认是 0.1（即10%）。你可以根据喜好改成 0.2 到 1.0 之间的任意数字 */
-    opacity: 0.15 !important;
+    opacity: 0.4;
 }
 /* 自定义：隐藏文章过期提示 */
 .post-content > .ks-notice {
@@ -1058,25 +1058,34 @@ article em, .post-content em {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1129 1024'%3E%3Cpath d='M234.9 9.7a80.5 80.5 0 0 1 68.4 0c16 8.5 30.1 18.9 41.8 30.6l160.9 140.8h115.1l160.9-140.8a169 169 0 0 1 41.8-30.6 80.5 80.5 0 0 1 107.1 66.8 80.5 80.5 0 0 1-17.7 53.9 449.8 449.8 0 0 1-35.4 32.2 232.6 232.6 0 0 1-22.5 18.5h100.6a170.6 170.6 0 0 1 118.3 53.1 171.4 171.4 0 0 1 53.9 118.3v462.7a325.9 325.9 0 0 1-4 70 178.6 178.6 0 0 1-80.5 112.7 173 173 0 0 1-92.5 25.7h-738.7a341.2 341.2 0 0 1-72.4-4 177.8 177.8 0 0 1-105.5-51.5 172.2 172.2 0 0 1-27.4-92.5V388.7a360.5 360.5 0 0 1 0-66.8A177 177 0 0 1 162.5 178.6h105.4a268 268 0 0 1-46.7-39.4 80.5 80.5 0 0 1-25.7-66 80.5 80.5 0 0 1 39.4-63.5M216.4 321.9a80.5 80.5 0 0 0-63.6 57.9c-2.3 9.9-3.4 20.2-3.4 30.6v380.6a80.5 80.5 0 0 0 55.5 80.5c11.2 4 22.9 5.8 34.6 5.6h654.2a80.5 80.5 0 0 0 76.4-47.5c5.3-11.8 8.1-24.5 8.1-53.1v-354.1a135.2 135.2 0 0 0 0-38.6 80.5 80.5 0 0 0-52.3-54.7 129.6 129.6 0 0 0-49.9-7.2h-654.2z' fill='%2320B0E3'/%3E%3Cpath d='M348.4 447.4a80.5 80.5 0 0 1 55.5 18.5 80.5 80.5 0 0 1 28.2 59.5v80.5a80.5 80.5 0 0 1-16.1 51.5 80.5 80.5 0 0 1-132-9.7 104.6 104.6 0 0 1-10.4-54.7v-80.5a80.5 80.5 0 0 1 70-67.6z m416 0a80.5 80.5 0 0 1 86.1 75.6v80.5a94.1 94.1 0 0 1-12.1 53.1 80.5 80.5 0 0 1-132.8 0 95.8 95.8 0 0 1-12.8-57.1V519a80.5 80.5 0 0 1 70-70.8z' fill='%2320B0E3'/%3E%3C/svg%3E");
 }
 /* =========================================
-   自定义主页文章卡片样式
+   自定义主页文章卡片样式 (丝滑进阶版)
    ========================================= */
 
 /* 卡片整体容器 */
 .post-item.card-style {
     position: relative;
-    height: 240px; /* 你可以根据喜好修改卡片高度 */
-    border-radius: 12px; /* 圆角 */
-    overflow: hidden; /* 超出卡片的部分裁掉，保证圆角和放大效果不溢出 */
+    height: 240px;
+    border-radius: 12px;
+    overflow: hidden;
     margin-bottom: 2.5em;
     cursor: pointer;
     padding: 0;
     border: none;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* 微微的阴影 */
-    background: #000; /* 底色 */
+    background: #000;
+    /* 1. 高级感平滑弥散阴影 */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    /* 增加卡片本身的悬停动画，配合阴影呼吸感 */
+    transition: box-shadow 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 隐藏原有 post-item 产生的影响 */
 .post-item.card-style > h2 { display: none; }
+
+/* 卡片整体悬停：微微上浮，阴影扩散 */
+.post-item.card-style:hover {
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    transform: translateY(-4px);
+}
 
 /* 卡片背景图 */
 .post-card-bg {
@@ -1084,26 +1093,25 @@ article em, .post-content em {
     top: 0; left: 0; width: 100%; height: 100%;
     background-size: cover;
     background-position: center;
-    /* transition 实现非线性的平滑过渡动画：放大和模糊 */
-    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1),
-    filter 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* 2. 丝滑拖尾非线性动画，时间拉长至 0.8s */
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 1;
 }
 
-/* 遮罩层，用于放置文字并确保白字能看清 */
+/* 遮罩层 */
 .post-card-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    /* 初始状态稍微变暗，让标题清晰 */
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.35);
     z-index: 2;
     display: flex;
     flex-direction: column;
-    justify-content: center; /* 默认居中 */
+    justify-content: center;
     align-items: center;
     padding: 2em;
     box-sizing: border-box;
-    transition: background 0.6s ease;
+    transition: background 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 卡片标题 */
@@ -1112,24 +1120,25 @@ article em, .post-content em {
     padding: 0 !important;
     border: none !important;
     text-align: center;
-    /* 标题上升的动画准备 */
-    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* 动画与整体保持同频 */
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .post-card-title a {
-    color: #fff !important; /* 强制标题纯白 */
-    font-size: 1.2em;
+    color: #fff !important;
+    font-size: 1.25em;
     font-weight: 500;
     text-decoration: none;
     border-bottom: none !important;
-    text-shadow: 0 2px 5px rgba(0,0,0,0.6); /* 文字加点阴影防止背景过亮看不清 */
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 
 /* 悬停浮现的信息层（简介和标签） */
 .post-card-info {
-    opacity: 0; /* 默认完全透明隐藏 */
-    transform: translateY(20px); /* 默认偏下一点 */
-    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    opacity: 0;
+    /* 3. 初始状态：位置稍微靠上（靠近标题） */
+    transform: translateY(-5px);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     color: #fff;
     margin-top: 15px;
     width: 100%;
@@ -1141,8 +1150,7 @@ article em, .post-content em {
     color: #eee;
     margin-bottom: 12px;
     line-height: 1.6;
-    text-indent: 0 !important; /* 覆盖你在正文设置的首行缩进 */
-    /* 以下属性限制简介最多显示两行，超出显示省略号 */
+    text-indent: 0 !important;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -1157,28 +1165,289 @@ article em, .post-content em {
     justify-content: space-between;
 }
 
+
 /* =========================================
    动画触发器：当鼠标悬停（Hover）在卡片上时
    ========================================= */
 
-/* 1. 背景图非线性放大 1.1倍，并且虚化加深变暗 */
+/* 背景图非线性放大，且虚化加深变暗 */
 .post-item.card-style:hover .post-card-bg {
-    transform: scale(1.1);
-    filter: blur(5px) brightness(0.6);
+    transform: scale(1.15);
+    filter: blur(6px) brightness(0.5);
 }
 
-/* 2. 遮罩层变得更暗一点，突出底部的长文本 */
-.post-item.card-style:hover .post-card-overlay {
-    background: rgba(0, 0, 0, 0.6);
+/* 修改：遮罩层不再因底部信息而导致标题偏移 */
+.post-card-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* 让内部的标题绝对居中 */
+    align-items: center;
+    padding: 2em;
+    box-sizing: border-box;
+    transition: background 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* 3. 标题平滑上移，给简介腾出空间 */
+/* 卡片标题 */
+.post-card-title {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    text-align: center;
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.post-card-title a {
+    color: #fff !important;
+    font-size: 1.25em;
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: none !important;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+/* ★ 微调 1：鼠标悬停时，标题向上移动的距离。数值越小（如 -15px），移动幅度越小，位置显得越低 */
 .post-item.card-style:hover .post-card-title {
-    transform: translateY(-25px);
+    transform: translateY(-20px);
 }
 
-/* 4. 简介与标签向上浮现，透明度变为不透明 */
+/* 悬停浮现的信息层（简介和标签） */
+.post-card-info {
+    position: absolute; /* 绝对定位，脱离文档流，不再把标题往上顶 */
+    /* ★ 微调 2：控制整个简介标签层距离卡片底部的绝对高度。数值越小（如 15px），整体越靠下 */
+    bottom: 25px;
+    left: 2em; right: 2em; width: auto;
+
+    opacity: 0;
+    /* ★ 微调 3：未悬停时的初始位置。10px 代表一开始在目标位置的下方一点点 */
+    transform: translateY(10px);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #fff;
+}
+/* ★ 微调 4：鼠标悬停时，信息层移动到的最终位置。0 代表回到 bottom: 25px 的设定原点 */
 .post-item.card-style:hover .post-card-info {
     opacity: 1;
-    transform: translateY(-10px);
+    transform: translateY(0);
+}
+/* 打字机光标闪烁动画 */
+#typewriter-text {
+    animation: blink-caret 0.8s step-end infinite;
+}
+@keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: var(--blue); }
+}
+/* 头像轻微悬停放大 */
+.home-avatar:hover { transform: scale(1.08); }
+
+/* =========================================
+   文章详情页：背景非线性渐变淡入特效
+   ========================================= */
+
+body.post-page:before {
+    /* 调用下方定义好的动画：持续 1.2秒，使用非线性贝塞尔曲线，forwards 保证动画结束后停留在最终状态 */
+    animation: post-bg-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+/* 定义关键帧动画的过程 */
+@keyframes post-bg-fade-in {
+    0% {
+        /* 起始透明度：与你之前在自定义代码里设定的主页背景透明度保持一致 */
+        opacity: 0.4;
+    }
+    100% {
+        /* 最终透明度：1代表 100% 不透明 */
+        opacity: 0.02;
+    }
+}
+
+/* =========================================
+   主页头部元素间距微调
+   ========================================= */
+
+/* 1. 缩短“昵称”与“打字机文字”之间的距离 */
+.home-title h1 {
+    margin-bottom: 0.2em !important;
+}
+
+/* 2. 缩短“打字机文字”与“社交图标”之间的距离 */
+#typewriter-text {
+    margin-bottom: 0.4em !important;
+}
+
+/* =========================================
+   新美学需求：社交图标框、字重区分、昵称颜色
+   ========================================= */
+
+/* 1. 社交账号图标：深色半透明圆角矩形框 */
+.home-social {
+    display: inline-block; /* 让框体自动收缩贴合图标宽度，而不是占满整行 */
+    background-color: rgba(255, 255, 255, 0.4); /* 白天模式底色，0.4是透明度，可调 */
+    border-radius: 20px; /* 圆角大小，调大（比如 50px）会变成胶囊形 */
+    padding: 8px 16px; /* 框内的上下、左右留白空间 */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* 微弱的投影，增加浮层质感 */
+}
+/* 夜间模式下社交图标的底色适配（防止刺眼） */
+.dark-theme .home-social {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 2. 全局字重加粗，并排除文章正文 */
+body {
+    /* 在这里修改全局字体粗细。400是常规，500是中等偏粗，600/700是粗体 */
+    font-weight: 550 !important;
+}
+/* 单独把文章正文、卡片简介的粗细“降”回正常值，保障长篇阅读不累眼 */
+.post-content, .post-content p, article, .post-card-description {
+    font-weight: 400 !important;
+}
+
+/* 3. 主页昵称颜色加深 */
+.home-title h1 {
+    /* 在这里修改为你想要的 HEX 颜色码，目前提供一个更深、偏灰蓝的默认值 */
+    color: #1b68ac !important;
+    margin-bottom: 0.2em !important; /* 保留之前的紧凑间距 */
+}
+/* 确保点击昵称时不会因为浏览器的默认超链接样式变色或出现下划线 */
+.home-profile-link:hover h1 {
+    color: #1b68ac !important; /* 保持与上面相同的颜色 */
+}
+/* 夜间模式下的昵称颜色 */
+.dark-theme .home-title h1,
+.dark-theme .home-profile-link:hover h1 {
+    color: #8bb4e0 !important; /* 夜间需要稍微亮一点以保证对比度，你也可以自己改 */
+}
+
+/* =========================================
+   顶部导航栏与搜索框重构
+   ========================================= */
+
+/* 1. 将白天/黑夜切换按钮强制移动到右上角 */
+.light-btn {
+    float: right !important;
+    margin-left: 0.5em !important; /* 和搜索框保持一点距离 */
+}
+
+/* 2. 隐藏原本需要点击才能展开搜索框的“旧放大镜按钮” */
+.search-btn {
+    display: none !important;
+}
+
+/* 3. 强制让搜索框永久处于显示、可交互状态 */
+.head-search {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* 4. 重塑搜索框的外观（适配白天与夜间） */
+/* 白天模式（默认）：浅灰底色，深色文字 */
+.head-search input {
+    background-color: #f0f0f0 !important;
+    color: #333 !important;
+    border: 1px solid transparent !important;
+    border-radius: 20px !important;
+    width: 180px !important;
+
+    /* 放大镜图标（把颜色稍微调深了一点以适应白天） */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23888' d='M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    background-size: 16px !important;
+
+    padding-left: 15px !important;
+    padding-right: 35px !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* 夜间模式：深灰底色，浅色文字 */
+.dark-theme .head-search input {
+    background-color: #444 !important;
+    color: #eee !important;
+}
+
+/* 5. 聚焦时的红光特效（适配白天与夜间） */
+/* 白天聚焦：背景变白，红光稍微柔和一点 */
+.head-search input:focus {
+    outline: none !important;
+    background-color: #fff !important;
+    border: 1px solid rgba(255, 100, 100, 0.7) !important;
+    box-shadow: 0 0 12px rgba(255, 100, 100, 0.4), inset 0 0 6px rgba(255, 100, 100, 0.1) !important;
+}
+
+/* 夜间聚焦：背景变深，红光更深邃 */
+.dark-theme .head-search input:focus {
+    background-color: #333 !important;
+    box-shadow: 0 0 12px rgba(255, 100, 100, 0.6), inset 0 0 6px rgba(255, 100, 100, 0.2) !important;
+}
+
+/* =========================================
+   修复：文章内表格行悬停刺眼白光
+   ========================================= */
+
+/* 白天模式：鼠标移上去时，加上极其轻微的灰色遮罩 */
+article table tr:hover, .post-content table tr:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 夜间模式：鼠标移上去时，加上极其轻微的白色遮罩（提亮一点点） */
+.dark-theme article table tr:hover, .dark-theme .post-content table tr:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* =========================================
+   顶栏左上角专属 Logo 文字
+   ========================================= */
+
+.header-logo {
+    position: absolute; /* 绝对定位，脱离文档流，不干扰中间的菜单栏 */
+    top: 0;
+    left: 1.5em; /* 距离左侧屏幕边缘的距离 */
+    line-height: 3.2em; /* 3.2em 是 Hingle 主题顶栏的默认高度，这样写能让文字完美垂直居中 */
+    font-size: 1.1em;
+    font-weight: 600 !important; /* 加粗一点显得有分量 */
+    letter-spacing: 0.5px; /* 字间距稍微拉开一点，增加呼吸感 */
+    color: inherit; /* 颜色跟随当前的白天/黑夜模式自动切换 */
+    z-index: 10; /* 确保它浮在最上层 */
+    transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 鼠标悬停时的效果：变成你主题的专属蓝色 */
+.header-logo:hover {
+    color: var(--blue) !important;
+}
+
+/* 手机端防遮挡适配 */
+/* 在屏幕宽度小于 600px（手机）时，左上角会有原主题的折叠菜单按钮 */
+@media screen and (max-width: 599px) {
+    .header-logo {
+        left: 3.5em; /* 把文字往右边挪一点，给折叠按钮让出空间 */
+        font-size: 1em; /* 在手机上稍微缩小白一点，防止拥挤 */
+    }
+}
+
+/* =========================================
+   顶栏 (Header) 毛玻璃模糊特效与穿透修复
+   ========================================= */
+
+header {
+    /* 1. 强制将顶栏层级提到最高（999），确保没有任何东西能盖住它 */
+    z-index: 999 !important;
+
+    /* 2. 白天模式：半透明白底（0.65是透明度，可调） */
+    background-color: rgba(255, 255, 255, 0.65) !important;
+
+    /* 3. 核心魔法：背景高斯模糊 */
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important; /* 兼容苹果 Safari 浏览器 */
+
+    /* 加一点极其微弱的底部阴影，让毛玻璃边缘更清晰 */
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 夜间模式的顶栏适配 */
+.dark-theme header {
+    /* 夜间模式：半透明黑底 */
+    background-color: rgba(30, 30, 30, 0.65) !important;
+    box-shadow: 0 1px 15px rgba(0, 0, 0, 0.3) !important;
 }
