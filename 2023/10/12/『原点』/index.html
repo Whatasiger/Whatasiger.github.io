@@ -22,8 +22,16 @@
 <meta name="generator" content="Hexo 8.1.1"></head>
 
   <body class="dark-theme post-page">
-    <header>
-    <a href="/" class="header-logo">Whatasiger.XYZ - Beta</a>
+    <script>
+    if (sessionStorage.getItem("theme") === "light") {
+        document.body.classList.remove("dark-theme");
+    } else {
+        document.body.classList.add("dark-theme");
+        sessionStorage.setItem("theme", "dark");
+    }
+</script>
+<header>
+    <a href="/" class="header-logo">Whatasiger.XYZ - Beta 2</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -32,11 +40,11 @@
     <div class="head-action">
         <div class="toggle-btn"></div>
         <div class="light-btn"></div>
-        <div class="search-btn"></div>
+        
     </div>
-    <form class="head-search" method="post">
-        <input type="text" name="s" placeholder="">
-    </form>
+
+    
+
     <nav class="head-menu">
         <a href="/">首页</a>
         
@@ -46,13 +54,16 @@
         
     </nav>
 </header>
-
     <main>
     <div class="wrap min">
         <section class="post-title">
             <h2>『原点』</h2>
             <div class="post-meta">
                 <time class="date">2023.10.12</time>
+
+                
+                <span class="word-count">约 7400 字</span>
+                <span class="read-time">预计阅读 13  分钟</span>
             
             </div>
         </section>
