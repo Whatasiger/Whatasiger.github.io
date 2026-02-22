@@ -23,15 +23,55 @@
 
   <body class="dark-theme ">
     <script>
-    if (sessionStorage.getItem("theme") === "light") {
-        document.body.classList.remove("dark-theme");
-    } else {
-        document.body.classList.add("dark-theme");
-        sessionStorage.setItem("theme", "dark");
-    }
+    (function() {
+        // 核心修复：把普通的博客文章 (is_post) 和独立页面 (is_page) 都视为“阅读界面”
+        var isArticle = false;
+        var isFromArticle = sessionStorage.getItem("is_from_article") === "true";
+        var theme = sessionStorage.getItem("theme");
+
+        // 1. 初始状态：全面封印动画，防止页面刚加载时的任何闪烁
+        document.body.classList.add("no-bg-transition");
+
+        // 2. 瞬间敲定日夜模式
+        if (theme === "light") {
+            document.body.classList.remove("dark-theme");
+        } else {
+            document.body.classList.add("dark-theme");
+            sessionStorage.setItem("theme", "dark");
+        }
+
+        // 3. 敲定刚进网页瞬间的背景状态
+        if (isArticle && isFromArticle) {
+            // 阅读页跳阅读页：瞬间淡化
+            document.body.classList.add("bg-faded");
+        } else if (!isArticle && isFromArticle) {
+            // 阅读页跳主页：必须先瞬间淡化，为后面的淡出动画做准备
+            document.body.classList.add("bg-faded");
+        }
+
+        // 4. 更新记忆，留给下一次跳转使用
+        sessionStorage.setItem("is_from_article", isArticle ? "true" : "false");
+
+        // 5. 释放封印，并触发需要的丝滑动画
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                // 解除动画封印
+                document.body.classList.remove("no-bg-transition");
+
+                // 触发跨界面的过渡动画
+                if (isArticle && !isFromArticle) {
+                    // 主页跳阅读页：此时开始平滑变淡
+                    document.body.classList.add("bg-faded");
+                } else if (!isArticle && isFromArticle) {
+                    // 阅读页跳主页：此时开始平滑变清晰
+                    document.body.classList.remove("bg-faded");
+                }
+            });
+        });
+    })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger.XYZ - Beta 2</a>
+    <a href="/" class="header-logo">Whatasiger.XYZ - Beta 3</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -104,9 +144,6 @@
 </main>
 
     <footer>
-    <div class="buttons">
-        <button class="to-top" href="#"></button>
-    </div>
     <div class="wrap min">
         <section class="widget">
             <div class="row">
@@ -130,13 +167,16 @@
     </div>
 </footer>
 
+<div class="buttons">
+    <button class="to-top" href="#"></button>
+</div>
+
 
 <script src="/static/kico.js"></script>
 <script src="/static/hingle.js"></script>
 
 
 <script>var hingle = new Paul_Hingle({"copyright":false,"night":true});</script>
-
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const toTopBtn = document.querySelector('.to-top');

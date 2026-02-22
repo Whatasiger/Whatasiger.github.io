@@ -23,15 +23,55 @@
 
   <body class="dark-theme post-page">
     <script>
-    if (sessionStorage.getItem("theme") === "light") {
-        document.body.classList.remove("dark-theme");
-    } else {
-        document.body.classList.add("dark-theme");
-        sessionStorage.setItem("theme", "dark");
-    }
+    (function() {
+        // 核心修复：把普通的博客文章 (is_post) 和独立页面 (is_page) 都视为“阅读界面”
+        var isArticle = true;
+        var isFromArticle = sessionStorage.getItem("is_from_article") === "true";
+        var theme = sessionStorage.getItem("theme");
+
+        // 1. 初始状态：全面封印动画，防止页面刚加载时的任何闪烁
+        document.body.classList.add("no-bg-transition");
+
+        // 2. 瞬间敲定日夜模式
+        if (theme === "light") {
+            document.body.classList.remove("dark-theme");
+        } else {
+            document.body.classList.add("dark-theme");
+            sessionStorage.setItem("theme", "dark");
+        }
+
+        // 3. 敲定刚进网页瞬间的背景状态
+        if (isArticle && isFromArticle) {
+            // 阅读页跳阅读页：瞬间淡化
+            document.body.classList.add("bg-faded");
+        } else if (!isArticle && isFromArticle) {
+            // 阅读页跳主页：必须先瞬间淡化，为后面的淡出动画做准备
+            document.body.classList.add("bg-faded");
+        }
+
+        // 4. 更新记忆，留给下一次跳转使用
+        sessionStorage.setItem("is_from_article", isArticle ? "true" : "false");
+
+        // 5. 释放封印，并触发需要的丝滑动画
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                // 解除动画封印
+                document.body.classList.remove("no-bg-transition");
+
+                // 触发跨界面的过渡动画
+                if (isArticle && !isFromArticle) {
+                    // 主页跳阅读页：此时开始平滑变淡
+                    document.body.classList.add("bg-faded");
+                } else if (!isArticle && isFromArticle) {
+                    // 阅读页跳主页：此时开始平滑变清晰
+                    document.body.classList.remove("bg-faded");
+                }
+            });
+        });
+    })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger.XYZ - Beta 2</a>
+    <a href="/" class="header-logo">Whatasiger.XYZ - Beta 3</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -62,7 +102,7 @@
                 <time class="date">2026.02.20</time>
 
                 
-                <span class="word-count">约 126 字</span>
+                <span class="word-count">约 605 字</span>
                 <span class="read-time">预计阅读 1  分钟</span>
             
             </div>
@@ -76,6 +116,64 @@
 <hr>
 <h3 id="文本编辑"><a href="#文本编辑" class="headerlink" title="文本编辑"></a><strong>文本编辑</strong></h3><p><a target="_blank" rel="noopener" href="https://typoraio.cn/">Typora</a></p>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_61621323/article/details/141036982">Typora 免费安装教程（支持版本：1.9.5）</a></p>
+<hr>
+<h3 id="更新日志"><a href="#更新日志" class="headerlink" title="更新日志"></a><strong>更新日志</strong></h3><h4 id="Pre-alpha（2026-02-20）"><a href="#Pre-alpha（2026-02-20）" class="headerlink" title="Pre-alpha（2026-02-20）"></a>Pre-alpha（2026-02-20）</h4><ul>
+<li>网站建立</li>
+</ul>
+<hr>
+<h4 id="Alpha（2026-02-21）"><a href="#Alpha（2026-02-21）" class="headerlink" title="Alpha（2026-02-21）"></a>Alpha（2026-02-21）</h4><ul>
+<li>由Github Pages更换为Cloudflare Pages驱动</li>
+<li>购入专属域名</li>
+<li>修复了about-me界面的一个格式错误</li>
+</ul>
+<hr>
+<h4 id="Beta-1（2026-02-22）"><a href="#Beta-1（2026-02-22）" class="headerlink" title="Beta 1（2026-02-22）"></a>Beta 1（2026-02-22）</h4><ul>
+<li>重构主页美学设计<ul>
+<li>文章预览优化：标题+图片 预览，鼠标移上卡片时后显示日期、标签、简介。</li>
+<li>新增头像、个性签名</li>
+<li>新增顶栏毛玻璃效果</li>
+<li>将社交账号图标用深色胶囊框起</li>
+<li>新增顶栏左侧专属标识</li>
+<li>微调字重</li>
+<li>深色模式设为默认</li>
+<li>直接展示搜索框而非搜索图标</li>
+</ul>
+</li>
+<li>阅读体验优化<ul>
+<li>阅读文章时的不透明度拉高</li>
+<li>新增「回到顶部」功能</li>
+</ul>
+</li>
+<li>点击头像、昵称可直接跳转至「关于我」界面</li>
+</ul>
+<hr>
+<h4 id="Beta-2（2026-02-22）"><a href="#Beta-2（2026-02-22）" class="headerlink" title="Beta 2（2026-02-22）"></a>Beta 2（2026-02-22）</h4><ul>
+<li>新增功能<ul>
+<li>文章内字数统计和阅读时间估计</li>
+<li>搜索功能（支持搜索标签）</li>
+<li>开关灯模式记忆</li>
+<li>PC端目录可收起</li>
+</ul>
+</li>
+<li>视觉优化<ul>
+<li>底栏增加毛玻璃效果</li>
+<li>开灯模式的背景不透明度调整</li>
+<li>平台账号图标显示优化</li>
+</ul>
+</li>
+<li>添加更多个人平台账号</li>
+</ul>
+<hr>
+<h4 id="Beta-3（2026-02-22）"><a href="#Beta-3（2026-02-22）" class="headerlink" title="Beta 3（2026-02-22）"></a>Beta 3（2026-02-22）</h4><ul>
+<li>修复「回到顶部」「目录」按钮被置底的Bug</li>
+<li>优化细节<ul>
+<li>优化目录章节跳转不到位的问题</li>
+<li>优化主页文章卡片阴影</li>
+<li>文章之间跳转不会触发背景透明度渐变</li>
+</ul>
+</li>
+<li>加入「更新日志」板块</li>
+</ul>
 
         </article>
         <section class="post-near">
@@ -110,9 +208,6 @@
 </main>
 
     <footer>
-    <div class="buttons">
-        <button class="to-top" href="#"></button>
-    </div>
     <div class="wrap min">
         <section class="widget">
             <div class="row">
@@ -136,13 +231,16 @@
     </div>
 </footer>
 
+<div class="buttons">
+    <button class="to-top" href="#"></button>
+</div>
+
 
 <script src="/static/kico.js"></script>
 <script src="/static/hingle.js"></script>
 
 
 <script>var hingle = new Paul_Hingle({"copyright":false,"night":true});</script>
-
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const toTopBtn = document.querySelector('.to-top');

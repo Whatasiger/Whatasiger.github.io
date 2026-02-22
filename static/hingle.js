@@ -104,7 +104,7 @@ var Paul_Hingle = function (config) {
         }
 
         // 绑定元素（右下角的悬浮按钮，原本只在手机端出现）
-        const buttons = ks.select("footer .buttons");
+        const buttons = ks.select(".buttons");
         const btn = ks.create("button", {
             class: "toggle-list",
             attr: [

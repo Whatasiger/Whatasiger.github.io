@@ -1247,26 +1247,7 @@ article em, .post-content em {
 /* 头像轻微悬停放大 */
 .home-avatar:hover { transform: scale(1.08); }
 
-/* =========================================
-   文章详情页：背景非线性渐变淡入特效
-   ========================================= */
 
-body.post-page:before {
-    /* 调用下方定义好的动画：持续 1.2秒，使用非线性贝塞尔曲线，forwards 保证动画结束后停留在最终状态 */
-    animation: post-bg-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-}
-
-/* 定义关键帧动画的过程 */
-@keyframes post-bg-fade-in {
-    0% {
-        /* 起始透明度：与你之前在自定义代码里设定的主页背景透明度保持一致 */
-        opacity: 0.4;
-    }
-    100% {
-        /* 最终透明度：1代表 100% 不透明 */
-        opacity: 0.02;
-    }
-}
 
 /* =========================================
    主页头部元素间距微调
@@ -1934,13 +1915,152 @@ body.dark-theme:before {
     opacity: 0.4;
 }
 
-/* 3. 文章阅读页防干扰状态（使用双重标签提高权重，通杀白天和黑夜） */
-body.post-page:before,
-body.dark-theme.post-page:before {
-    opacity: 0.02;
-}
+
 
 html, body {
     /* 强行隐藏超出屏幕左右边缘的元素，彻底禁用横向滚动条 */
     overflow-x: hidden !important;
+}
+
+/* =========================================
+   终极修复：悬浮按钮脱困与现代化 UI 升级
+   ========================================= */
+
+/* 1. 重新定位浮动容器 */
+.buttons {
+    right: 1.5em; /* 稍微往左挪一点，防边缘误触 */
+    bottom: 5em;
+    z-index: 100000 !important; /* 绝对高层级，不再被遮挡 */
+    position: fixed;
+}
+
+/* 2. 重塑按钮外观与丝滑过渡 */
+.buttons .to-top, .buttons .toggle-list {
+    padding: 0.6em;
+    display: block;
+    cursor: pointer;
+    color: var(--blue);
+    background-color: var(--light-background);
+    border-radius: 8px; /* 圆角更柔和 */
+    border: 1px solid var(--border);
+    transform: translateX(8em); /* 默认完全藏在屏幕右侧外 */
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 加个极其轻微的浮层阴影 */
+}
+
+/* 按钮间的间距 */
+.buttons .toggle-list {
+    display: none;
+    margin-top: 0.8em;
+}
+
+/* 3. 图标设定 */
+.buttons .to-top:before, .buttons .toggle-list:before {
+    width: 1.5em;
+    display: block;
+    text-align: center;
+    font-family: "FontAwesome";
+    font-size: 1.1em;
+}
+.buttons .to-top:before { content: "\f062"; }
+.buttons .toggle-list:before { content: '\f00b'; }
+
+/* 4. 激活状态（滑出屏幕） */
+.buttons .to-top.active {
+    transform: translateX(0);
+}
+
+/* 5. 鼠标悬停的高级反馈 */
+.buttons .to-top:hover, .buttons .toggle-list:hover {
+    background-color: var(--blue);
+    color: #fff;
+    transform: scale(1.05); /* 微微放大一点点 */
+}
+
+/* 6. 响应式与特定状态唤醒 */
+@media screen and (max-width: 800px) {
+    .buttons .toggle-list {
+        display: block;
+        transform: translateX(0);
+    }
+}
+@media screen and (min-width: 800px) {
+    body.toc-collapsed .buttons .toggle-list {
+        display: block !important;
+        transform: translateX(0) !important;
+        animation: fade-in-bottom 0.5s both;
+    }
+}
+
+/* 7. 黑夜模式极致适配 */
+.dark-theme .buttons .to-top, .dark-theme .buttons .toggle-list {
+    background-color: rgba(40, 40, 40, 0.85); /* 半透明黑 */
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #8bb4e0;
+    backdrop-filter: blur(5px); /* 夜间也给它上点毛玻璃质感 */
+}
+.dark-theme .buttons .to-top:hover, .dark-theme .buttons .toggle-list:hover {
+    background-color: #8bb4e0; /* 悬停反白发光 */
+    color: #111;
+}
+
+/* =========================================
+   修复：文章目录跳转时的锚点偏移距离
+   ========================================= */
+
+article h1, article h2, article h3, article h4, article h5, article h6 {
+    /* 顶栏高度是 3.2em。
+       这里设为 3.8em，意味着跳转后，标题刚好在顶栏下方留出一点点完美的呼吸空间，
+       同时又足以把上一段的文字藏在顶栏后面。
+       （如果你觉得还是不够靠上，可以把它改成 3.4em 甚至 3.2em） */
+    scroll-margin-top: 3.2em !important;
+}
+
+/* =========================================
+   背景图透明度统筹管理（完美状态机控制）
+   ========================================= */
+
+/* 1. 基础开灯模式背景（默认清晰） */
+body:before {
+    opacity: 0.9;
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 2. 关灯模式背景（夜间清晰） */
+body.dark-theme:before {
+    opacity: 0.4;
+}
+
+/* 3. 核心：阅读模式下淡化背景（取消 .post-page 绑定，全权交由 JS 控制） */
+body.bg-faded:before {
+    opacity: 0.02 !important;
+}
+
+/* 4. 瞬间切换开关（封印动画专用） */
+body.no-bg-transition:before {
+    transition: none !important;
+}
+
+/* =========================================
+   修复：显著增强主页文章卡片的悬浮阴影
+   ========================================= */
+
+/* 1. 开灯模式（白天）：加深阴影浓度到 35% */
+.post-item.card-style {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* 白天悬停时：阴影进一步加深扩散到 50% */
+.post-item.card-style:hover {
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* 2. 关灯模式（黑夜）：因为背景本身就暗，需要极深的阴影（70%）才能分出层次 */
+.dark-theme .post-item.card-style {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* 黑夜悬停时：阴影几乎变成纯黑，托起卡片 */
+.dark-theme .post-item.card-style:hover {
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7) !important;
 }
