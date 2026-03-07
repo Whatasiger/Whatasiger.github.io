@@ -14,6 +14,227 @@ var Paul_Hingle = function (config) {
     var body = document.body;
     var content = ks.select(".post-content:not(.is-special), .page-content:not(.is-special)");
 
+    // 全局阅读设置（保存在 localStorage，控制回到顶部 / 字体 / 背景）
+    var SETTINGS_KEY = "whatasiger_reader_settings";
+    // 字重档位映射表：1~5 档映射到更分明的 CSS 字重
+    var FONT_WEIGHT_LEVELS = [300, 400, 500, 600, 700];
+
+    function getWeightFromLevel(level) {
+        var idx = (parseInt(level, 10) || 3) - 1;
+        if (idx < 0) idx = 0;
+        if (idx >= FONT_WEIGHT_LEVELS.length) idx = FONT_WEIGHT_LEVELS.length - 1;
+        return FONT_WEIGHT_LEVELS[idx];
+    }
+
+    function getLevelFromWeight(weight) {
+        var w = parseInt(weight, 10) || 450;
+        var closest = 1;
+        var minDiff = Infinity;
+        for (var i = 0; i < FONT_WEIGHT_LEVELS.length; i++) {
+            var diff = Math.abs(w - FONT_WEIGHT_LEVELS[i]);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closest = i + 1;
+            }
+        }
+        return closest;
+    }
+
+    var defaultSettings = {
+        showToTop: true,       // 是否显示「回到顶部」
+        hideBackground: false, // 是否隐藏背景图片
+        fontFamily: "noto-sans-sc", // 字体：noto-sans-sc（思源黑体）或 system-default（系统默认）
+        fontWeight: getWeightFromLevel(3), // 正文字重第三档
+        letterSpacing: 3,      // 字间距第六档（-2起步，第6个=3）
+        fontSize: 100,         // 字号第三档（90起步，第3heo个=110）
+        bgOpacity: 35          // 背景可见度第八档（0起步step5，第8个=35）
+    };
+
+    var currentSettings = (function () {
+        try {
+            var saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+            if (saved && typeof saved === "object") {
+                return Object.assign({}, defaultSettings, saved);
+            }
+        } catch (e) {
+            // ignore
+        }
+        return Object.assign({}, defaultSettings);
+    })();
+
+    function persistSettings() {
+        try {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentSettings));
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    function applyReadingSettings() {
+        // 背景可见度（统一映射到 CSS 变量）
+        var bgValue = typeof currentSettings.bgOpacity === "number"
+            ? currentSettings.bgOpacity
+            : defaultSettings.bgOpacity;
+        if (bgValue < 0) bgValue = 0;
+        if (bgValue > 100) bgValue = 100;
+        // 将 0~100 线性映射到 0~1 的透明度范围，10 => 0.1
+        var baseOpacity = bgValue / 100;
+        body.style.setProperty("--bg-opacity", String(baseOpacity));
+
+        // 字体设置
+        var fontFamily = currentSettings.fontFamily || defaultSettings.fontFamily;
+        if (fontFamily === "noto-sans-sc") {
+            body.style.fontFamily = '"Noto Sans SC", "Microsoft YaHei", sans-serif';
+        } else {
+            body.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
+        }
+
+        // 回到顶部按钮：通过类控制 + JS 逻辑双保险
+        if (currentSettings.showToTop) {
+            body.classList.remove("hide-to-top");
+        } else {
+            body.classList.add("hide-to-top");
+        }
+
+        // 背景图片显示 / 隐藏
+        if (currentSettings.hideBackground) {
+            body.classList.add("no-bg-image");
+        } else {
+            body.classList.remove("no-bg-image");
+        }
+
+        // 文章阅读排版（仅在阅读页生效）
+        if (body.classList.contains("post-page")) {
+            body.style.setProperty("--reader-font-weight", String(currentSettings.fontWeight));
+            body.style.setProperty("--reader-letter-spacing", (currentSettings.letterSpacing / 100) + "em");
+            body.style.setProperty("--reader-font-size", (currentSettings.fontSize / 100) + "rem");
+        }
+    }
+
+    function setupSettingsPanel() {
+        var panel = document.getElementById("reader-settings-panel");
+        var btn = ks.select(".settings-btn");
+
+        if (!panel || !btn) return;
+
+        var showTopInput = document.getElementById("setting-show-top");
+        var hideBgInput = document.getElementById("setting-hide-bg");
+        var fontFamilyInput = document.getElementById("setting-font-family");
+        var weightInput = document.getElementById("setting-font-weight");
+        var letterInput = document.getElementById("setting-letter-spacing");
+        var sizeInput = document.getElementById("setting-font-size");
+        var bgInput = document.getElementById("setting-bg-opacity");
+        var resetBtn = document.getElementById("setting-reset-btn");
+
+        // 初始化表单值
+        if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
+        if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
+        if (fontFamilyInput) fontFamilyInput.value = currentSettings.fontFamily || defaultSettings.fontFamily;
+        if (weightInput) weightInput.value = getLevelFromWeight(currentSettings.fontWeight);
+        if (letterInput) letterInput.value = currentSettings.letterSpacing;
+        if (sizeInput) sizeInput.value = currentSettings.fontSize;
+        if (bgInput) bgInput.value = ((typeof currentSettings.bgOpacity === "number"
+            ? currentSettings.bgOpacity
+            : defaultSettings.bgOpacity) / 2);
+
+        // 打开 / 关闭面板
+        btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            panel.classList.toggle("open");
+        });
+
+        document.addEventListener("click", function (e) {
+            if (!panel.classList.contains("open")) return;
+            if (panel.contains(e.target) || e.target === btn) return;
+            panel.classList.remove("open");
+        });
+
+        // 绑定设置变更
+        if (showTopInput) {
+            showTopInput.addEventListener("change", function () {
+                currentSettings.showToTop = !!this.checked;
+                persistSettings();
+                applyReadingSettings();
+            });
+        }
+
+        if (hideBgInput) {
+            hideBgInput.addEventListener("change", function () {
+                currentSettings.hideBackground = !!this.checked;
+                persistSettings();
+                applyReadingSettings();
+            });
+        }
+
+        if (fontFamilyInput) {
+            fontFamilyInput.addEventListener("change", function () {
+                currentSettings.fontFamily = this.value;
+                persistSettings();
+                applyReadingSettings();
+            });
+        }
+
+        if (weightInput) {
+            weightInput.addEventListener("input", function () {
+                var lvl = parseInt(this.value, 10) || 3;
+                currentSettings.fontWeight = getWeightFromLevel(lvl);
+                persistSettings();
+                applyReadingSettings();
+            });
+        }
+
+        if (letterInput) {
+            letterInput.addEventListener("input", function () {
+                currentSettings.letterSpacing = parseInt(this.value, 10) || 0;
+                persistSettings();
+                applyReadingSettings();
+            });
+        }
+
+        if (sizeInput) {
+            sizeInput.addEventListener("input", function () {
+                currentSettings.fontSize = parseInt(this.value, 10) || defaultSettings.fontSize;
+                persistSettings();
+                applyReadingSettings();
+            });
+        }
+
+        if (bgInput) {
+            bgInput.addEventListener("input", function () {
+                var v = parseFloat(this.value, 10);
+                if (isNaN(v)) v = defaultSettings.bgOpacity / 2;
+                if (v < 0) v = 0;
+                if (v > 50) v = 50;
+                currentSettings.bgOpacity = Math.round(v * 2);
+                persistSettings();
+                applyReadingSettings();
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener("click", function () {
+                currentSettings.showToTop = defaultSettings.showToTop;
+                currentSettings.hideBackground = defaultSettings.hideBackground;
+                currentSettings.fontFamily = defaultSettings.fontFamily;
+                currentSettings.fontWeight = defaultSettings.fontWeight;
+                currentSettings.letterSpacing = defaultSettings.letterSpacing;
+                currentSettings.fontSize = defaultSettings.fontSize;
+                currentSettings.bgOpacity = defaultSettings.bgOpacity;
+
+                persistSettings();
+                applyReadingSettings();
+
+                if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
+                if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
+                if (fontFamilyInput) fontFamilyInput.value = currentSettings.fontFamily;
+                if (weightInput) weightInput.value = getLevelFromWeight(currentSettings.fontWeight);
+                if (letterInput) letterInput.value = currentSettings.letterSpacing;
+                if (sizeInput) sizeInput.value = currentSettings.fontSize;
+                if (bgInput) bgInput.value = currentSettings.bgOpacity / 2;
+            });
+        }
+    }
+
     // 菜单按钮
     this.header = function () {
         var menu = document.getElementsByClassName("head-menu")[0];
@@ -33,6 +254,9 @@ var Paul_Hingle = function (config) {
                 bar.classList.toggle("active");
             });
         }
+
+        // 初始化右上角设置面板
+        setupSettingsPanel();
     };
 
     // 关灯切换 (使用 sessionStorage 记忆单次会话)
@@ -155,6 +379,14 @@ var Paul_Hingle = function (config) {
         var btn = document.getElementsByClassName("to-top")[0];
         var scroll = document.documentElement.scrollTop || document.body.scrollTop;
 
+        if (!btn) return;
+
+        // 用户主动关闭回到顶部时，强制保持隐藏
+        if (!currentSettings.showToTop) {
+            btn.classList.remove("active");
+            return;
+        }
+
         scroll >= window.innerHeight / 2 ? btn.classList.add("active") : btn.classList.remove("active");
     };
 
@@ -168,6 +400,9 @@ var Paul_Hingle = function (config) {
 
     // 返回页首
     window.addEventListener("scroll", this.to_top);
+
+    // 首次应用阅读设置（在夜间模式与其它初始化之前执行）
+    applyReadingSettings();
 
     // 如果开启自动夜间模式
     // =========================================

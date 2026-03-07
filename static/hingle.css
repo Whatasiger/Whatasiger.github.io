@@ -31,18 +31,29 @@ body{
     font-weight: 300;
     background: #fafafa;
     transition: margin .3s, background .3s;
+    /* 阅读模式可调节的默认变量 */
+    --reader-font-weight: 400;
+    --reader-letter-spacing: 0em;
+    --reader-font-size: 1rem;
+    /* 全站背景图片变量（可被页面或 JS 覆盖） */
+    --page-bg-image: none;
+    /* 背景图可见度（0~1 之间），默认约 0.1 */
+    --bg-opacity: 0.1;
 }
 
 body:before{
+    content: '';
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    opacity: .1;
+    opacity: var(--bg-opacity);
     z-index: -1;
     display: block;
     position: fixed;
     background: center/cover no-repeat;
+    background-image: var(--page-bg-image);
+    transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 ::-webkit-scrollbar{
@@ -204,6 +215,7 @@ header{
     cursor: pointer;
     position: relative;
     line-height: 2.25em;
+    font-weight: 600 !important;
 }
 .head-menu a:hover{ color: #ffa628 }
 
@@ -314,7 +326,7 @@ header{
     .toggle-btn{ display: none }
 }
 
-.toggle-btn, .light-btn, .search-btn{
+.toggle-btn, .light-btn, .search-btn, .settings-btn{
     z-index: 1;
     float: left;
     width: 2em;
@@ -328,12 +340,13 @@ header{
 
 .toggle-btn{ margin-right: 0 }
 .search-btn{ float: right }
+.settings-btn{ float: right }
 
-.toggle-btn:hover, .light-btn:hover, .search-btn:hover{
+.toggle-btn:hover, .light-btn:hover, .search-btn:hover, .settings-btn:hover{
     background-color: rgba(0, 0, 0, .05);
 }
 
-.toggle-btn:before, .light-btn:before, .search-btn:before{
+.toggle-btn:before, .light-btn:before, .search-btn:before, .settings-btn:before{
     display: block;
     text-align: center;
     font: 1em/2em "FontAwesome";
@@ -342,6 +355,7 @@ header{
 .toggle-btn:before{ content: "\f0c9" }
 .light-btn:before{ content: "\f0eb" }
 .search-btn:before{ content: "\f002" }
+.settings-btn:before{ content: "\f013" }
 
 .head-search{
     z-index: 1;
@@ -404,6 +418,7 @@ main img {
     display: block;
     margin-bottom: 1em;
     font-style: oblique;
+    font-weight: 600 !important;
 }
 
 /* - 社交链接 */
@@ -473,6 +488,7 @@ main img {
 .post-meta span, .post-meta time{
     margin-right: .8em;
     display: inline-block;
+    font-weight: 600 !important;
 }
 
 .post-meta span:last-child{ margin-right: 0 }
@@ -482,6 +498,7 @@ main img {
     margin-right: .4em;
     display: inline-block;
     font-family: "FontAwesome";
+    font-weight: normal !important;
 }
 
 .post-meta .date:before{ content: "\f073" }
@@ -521,6 +538,7 @@ main img {
     color: #6e8aad;
     margin-right: .25rem;
     display: inline-block;
+    font-weight: 600 !important;
 }
 
 .page-title h2{ margin-bottom: 0 }
@@ -734,6 +752,12 @@ article h1:before{ font-weight: bold }
 .article-list::-webkit-scrollbar{ width: 0; height: 0 }
 
 .article-list h4{ text-align: center }
+
+.article-list,
+.article-list .title,
+.article-list a {
+    font-weight: 800;
+}
 
 .article-list .title{
     padding: .25em 1em;
@@ -1288,28 +1312,65 @@ article em, .post-content em {
 
 /* 2. 全局字重加粗，并排除文章正文 */
 body {
+    font-family: "Microsoft YaHei", sans-serif;
+
     /* 在这里修改全局字体粗细。400是常规，500是中等偏粗，600/700是粗体 */
-    font-weight: 550 !important;
+    font-weight: 550;
 }
-/* 单独把文章正文、卡片简介的粗细“降”回正常值，保障长篇阅读不累眼 */
+/* 单独把文章正文、卡片简介的粗细"降"回正常值，保障长篇阅读不累眼 */
 .post-content, .post-content p, article, .post-card-description {
-    font-weight: 400 !important;
+    font-weight: 400;
 }
 
-/* 3. 主页昵称颜色加深 */
+/* 2.1 文章阅读页的可调排版（仅在 .post-page 下生效） */
+.post-page .post-content,
+.post-page .post-content p {
+    font-weight: var(--reader-font-weight);
+    letter-spacing: var(--reader-letter-spacing);
+    font-size: var(--reader-font-size);
+}
+
+/* 3. 主页昵称颜色 */
+
+/* 与顶栏、背景一致的主题切换渐变 */
+.home-title h1,
+.home-profile-link h1 {
+    transition: color 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+#typewriter-text {
+    transition: color 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.home-avatar {
+    transition: box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.home-social {
+    transition: background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.home-social a i[class^="fa-"] {
+    transition: background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* 白天模式：明亮醒目的蓝色，与浅色背景形成鲜明对比 */
 .home-title h1 {
-    /* 在这里修改为你想要的 HEX 颜色码，目前提供一个更深、偏灰蓝的默认值 */
-    color: #1b68ac !important;
-    margin-bottom: 0.2em !important; /* 保留之前的紧凑间距 */
+    color: #1a7fd6 !important;
+    margin-bottom: 0.2em !important;
 }
-/* 确保点击昵称时不会因为浏览器的默认超链接样式变色或出现下划线 */
 .home-profile-link:hover h1 {
-    color: #1b68ac !important; /* 保持与上面相同的颜色 */
+    color: #1a7fd6 !important;
 }
-/* 夜间模式下的昵称颜色 */
+
+/* 白天模式：个性签名文字颜色更清晰 */
+#typewriter-text {
+    color: #3a3a3a !important;
+}
+
+/* 夜间模式：昵称和签名保持原有柔和色调（不变） */
 .dark-theme .home-title h1,
 .dark-theme .home-profile-link:hover h1 {
-    color: #8bb4e0 !important; /* 夜间需要稍微亮一点以保证对比度，你也可以自己改 */
+    color: #8bb4e0 !important;
+}
+.dark-theme #typewriter-text {
+    color: inherit !important;
 }
 
 /* =========================================
@@ -1322,15 +1383,24 @@ body {
     margin-left: 0.5em !important; /* 和搜索框保持一点距离 */
 }
 
-/* 2. 隐藏原本需要点击才能展开搜索框的“旧放大镜按钮” */
+/* 2. 搜索按钮 & 搜索框行为保持主题默认：点击放大镜再展开搜索框 */
 .search-btn {
-    display: none !important;
+    display: block;
 }
 
-/* 3. 强制让搜索框永久处于显示、可交互状态 */
-.head-search {
-    opacity: 1 !important;
-    pointer-events: auto !important;
+/* PC 端（宽度 >= 600px）：始终展示搜索框，不再依赖放大镜按钮 */
+@media screen and (min-width: 600px){
+    .search-btn{
+        display: none !important;
+    }
+
+    .head-search{
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        position: relative !important;
+        margin: .6em 0 !important;
+        width: auto !important;
+    }
 }
 
 /* 4. 重塑搜索框的外观（适配白天与夜间） */
@@ -1900,20 +1970,7 @@ footer {
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-/* =========================================
-   背景图透明度统筹管理（摒弃暴力覆盖）
-   ========================================= */
-
-/* 1. 基础开灯模式背景 */
-body:before {
-    opacity: 0.9;
-    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* 2. 关灯模式背景 */
-body.dark-theme:before {
-    opacity: 0.4;
-}
+/* （旧版背景透明度规则已移除，统一使用下方的 var(--bg-opacity) 系统） */
 
 
 
@@ -2004,6 +2061,11 @@ html, body {
     color: #111;
 }
 
+/* 用户关闭「回到顶部」时隐藏按钮 */
+body.hide-to-top .buttons .to-top {
+    display: none !important;
+}
+
 /* =========================================
    修复：文章目录跳转时的锚点偏移距离
    ========================================= */
@@ -2017,23 +2079,250 @@ article h1, article h2, article h3, article h4, article h5, article h6 {
 }
 
 /* =========================================
-   背景图透明度统筹管理（完美状态机控制）
+   背景图透明度统筹管理（唯一权威版本）
+   所有 body:before opacity 规则集中在这里
    ========================================= */
 
-/* 1. 基础开灯模式背景（默认清晰） */
+/* 1. 基础背景：完全由 --bg-opacity 控制 */
 body:before {
-    opacity: 0.9;
+    opacity: var(--bg-opacity);
     transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* 2. 关灯模式背景（夜间清晰） */
-body.dark-theme:before {
-    opacity: 0.4;
+/* 2. 白天模式：再调高两档，更清晰（×1.5 倍） */
+body:not(.dark-theme):before {
+    opacity: calc(var(--bg-opacity) * 1.5);
 }
 
-/* 3. 核心：阅读模式下淡化背景（取消 .post-page 绑定，全权交由 JS 控制） */
+/* 3. 夜间模式：再略微放大（×1.5 倍） */
+body.dark-theme:before {
+    opacity: calc(var(--bg-opacity) * 1.5);
+}
+
+/* 4. 阅读页（文章/独立页）：主动降低背景可见度，避免干扰阅读 */
 body.bg-faded:before {
-    opacity: 0.02 !important;
+    opacity: calc(var(--bg-opacity) * 0.2) !important;
+}
+
+/* 5. 完全关闭背景图片时（通过设置面板） */
+body.no-bg-image:before {
+    background-image: none !important;
+}
+
+/* =========================================
+   右上角设置面板样式（桌面 + 移动）
+   ========================================= */
+
+.settings-panel {
+    position: fixed;
+    top: 4.2em;
+    right: 1.2em;
+    width: 280px;
+    max-width: 92vw;
+    padding: 0.9em 1em 1.1em;
+    border-radius: 0.9em;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #333;
+    z-index: 10001;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.settings-panel.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.settings-panel-inner {
+    width: 100%;
+}
+
+.settings-panel-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.4em;
+}
+
+.settings-panel-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.settings-panel-hint {
+    font-size: 0.7rem;
+    color: #888;
+}
+
+.settings-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35em;
+}
+
+.settings-group-title {
+    margin-top: 0.4em;
+    margin-bottom: 0.1em;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #999;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75em;
+}
+
+.settings-row span {
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.settings-row input[type="checkbox"] {
+    width: 1.15em;
+    height: 1.15em;
+    cursor: pointer;
+}
+
+.settings-row select {
+    width: 120px;
+    padding: 0.3em 0.5em;
+    border-radius: 0.3em;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.settings-row-range input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(111,159,199,0.25), rgba(111,159,199,0.8));
+    outline: none;
+}
+
+.settings-row-range input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--blue);
+    box-shadow: 0 0 0 4px rgba(111,159,199,0.25);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.settings-row-range input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 6px rgba(111,159,199,0.3);
+}
+
+.settings-row-range input[type="range"]::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(111,159,199,0.25), rgba(111,159,199,0.8));
+}
+
+.settings-row-range input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--blue);
+    box-shadow: 0 0 0 4px rgba(111,159,199,0.25);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.settings-row-range input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 6px rgba(111,159,199,0.3);
+}
+
+/* 暗色模式下的面板外观 */
+.dark-theme .settings-panel {
+    background: rgba(24, 24, 24, 0.96);
+    border-color: rgba(255, 255, 255, 0.06);
+    color: #ddd;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65);
+}
+
+.dark-theme .settings-panel-hint {
+    color: #aaa;
+}
+
+.dark-theme .settings-group-title {
+    color: #777;
+}
+
+.dark-theme .settings-row input[type="checkbox"] {
+    accent-color: #8bb4e0;
+}
+
+.settings-panel-footer {
+    margin-top: 0.8em;
+    padding-top: 0.6em;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.settings-reset-btn {
+    width: 100%;
+    padding: 0.5em 1em;
+    border: none;
+    border-radius: 0.4em;
+    background: linear-gradient(135deg, #6f9fc7, #5a8db5);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.settings-reset-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(111, 159, 199, 0.4);
+    background: linear-gradient(135deg, #5a8db5, #4a7ca0);
+}
+
+.settings-reset-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(111, 159, 199, 0.3);
+}
+
+.dark-theme .settings-panel-footer {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-theme .settings-row select {
+    background: #333;
+    border-color: #555;
+    color: #ddd;
+}
+
+@media screen and (max-width: 600px) {
+    .settings-panel {
+        top: 3.7em;
+        right: 0.6em;
+        left: 0.6em;
+        width: auto;
+    }
 }
 
 /* 4. 瞬间切换开关（封印动画专用） */

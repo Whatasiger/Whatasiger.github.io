@@ -17,20 +17,62 @@
     <meta property="og:site_name" content="Whatasiger">
     <meta property="og:title" content="『末班花火』"/>
     
-    <style>body:before{ content: ''; background-image: url(https://p.sda1.dev/30/843484e228479c4c283bfe674c07544d/a764129886829014b24abacfeb209c5d.jpg) }</style>
+    <style>body{ --page-bg-image: url(https://p.sda1.dev/30/843484e228479c4c283bfe674c07544d/a764129886829014b24abacfeb209c5d.jpg) }</style>
     
+    <!-- 引入思源黑体完整字重 (300,400,500,600,700) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <meta name="generator" content="Hexo 8.1.1"></head>
 
   <body class="dark-theme post-page">
     <script>
     (function() {
-        // 核心修复：把普通的博客文章 (is_post) 和独立页面 (is_page) 都视为“阅读界面”
+        // 核心修复：把普通的博客文章 (is_post) 和独立页面 (is_page) 都视为"阅读界面"
         var isArticle = true;
         var isFromArticle = sessionStorage.getItem("is_from_article") === "true";
         var theme = sessionStorage.getItem("theme");
 
+        // 0. 立即应用字体设置，避免字体闪烁
+        try {
+            var SETTINGS_KEY = "whatasiger_reader_settings";
+            var savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+            var fontChoice = (savedSettings && savedSettings.fontFamily) ? savedSettings.fontFamily : "noto-sans-sc";
+            if (fontChoice === "noto-sans-sc") {
+                document.body.style.fontFamily = '"Noto Sans SC", "Microsoft YaHei", sans-serif';
+            } else {
+                document.body.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
+            }
+        } catch (e) {
+            document.body.style.fontFamily = '"Noto Sans SC", "Microsoft YaHei", sans-serif';
+        }
+
+        // 0.1 背景可见度：与设置面板共用唯一数据源 whatasiger_reader_settings.bgOpacity
+        var targetBgOpacity = 0.35; // 与 hingle.js defaultSettings.bgOpacity=35 对应
+        var defaultBgOpacityValue = 35; // 默认档位（0~100），用于“从文章回首页”时重置
+        try {
+            var readerSettings = JSON.parse(localStorage.getItem("whatasiger_reader_settings"));
+            if (readerSettings && typeof readerSettings.bgOpacity === "number") {
+                var v = readerSettings.bgOpacity;
+                if (v >= 0 && v <= 100) targetBgOpacity = v / 100;
+            }
+            // 从文章回到首页时：强制恢复为默认可见度，并写回设置
+            if (!isArticle && isFromArticle) {
+                targetBgOpacity = defaultBgOpacityValue / 100;
+                if (readerSettings && typeof readerSettings === "object") {
+                    readerSettings.bgOpacity = defaultBgOpacityValue;
+                    try { localStorage.setItem("whatasiger_reader_settings", JSON.stringify(readerSettings)); } catch (e) {}
+                }
+            }
+        } catch (e) {
+            // 忽略错误，使用默认 0.35
+        }
+
         // 1. 初始状态：全面封印动画，防止页面刚加载时的任何闪烁
         document.body.classList.add("no-bg-transition");
+
+        // 1.1 立即设置背景可见度
+        document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
 
         // 2. 瞬间敲定日夜模式
         if (theme === "light") {
@@ -58,7 +100,10 @@
                 // 解除动画封印
                 document.body.classList.remove("no-bg-transition");
 
-                // 触发跨界面的过渡动画
+                // 背景可见度：与设置面板统一，不再在跳转时覆盖为固定值，保持当前 targetBgOpacity 即可
+                document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
+
+                // 触发跨界面的过渡动画（保留原有逻辑）
                 if (isArticle && !isFromArticle) {
                     // 主页跳阅读页：此时开始平滑变淡
                     document.body.classList.add("bg-faded");
@@ -71,7 +116,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - Beta 3</a>
+    <a href="/" class="header-logo">Whatasiger - RC1</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -80,15 +125,65 @@
     <div class="head-action">
         <div class="toggle-btn"></div>
         <div class="light-btn"></div>
+        <div class="settings-btn"></div>
         
     </div>
 
     
 
+    <div class="settings-panel" id="reader-settings-panel">
+        <div class="settings-panel-inner">
+            <div class="settings-panel-header">
+                <span class="settings-panel-title">阅读设置</span>
+                <span class="settings-panel-hint">仅在文章页对正文生效</span>
+            </div>
+            <div class="settings-panel-body">
+                <label class="settings-row">
+                    <span>显示「回到顶部」</span>
+                    <input type="checkbox" id="setting-show-top">
+                </label>
+                <label class="settings-row">
+                    <span>隐藏背景图片</span>
+                    <input type="checkbox" id="setting-hide-bg">
+                </label>
+                <label class="settings-row">
+                    <span>字体</span>
+                    <select id="setting-font-family">
+                        <option value="noto-sans-sc">思源黑体</option>
+                        <option value="system-default">系统默认</option>
+                    </select>
+                </label>
+                <div class="settings-group-title">文章字体</div>
+                <label class="settings-row settings-row-range">
+                    <span>字重</span>
+                    <input type="range" id="setting-font-weight" min="1" max="5" step="1">
+                </label>
+                <label class="settings-row settings-row-range">
+                    <span>字间距</span>
+                    <input type="range" id="setting-letter-spacing" min="-2" max="8" step="1">
+                </label>
+                <label class="settings-row settings-row-range">
+                    <span>字号</span>
+                    <input type="range" id="setting-font-size" min="90" max="130" step="10">
+                </label>
+                <div class="settings-group-title">背景</div>
+                <label class="settings-row settings-row-range">
+                    <span>背景可见度</span>
+                    <input type="range" id="setting-bg-opacity" min="0" max="50" step="2.5">
+                </label>
+            </div>
+            <div class="settings-panel-footer">
+                <button id="setting-reset-btn" class="settings-reset-btn">重置</button>
+            </div>
+        </div>
+    </div>
+
     <nav class="head-menu">
         <a href="/">首页</a>
         
             <a href="/about-me">关于我</a>
+        
+            <a href="/2026/02/20/hello-world/">关于网站</a>
         
             <a href="/comments">留言板</a>
         
@@ -109,7 +204,7 @@
         </section>
         <article class="post-content">
         
-            <blockquote>这篇文章上次修改于 594 天前，可能其部分内容已经发生变化，如有疑问可询问作者。</blockquote>
+            <blockquote>这篇文章上次修改于 604 天前，可能其部分内容已经发生变化，如有疑问可询问作者。</blockquote>
         
             <p>序章「flee」</p>
 <p>惊慌的心跳持续了不止半个小时。</p>
@@ -1783,6 +1878,32 @@
     
     </div>
 </main>
+
+<script>
+    (function () {
+        // 文章有封面图时，将整站背景替换为该封面
+        // 但"关于网站"页面使用主页背景
+        var cover = "https://p.sda1.dev/30/48c065a6175c5cb0de0abd1b758a526d/e114bd9dc433cbbe2b8c700303f2c7af.jpg";
+        var pageTitle = "『末班花火』";
+        
+        if (!cover) return;
+        
+        // 如果是"关于网站"页面，不使用封面图，使用主页背景
+        if (pageTitle === "关于网站") {
+            document.body.style.removeProperty("--page-bg-image");
+            return;
+        }
+
+        // 等待 DOM 就绪后再修改 CSS 变量，避免和首屏样式冲突
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", function () {
+                document.body.style.setProperty("--page-bg-image", "url(" + cover + ")");
+            });
+        } else {
+            document.body.style.setProperty("--page-bg-image", "url(" + cover + ")");
+        }
+    })();
+</script>
 
     <footer>
     <div class="wrap min">
