@@ -238,10 +238,31 @@ var Paul_Hingle = function (config) {
     // 菜单按钮
     this.header = function () {
         var menu = document.getElementsByClassName("head-menu")[0];
+        var toggleBtn = ks.select(".toggle-btn");
 
-        ks.select(".toggle-btn").onclick = function () {
+        toggleBtn.onclick = function (e) {
+            e.stopPropagation();
             menu.classList.toggle("active");
         };
+
+        // 点击菜单内的链接后自动收起（手机端浮动菜单体验）
+        if (menu) {
+            var menuLinks = menu.querySelectorAll("a");
+            menuLinks.forEach(function (link) {
+                link.addEventListener("click", function () {
+                    menu.classList.remove("active");
+                });
+            });
+        }
+
+        // 点击菜单外部区域时关闭菜单
+        document.addEventListener("click", function (e) {
+            if (menu && menu.classList.contains("active")) {
+                if (!menu.contains(e.target) && e.target !== toggleBtn) {
+                    menu.classList.remove("active");
+                }
+            }
+        });
 
         ks.select(".light-btn").onclick = this.night;
 
@@ -519,8 +540,30 @@ var Paul_Hingle = function (config) {
 // 在文件初始化末尾，执行这个搜索功能
     this.local_search();
 
-// 图片缩放
-ks.image(".post-content:not(.is-special) img, .page-content:not(.is-special) img");
+// 图片懒加载 + 缩放
+// 1. 把正文图片的真实地址转存到 ks-original，用轻量占位符替换 src，
+//    这样浏览器不会在页面初始就请求视口外的图片。
+// 2. ks.lazy() 基于 IntersectionObserver，图片进入视口时自动回填 src。
+// 3. ks.image() 优先读取 ks-original，因此懒加载与灯箱天然兼容。
+var CONTENT_IMG_SEL = ".post-content:not(.is-special) img, .page-content:not(.is-special) img";
+var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+(function () {
+    var imgs = document.querySelectorAll(CONTENT_IMG_SEL);
+    if (!imgs.length) return;
+
+    for (var i = 0; i < imgs.length; i++) {
+        var img = imgs[i];
+        var src = img.getAttribute("src");
+        if (!src || src === BLANK) continue;
+        img.setAttribute("ks-original", src);
+        img.setAttribute("src", BLANK);
+    }
+
+    ks.lazy(CONTENT_IMG_SEL);
+})();
+
+ks.image(CONTENT_IMG_SEL);
 
 // 请保留版权说明
 if(window.console && window.console.log){
