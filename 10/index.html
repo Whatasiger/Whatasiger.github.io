@@ -48,8 +48,8 @@
         }
 
         // 0.1 背景可见度：与设置面板共用唯一数据源 whatasiger_reader_settings.bgOpacity
-        var targetBgOpacity = 0.35; // 与 hingle.js defaultSettings.bgOpacity=35 对应
-        var defaultBgOpacityValue = 35; // 默认档位（0~100），用于“从文章回首页”时重置
+        var targetBgOpacity = 0.50; // 与 hingle.js defaultSettings.bgOpacity=35 对应
+        var defaultBgOpacityValue = 50; // 默认档位（0~100），用于“从文章回首页”时重置
         try {
             var readerSettings = JSON.parse(localStorage.getItem("whatasiger_reader_settings"));
             if (readerSettings && typeof readerSettings.bgOpacity === "number") {
@@ -68,11 +68,27 @@
             // 忽略错误，使用默认 0.35
         }
 
+        // 0.2 背景模糊度：文章页使用用户保存值（默认8px），首页始终为0
+        var DEFAULT_ARTICLE_BLUR = 8;
+        var savedBlur = DEFAULT_ARTICLE_BLUR;
+        try {
+            if (readerSettings && typeof readerSettings.bgBlur === "number") {
+                var bv = readerSettings.bgBlur;
+                if (bv >= 0 && bv <= 20) savedBlur = bv;
+            }
+        } catch (e) {}
+        // 目标模糊度：文章页=用户设置，首页=0
+        var targetBgBlur = isArticle ? savedBlur : 0;
+        // 初始（瞬间）模糊度：来自文章页则从 savedBlur 开始，便于过渡动画
+        var initialBgBlur = isFromArticle ? savedBlur : 0;
+        // 文章→文章时 initialBgBlur == targetBgBlur，rAF 不触发动画
+
         // 1. 初始状态：全面封印动画，防止页面刚加载时的任何闪烁
         document.body.classList.add("no-bg-transition");
 
-        // 1.1 立即设置背景可见度
+        // 1.1 立即设置背景可见度和模糊度（封印状态，无动画）
         document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
+        document.body.style.setProperty("--bg-blur", initialBgBlur + "px");
 
         // 2. 瞬间敲定日夜模式
         if (theme === "light") {
@@ -103,6 +119,10 @@
                 // 背景可见度：与设置面板统一，不再在跳转时覆盖为固定值，保持当前 targetBgOpacity 即可
                 document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
 
+                // 背景模糊度：设置目标值，触发平滑过渡
+                // 文章→文章时 initialBgBlur == targetBgBlur，此处赋值无变化，不触发动画
+                document.body.style.setProperty("--bg-blur", targetBgBlur + "px");
+
                 // 触发跨界面的过渡动画（保留原有逻辑）
                 if (isArticle && !isFromArticle) {
                     // 主页跳阅读页：此时开始平滑变淡
@@ -116,7 +136,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - RC2</a>
+    <a href="/" class="header-logo">Whatasiger - RC3</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -170,6 +190,10 @@
                 <label class="settings-row settings-row-range">
                     <span>背景可见度</span>
                     <input type="range" id="setting-bg-opacity" min="0" max="50" step="2.5">
+                </label>
+                <label class="settings-row settings-row-range settings-row-range-rtl">
+                    <span>背景模糊度</span>
+                    <input type="range" id="setting-bg-blur" min="0" max="20" step="1">
                 </label>
             </div>
             <div class="settings-panel-footer">

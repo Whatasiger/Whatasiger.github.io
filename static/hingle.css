@@ -39,6 +39,8 @@ body{
     --page-bg-image: none;
     /* 背景图可见度（0~1 之间），默认约 0.1 */
     --bg-opacity: 0.1;
+    /* 背景图模糊度（px），默认无模糊 */
+    --bg-blur: 8px;
 }
 
 body:before{
@@ -48,12 +50,14 @@ body:before{
     right: 0;
     bottom: 0;
     opacity: var(--bg-opacity);
+    filter: blur(var(--bg-blur));
     z-index: -1;
     display: block;
     position: fixed;
     background: center/cover no-repeat;
     background-image: var(--page-bg-image);
-    transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 ::-webkit-scrollbar{
@@ -2181,10 +2185,12 @@ article h1, article h2, article h3, article h4, article h5, article h6 {
    所有 body:before opacity 规则集中在这里
    ========================================= */
 
-/* 1. 基础背景：完全由 --bg-opacity 控制 */
+/* 1. 基础背景：完全由 --bg-opacity / --bg-blur 控制 */
 body:before {
     opacity: var(--bg-opacity);
-    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    filter: blur(var(--bg-blur));
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* 2. 白天模式：再调高两档，更清晰（×1.5 倍） */
@@ -2354,6 +2360,11 @@ body.no-bg-image:before {
     box-shadow: 0 0 0 6px rgba(111,159,199,0.3);
 }
 
+/* 反向滑动条：左端=最大值（最模糊），右端=最小值（无模糊） */
+.settings-row-range-rtl input[type="range"] {
+    transform: scaleX(-1);
+}
+
 /* 暗色模式下的面板外观 */
 .dark-theme .settings-panel {
     background: rgba(24, 24, 24, 0.96);
@@ -2450,4 +2461,10 @@ body.no-bg-transition:before {
 /* 黑夜悬停时：阴影几乎变成纯黑，托起卡片 */
 .dark-theme .post-item.card-style:hover {
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* 专属：深色模式下首页头像不调暗 */
+.dark-theme .home-avatar {
+    filter: brightness(75%) !important;
+    -webkit-filter: brightness(75%) !important;
 }

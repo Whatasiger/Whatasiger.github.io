@@ -48,8 +48,8 @@
         }
 
         // 0.1 背景可见度：与设置面板共用唯一数据源 whatasiger_reader_settings.bgOpacity
-        var targetBgOpacity = 0.35; // 与 hingle.js defaultSettings.bgOpacity=35 对应
-        var defaultBgOpacityValue = 35; // 默认档位（0~100），用于“从文章回首页”时重置
+        var targetBgOpacity = 0.50; // 与 hingle.js defaultSettings.bgOpacity=35 对应
+        var defaultBgOpacityValue = 50; // 默认档位（0~100），用于“从文章回首页”时重置
         try {
             var readerSettings = JSON.parse(localStorage.getItem("whatasiger_reader_settings"));
             if (readerSettings && typeof readerSettings.bgOpacity === "number") {
@@ -68,11 +68,27 @@
             // 忽略错误，使用默认 0.35
         }
 
+        // 0.2 背景模糊度：文章页使用用户保存值（默认8px），首页始终为0
+        var DEFAULT_ARTICLE_BLUR = 8;
+        var savedBlur = DEFAULT_ARTICLE_BLUR;
+        try {
+            if (readerSettings && typeof readerSettings.bgBlur === "number") {
+                var bv = readerSettings.bgBlur;
+                if (bv >= 0 && bv <= 20) savedBlur = bv;
+            }
+        } catch (e) {}
+        // 目标模糊度：文章页=用户设置，首页=0
+        var targetBgBlur = isArticle ? savedBlur : 0;
+        // 初始（瞬间）模糊度：来自文章页则从 savedBlur 开始，便于过渡动画
+        var initialBgBlur = isFromArticle ? savedBlur : 0;
+        // 文章→文章时 initialBgBlur == targetBgBlur，rAF 不触发动画
+
         // 1. 初始状态：全面封印动画，防止页面刚加载时的任何闪烁
         document.body.classList.add("no-bg-transition");
 
-        // 1.1 立即设置背景可见度
+        // 1.1 立即设置背景可见度和模糊度（封印状态，无动画）
         document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
+        document.body.style.setProperty("--bg-blur", initialBgBlur + "px");
 
         // 2. 瞬间敲定日夜模式
         if (theme === "light") {
@@ -103,6 +119,10 @@
                 // 背景可见度：与设置面板统一，不再在跳转时覆盖为固定值，保持当前 targetBgOpacity 即可
                 document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
 
+                // 背景模糊度：设置目标值，触发平滑过渡
+                // 文章→文章时 initialBgBlur == targetBgBlur，此处赋值无变化，不触发动画
+                document.body.style.setProperty("--bg-blur", targetBgBlur + "px");
+
                 // 触发跨界面的过渡动画（保留原有逻辑）
                 if (isArticle && !isFromArticle) {
                     // 主页跳阅读页：此时开始平滑变淡
@@ -116,7 +136,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - RC2</a>
+    <a href="/" class="header-logo">Whatasiger - RC3</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -170,6 +190,10 @@
                 <label class="settings-row settings-row-range">
                     <span>背景可见度</span>
                     <input type="range" id="setting-bg-opacity" min="0" max="50" step="2.5">
+                </label>
+                <label class="settings-row settings-row-range settings-row-range-rtl">
+                    <span>背景模糊度</span>
+                    <input type="range" id="setting-bg-blur" min="0" max="20" step="1">
                 </label>
             </div>
             <div class="settings-panel-footer">
@@ -896,29 +920,32 @@
 <p>Q君将那张纸拿了下来。</p>
 <p>那是一张写满字的纸条，顶上用硕大的字赫然写着：</p>
 <p><strong>“C老师 最终记录”</strong></p>
-<p>如果你看到这张纸条，我很可能已经不知去向。不必多问。</p>
-<p>我多年潜心研究的事物，就在图书馆G14书架第三列的瓷砖底下。你若按动那一列的书，机关就会启动。</p>
-<p>我们所在的世界尽是谎言，虚伪，与面具。设想一下，一个人人面对自己真心的世界，大家的真心渐渐融合。不再有因为观念的区隔产生的冲突，不再有思想不合导致的关系破裂，甚至国家间的战争也将不复存在。于是，造出了这台机器。</p>
-<p>装置会发出一种特殊的电波，在两秒内传递到全世界。这种电波会让所有人面对自己的真心，然后与身边的人随机融合。这样的过程反复在每个人身上进行，扩散到全世界。由于电波波长机制的原理，按下按钮时，离装置最远的人，大概是地球背面的人，会最先受到影响；而离装置最近的几个人，将是最后受到影响的。</p>
-<p>但是，我发现了一个致命的问题。似乎没有人的真心能够承受暴力的展露与融合。反而会丢失掉组成自己真心的碎片，然后……在这个世界消失。</p>
-<p>意识到这一点之后，我发觉这是一个很危险的机器。我对它进行了如上述所说的封存，隐藏。未来如果有人发现它，请确认那是一个人人的真心都足够强大的世界，再按下那个按钮。</p>
-<p>愿我们的真心终将相融。²⁹</p>
+<hr>
+<p><em>如果你看到这张纸条，我很可能已经不知去向。不必多问。</em></p>
+<p><em>我多年潜心研究的事物，就在图书馆G14书架第三列的瓷砖底下。你若按动那一列的书，机关就会启动。</em></p>
+<p><em>我们所在的世界尽是谎言，虚伪，与面具。设想一下，一个人人面对自己真心的世界，大家的真心渐渐融合。不再有因为观念的区隔产生的冲突，不再有思想不合导致的关系破裂，甚至国家间的战争也将不复存在。于是，造出了这台机器。</em></p>
+<p><em>装置会发出一种特殊的电波，在两秒内传递到全世界。这种电波会让所有人面对自己的真心，然后与身边的人随机融合。这样的过程反复在每个人身上进行，扩散到全世界。由于电波波长机制的原理，按下按钮时，离装置最远的人，大概是地球背面的人，会最先受到影响；而离装置最近的几个人，将是最后受到影响的。</em></p>
+<p><em>但是，我发现了一个致命的问题。似乎没有人的真心能够承受暴力的展露与融合。反而会丢失掉组成自己真心的碎片，然后……在这个世界消失。</em></p>
+<p><em>意识到这一点之后，我发觉这是一个很危险的机器。我对它进行了如上述所说的封存，隐藏。未来如果有人发现它，请确认那是一个人人的真心都足够强大的世界，再按下那个按钮。</em></p>
+<p><em>愿我们的真心终将相融。²⁹</em></p>
 <div style="text-align: right; text-indent: 0;">
     C老师
-
-<p>■■■■年■■月■■日</p>
+■■■■年■■月■■日
 </div>
           
+
 <hr>
 <p>文字到此结束。</p>
 <p>Q君的头脑仿佛被灌进来什么东西，抱着头，头痛欲裂。</p>
 <p>没错，都想起来了。看到那些文字的瞬间，一幕幕不知从何处而来的记忆闪回。</p>
-<p>“C老师，也就是我们的顾问老师，”S君没有理会Q君的打趣，“为我们留下了，一件伟大的遗产！！”</p>
-<p>她摆了个非常中二的pose，随即双手高抬，片刻后左手扶着额头，右手横挥向书架，再一用力，书架的中间凹下一块。</p>
-<p>S君说的没错，书架间的一块瓷砖渐渐被摇下，再升上来时，随之升起的还有一个奇特的装置。</p>
-<p>Q君所看到的是一坨没有外壳，棱角分明，但错综复杂，大小不一的硬质金属堆积在一起的物体。唯一有形状可言的，是从中延伸出来的一条导线，所连接的红色开关按钮。</p>
-<p>按钮霎时间就被Q君按下了。</p>
-<p>咔嗒。</p>
+<hr>
+<p><em>“C老师，也就是我们的顾问老师，”S君没有理会Q君的打趣，“为我们留下了，一件伟大的遗产！！”</em></p>
+<p><em>她摆了个非常中二的pose，随即双手高抬，片刻后左手扶着额头，右手横挥向书架，再一用力，书架的中间凹下一块。</em></p>
+<p><em>S君说的没错，书架间的一块瓷砖渐渐被摇下，再升上来时，随之升起的还有一个奇特的装置。</em></p>
+<p><em>Q君所看到的是一坨没有外壳，棱角分明，但错综复杂，大小不一的硬质金属堆积在一起的物体。唯一有形状可言的，是从中延伸出来的一条导线，所连接的红色开关按钮。</em></p>
+<p><em>按钮霎时间就被Q君按下了。</em></p>
+<p><em>咔嗒。</em></p>
+<hr>
 <p>“啊啊啊啊啊！！！——”</p>
 <p>Q君扔下纸条，那纸条飞舞，盘旋，正好从书架底下的缝隙钻了进去。</p>
 <p>大脑像爆炸了一般。身体脱离了控制。仿佛千千万万根尖锐的毛刺扎着皮肤。</p>

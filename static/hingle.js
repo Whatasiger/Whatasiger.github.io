@@ -47,7 +47,8 @@ var Paul_Hingle = function (config) {
         fontWeight: getWeightFromLevel(3), // 正文字重第三档
         letterSpacing: 3,      // 字间距第六档（-2起步，第6个=3）
         fontSize: 100,         // 字号第三档（90起步，第3heo个=110）
-        bgOpacity: 35          // 背景可见度第八档（0起步step5，第8个=35）
+        bgOpacity: 50,         // 背景可见度第八档（0起步step5，第8个=35）
+        bgBlur: 8              // 背景模糊度（0~20px），文章页默认8px
     };
 
     var currentSettings = (function () {
@@ -80,6 +81,14 @@ var Paul_Hingle = function (config) {
         // 将 0~100 线性映射到 0~1 的透明度范围，10 => 0.1
         var baseOpacity = bgValue / 100;
         body.style.setProperty("--bg-opacity", String(baseOpacity));
+
+        // 背景模糊度（文章页应用用户设置，非文章页归零）
+        var bgBlurValue = typeof currentSettings.bgBlur === "number"
+            ? currentSettings.bgBlur
+            : defaultSettings.bgBlur;
+        bgBlurValue = Math.max(0, Math.min(20, bgBlurValue));
+        body.style.setProperty("--bg-blur",
+            body.classList.contains("post-page") ? bgBlurValue + "px" : "0px");
 
         // 字体设置
         var fontFamily = currentSettings.fontFamily || defaultSettings.fontFamily;
@@ -124,6 +133,7 @@ var Paul_Hingle = function (config) {
         var letterInput = document.getElementById("setting-letter-spacing");
         var sizeInput = document.getElementById("setting-font-size");
         var bgInput = document.getElementById("setting-bg-opacity");
+        var bgBlurInput = document.getElementById("setting-bg-blur");
         var resetBtn = document.getElementById("setting-reset-btn");
 
         // 初始化表单值
@@ -136,6 +146,9 @@ var Paul_Hingle = function (config) {
         if (bgInput) bgInput.value = ((typeof currentSettings.bgOpacity === "number"
             ? currentSettings.bgOpacity
             : defaultSettings.bgOpacity) / 2);
+        if (bgBlurInput) bgBlurInput.value = (typeof currentSettings.bgBlur === "number"
+            ? currentSettings.bgBlur
+            : defaultSettings.bgBlur);
 
         // 打开 / 关闭面板
         btn.addEventListener("click", function (e) {
@@ -211,6 +224,19 @@ var Paul_Hingle = function (config) {
             });
         }
 
+        if (bgBlurInput) {
+            bgBlurInput.addEventListener("input", function () {
+                var v = parseInt(this.value, 10);
+                if (isNaN(v) || v < 0) v = 0;
+                if (v > 20) v = 20;
+                currentSettings.bgBlur = v;
+                persistSettings();
+                // 直接设置 CSS 变量，绕过 applyReadingSettings 的页面类型过滤
+                // 实现"除非用户手动调整"的实时预览（任何页面均生效）
+                body.style.setProperty("--bg-blur", v + "px");
+            });
+        }
+
         if (resetBtn) {
             resetBtn.addEventListener("click", function () {
                 currentSettings.showToTop = defaultSettings.showToTop;
@@ -220,6 +246,7 @@ var Paul_Hingle = function (config) {
                 currentSettings.letterSpacing = defaultSettings.letterSpacing;
                 currentSettings.fontSize = defaultSettings.fontSize;
                 currentSettings.bgOpacity = defaultSettings.bgOpacity;
+                currentSettings.bgBlur = defaultSettings.bgBlur;
 
                 persistSettings();
                 applyReadingSettings();
@@ -231,6 +258,7 @@ var Paul_Hingle = function (config) {
                 if (letterInput) letterInput.value = currentSettings.letterSpacing;
                 if (sizeInput) sizeInput.value = currentSettings.fontSize;
                 if (bgInput) bgInput.value = currentSettings.bgOpacity / 2;
+                if (bgBlurInput) bgBlurInput.value = currentSettings.bgBlur;
             });
         }
     }
