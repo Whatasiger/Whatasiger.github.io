@@ -23,123 +23,6 @@
       </tags>
   </entry>
   <entry>
-    <title>关于网站</title>
-    <url>/about-website/</url>
-    <content><![CDATA[<h3 id="建站流程"><a href="#建站流程" class="headerlink" title="建站流程"></a><strong>建站流程</strong></h3><p><a href="https://www.bilibili.com/video/BV1odZYBKEQV/">成为冻鳗糕手第一步？教你零基础搭建属于自己的个人博客！丨Hexo建站经验分享</a></p>
-<p>with <a href="https://aistudio.google.com/prompts/new_chat?model=gemini-3.1-pro-preview">Gemini 3.1 Pro</a></p>
-<hr>
-<h3 id="背景图"><a href="#背景图" class="headerlink" title="背景图"></a><strong>背景图</strong></h3><p><a href="https://www.pixiv.net/artworks/68893230">#オリジナル 窓の研究Ⅱ - banishment的插画 - pixiv</a></p>
-<hr>
-<h3 id="文本编辑"><a href="#文本编辑" class="headerlink" title="文本编辑"></a><strong>文本编辑</strong></h3><p><a href="https://typoraio.cn/">Typora</a></p>
-<p><a href="https://blog.csdn.net/qq_61621323/article/details/141036982">Typora 免费安装教程（支持版本：1.9.5）</a></p>
-<hr>
-<h3 id="更新日志"><a href="#更新日志" class="headerlink" title="更新日志"></a><strong>更新日志</strong></h3><h4 id="Pre-alpha（2026-02-20）"><a href="#Pre-alpha（2026-02-20）" class="headerlink" title="Pre-alpha（2026-02-20）"></a>Pre-alpha（2026-02-20）</h4><ul>
-<li>网站建立</li>
-</ul>
-<hr>
-<h4 id="Alpha（2026-02-21）"><a href="#Alpha（2026-02-21）" class="headerlink" title="Alpha（2026-02-21）"></a>Alpha（2026-02-21）</h4><ul>
-<li>由Github Pages更换为Cloudflare Pages驱动</li>
-<li>购入专属域名</li>
-<li>修复了about-me界面的一个格式错误</li>
-</ul>
-<hr>
-<h4 id="Beta-1（2026-02-22）"><a href="#Beta-1（2026-02-22）" class="headerlink" title="Beta 1（2026-02-22）"></a>Beta 1（2026-02-22）</h4><ul>
-<li>重构主页美学设计<ul>
-<li>文章预览优化：标题+图片 预览，鼠标移上卡片时后显示日期、标签、简介。</li>
-<li>新增头像、个性签名</li>
-<li>新增顶栏毛玻璃效果</li>
-<li>将社交账号图标用深色胶囊框起</li>
-<li>新增顶栏左侧专属标识</li>
-<li>微调字重</li>
-<li>深色模式设为默认</li>
-<li>直接展示搜索框而非搜索图标</li>
-</ul>
-</li>
-<li>阅读体验优化<ul>
-<li>阅读文章时的不透明度拉高</li>
-<li>新增「回到顶部」功能</li>
-</ul>
-</li>
-<li>点击头像、昵称可直接跳转至「关于我」界面</li>
-</ul>
-<hr>
-<h4 id="Beta-2（2026-02-22）"><a href="#Beta-2（2026-02-22）" class="headerlink" title="Beta 2（2026-02-22）"></a>Beta 2（2026-02-22）</h4><ul>
-<li>新增功能<ul>
-<li>文章内字数统计和阅读时间估计</li>
-<li>搜索功能（支持搜索标签）</li>
-<li>开关灯模式记忆</li>
-<li>PC端目录可收起</li>
-</ul>
-</li>
-<li>视觉优化<ul>
-<li>底栏增加毛玻璃效果</li>
-<li>开灯模式的背景不透明度调整</li>
-<li>平台账号图标显示优化</li>
-</ul>
-</li>
-<li>添加更多个人平台账号</li>
-</ul>
-<hr>
-<h4 id="Beta-3（2026-02-22）"><a href="#Beta-3（2026-02-22）" class="headerlink" title="Beta 3（2026-02-22）"></a>Beta 3（2026-02-22）</h4><ul>
-<li>修复「回到顶部」「目录」按钮被置底的Bug</li>
-<li>优化细节<ul>
-<li>优化目录章节跳转不到位的问题</li>
-<li>优化主页文章卡片阴影</li>
-<li>文章之间跳转不会触发背景透明度渐变</li>
-</ul>
-</li>
-<li>加入「更新日志」板块</li>
-</ul>
-<hr>
-<h4 id="RC1（2026-03-07）"><a href="#RC1（2026-03-07）" class="headerlink" title="RC1（2026-03-07）"></a>RC1（2026-03-07）</h4><ul>
-<li>新增「设置」界面<ul>
-<li>可选思源黑体，调整字号、字间距、字重。</li>
-<li>可调整背景可见度，或者直接隐藏背景图片。</li>
-<li>可隐藏「回到顶部」按钮。</li>
-</ul>
-</li>
-<li>细节优化<ul>
-<li>不同文章的阅读界面现有各自的背景图。</li>
-<li>优化开灯模式下，头像、ID、个性签名的显示效果。</li>
-<li>将「关于网站」界面并入顶栏。</li>
-</ul>
-</li>
-</ul>
-<hr>
-<h4 id="RC2（2026-03-12）"><a href="#RC2（2026-03-12）" class="headerlink" title="RC2（2026-03-12）"></a>RC2（2026-03-12）</h4><ul>
-<li>美学优化<ul>
-<li>新增首页背景水波纹动画，点击触发。</li>
-<li>新增鼠标移上头像时轻微放大的动画。</li>
-<li>修改手机端左上顶栏展开样式。</li>
-</ul>
-</li>
-<li>修复 Bug<ul>
-<li>修复手机端搜索功能无作用的 Bug。</li>
-<li>修复图片放大后亮度偏低的 Bug。</li>
-</ul>
-</li>
-<li>文章二级链接后缀优化。</li>
-</ul>
-<hr>
-<h4 id="RC3（2026-03-21）"><a href="#RC3（2026-03-21）" class="headerlink" title="RC3（2026-03-21）"></a>RC3（2026-03-21）</h4><ul>
-<li>阅读体验优化<ul>
-<li>新增「背景模糊度」设置，可调整文章背景的高斯模糊程度。</li>
-<li>手机端「目录」按钮显示逻辑（TODO）</li>
-<li>去除旧文章“距今已……”提示（TODO）</li>
-<li>修复超出60分钟的预计阅读时间显示问题（TODO）</li>
-</ul>
-</li>
-<li>细节优化<ul>
-<li>调整首页默认背景可见度、头像亮度</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <tags>
-        <tag>特殊</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>2026-02-16 除夕</title>
     <url>/8/</url>
     <content><![CDATA[<p>2026-02-16 除夕</p>
@@ -170,7 +53,7 @@
 <p>2026-02-24</p>
 <p>妈的，跟中国电信爆了。</p>
 <p>今晚浪费两个小时折腾家里 Wi-Fi ，还没折腾好，现在依然连不上网，苟且靠手机热点发上来一篇。</p>
-<p>大概是我一直挂着 BT 上传的缘故，把「超时空辉夜姬！」做种了 158 份，每份 3.5GB，这样就是上传了 553 GB，在加上下载的一堆动画，杂七杂八的其他开销，总共达到了 1290 GB，然后宽带就欠费了。唉，这就是看「超时空辉夜姬！」的下场。</p>
+<p>大概是我一直挂着 BT 上传的缘故，把「超时空辉夜姬！」做种了 158 份，每份 3.5 GB，这样就是上传了 553 GB，在加上下载的一堆动画，杂七杂八的其他开销，总共达到了 1290 GB，然后宽带就欠费了。唉，这就是看「超时空辉夜姬！」的下场。</p>
 <p>我以前还真没考虑过 BT 做种会把宽带做没，运营商一看这家一个月上传五百多个G到公网的确有点诡异（还通常挂着梯子），没把我封了就不错了。当然，我一直是不喜欢替企业 &#x2F; 政府说话的，所以只是打个趣。真正的问题是补缴费之后现在仍未通网。</p>
 <p>实际上早上 11 点我就已经发消息给还在高速上堵着车的父母，让他们缴费。按理来说那时候应该搞定了才对。即使是等我回到家才重启光猫，到现在（21:38），也必须重新通上网了才对。结果是没有。无论我怎么给光猫断电，等待漫长的十分钟，通电，再重启路由器，再在傻逼米家 APP 上反复试探，都像今天早上一样——连上路由器就跳转到提示欠费界面。</p>
 <p>唉，真是没耐心耗下去了。刚才在小米路由器后台不知道点到什么，现在连 Wi-Fi 本体都搜索不到了。我发现我这人运气真的差。</p>
@@ -1008,8 +891,126 @@
 <p>十五岁。</p>
 ]]></content>
       <tags>
-        <tag>特殊</tag>
         <tag>小说</tag>
+        <tag>特殊</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>关于网站</title>
+    <url>/about-website/</url>
+    <content><![CDATA[<h3 id="建站流程"><a href="#建站流程" class="headerlink" title="建站流程"></a><strong>建站流程</strong></h3><p><a href="https://www.bilibili.com/video/BV1odZYBKEQV/">成为冻鳗糕手第一步？教你零基础搭建属于自己的个人博客！丨Hexo建站经验分享</a></p>
+<p>with <a href="https://aistudio.google.com/prompts/new_chat?model=gemini-3.1-pro-preview">Gemini 3.1 Pro</a></p>
+<p>with <a href="https://cursor.com/">Cursor</a></p>
+<hr>
+<h3 id="背景图"><a href="#背景图" class="headerlink" title="背景图"></a><strong>背景图</strong></h3><p><a href="https://www.pixiv.net/artworks/68893230">#オリジナル 窓の研究Ⅱ - banishment的插画 - pixiv</a></p>
+<hr>
+<h3 id="文本编辑"><a href="#文本编辑" class="headerlink" title="文本编辑"></a><strong>文本编辑</strong></h3><p><a href="https://typoraio.cn/">Typora</a></p>
+<p><a href="https://blog.csdn.net/qq_61621323/article/details/141036982">Typora 免费安装教程（支持版本：1.9.5）</a></p>
+<hr>
+<h3 id="更新日志"><a href="#更新日志" class="headerlink" title="更新日志"></a><strong>更新日志</strong></h3><h4 id="Pre-alpha（2026-02-20）"><a href="#Pre-alpha（2026-02-20）" class="headerlink" title="Pre-alpha（2026-02-20）"></a>Pre-alpha（2026-02-20）</h4><ul>
+<li>网站建立</li>
+</ul>
+<hr>
+<h4 id="Alpha（2026-02-21）"><a href="#Alpha（2026-02-21）" class="headerlink" title="Alpha（2026-02-21）"></a>Alpha（2026-02-21）</h4><ul>
+<li>由Github Pages更换为Cloudflare Pages驱动</li>
+<li>购入专属域名</li>
+<li>修复了about-me界面的一个格式错误</li>
+</ul>
+<hr>
+<h4 id="Beta-1（2026-02-22）"><a href="#Beta-1（2026-02-22）" class="headerlink" title="Beta 1（2026-02-22）"></a>Beta 1（2026-02-22）</h4><ul>
+<li>重构主页美学设计<ul>
+<li>文章预览优化：标题+图片 预览，鼠标移上卡片时后显示日期、标签、简介。</li>
+<li>新增头像、个性签名</li>
+<li>新增顶栏毛玻璃效果</li>
+<li>将社交账号图标用深色胶囊框起</li>
+<li>新增顶栏左侧专属标识</li>
+<li>微调字重</li>
+<li>深色模式设为默认</li>
+<li>直接展示搜索框而非搜索图标</li>
+</ul>
+</li>
+<li>阅读体验优化<ul>
+<li>阅读文章时的不透明度拉高</li>
+<li>新增「回到顶部」功能</li>
+</ul>
+</li>
+<li>点击头像、昵称可直接跳转至「关于我」界面</li>
+</ul>
+<hr>
+<h4 id="Beta-2（2026-02-22）"><a href="#Beta-2（2026-02-22）" class="headerlink" title="Beta 2（2026-02-22）"></a>Beta 2（2026-02-22）</h4><ul>
+<li>新增功能<ul>
+<li>文章内字数统计和阅读时间估计</li>
+<li>搜索功能（支持搜索标签）</li>
+<li>开关灯模式记忆</li>
+<li>PC端目录可收起</li>
+</ul>
+</li>
+<li>视觉优化<ul>
+<li>底栏增加毛玻璃效果</li>
+<li>开灯模式的背景不透明度调整</li>
+<li>平台账号图标显示优化</li>
+</ul>
+</li>
+<li>添加更多个人平台账号</li>
+</ul>
+<hr>
+<h4 id="Beta-3（2026-02-22）"><a href="#Beta-3（2026-02-22）" class="headerlink" title="Beta 3（2026-02-22）"></a>Beta 3（2026-02-22）</h4><ul>
+<li>修复「回到顶部」「目录」按钮被置底的Bug</li>
+<li>优化细节<ul>
+<li>优化目录章节跳转不到位的问题</li>
+<li>优化主页文章卡片阴影</li>
+<li>文章之间跳转不会触发背景透明度渐变</li>
+</ul>
+</li>
+<li>加入「更新日志」板块</li>
+</ul>
+<hr>
+<h4 id="RC1（2026-03-07）"><a href="#RC1（2026-03-07）" class="headerlink" title="RC1（2026-03-07）"></a>RC1（2026-03-07）</h4><ul>
+<li>新增「设置」界面<ul>
+<li>可选思源黑体，调整字号、字间距、字重。</li>
+<li>可调整背景可见度，或者直接隐藏背景图片。</li>
+<li>可隐藏「回到顶部」按钮。</li>
+</ul>
+</li>
+<li>细节优化<ul>
+<li>不同文章的阅读界面现有各自的背景图。</li>
+<li>优化开灯模式下，头像、ID、个性签名的显示效果。</li>
+<li>将「关于网站」界面并入顶栏。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h4 id="RC2（2026-03-12）"><a href="#RC2（2026-03-12）" class="headerlink" title="RC2（2026-03-12）"></a>RC2（2026-03-12）</h4><ul>
+<li>美学优化<ul>
+<li>新增首页背景水波纹动画，点击触发。</li>
+<li>新增鼠标移上头像时轻微放大的动画。</li>
+<li>修改手机端左上顶栏展开样式。</li>
+</ul>
+</li>
+<li>修复 Bug<ul>
+<li>修复手机端搜索功能无作用的 Bug。</li>
+<li>修复图片放大后亮度偏低的 Bug。</li>
+</ul>
+</li>
+<li>文章二级链接后缀优化。</li>
+</ul>
+<hr>
+<h4 id="RC3（2026-03-21）"><a href="#RC3（2026-03-21）" class="headerlink" title="RC3（2026-03-21）"></a>RC3（2026-03-21）</h4><ul>
+<li>阅读体验优化<ul>
+<li>新增「背景模糊度」设置，可调整文章背景的高斯模糊程度。</li>
+<li>手机端「目录」按钮显示逻辑（TODO）</li>
+<li>去除旧文章“距今已……”提示（TODO）</li>
+<li>修复超出60分钟的预计阅读时间显示问题（TODO）</li>
+</ul>
+</li>
+<li>细节优化<ul>
+<li>调整首页默认背景可见度、头像亮度</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <tags>
+        <tag>特殊</tag>
       </tags>
   </entry>
   <entry>
