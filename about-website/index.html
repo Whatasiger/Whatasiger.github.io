@@ -17,7 +17,7 @@
     <meta property="og:site_name" content="Whatasiger">
     <meta property="og:title" content="关于网站"/>
     
-    <style>body{ --page-bg-image: url(https://p.sda1.dev/30/843484e228479c4c283bfe674c07544d/a764129886829014b24abacfeb209c5d.jpg) }</style>
+    <style>body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
     
     <!-- 引入思源黑体完整字重 (300,400,500,600,700) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -221,13 +221,12 @@
                 <time class="date">2026.02.20</time>
 
                 
-                <span class="word-count">约 997 字</span>
-                <span class="read-time">预计阅读 2  分钟</span>
+                <span class="word-count">约 1000 字</span>
+                <span class="read-time">预计阅读 2 分钟</span>
             
             </div>
         </section>
         <article class="post-content">
-        
             <h3 id="建站流程"><a href="#建站流程" class="headerlink" title="建站流程"></a><strong>建站流程</strong></h3><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1odZYBKEQV/">成为冻鳗糕手第一步？教你零基础搭建属于自己的个人博客！丨Hexo建站经验分享</a></p>
 <p>with <a target="_blank" rel="noopener" href="https://aistudio.google.com/prompts/new_chat?model=gemini-3.1-pro-preview">Gemini 3.1 Pro</a></p>
 <p>with <a target="_blank" rel="noopener" href="https://cursor.com/">Cursor</a></p>
@@ -297,44 +296,49 @@
 <hr>
 <h4 id="RC1（2026-03-07）"><a href="#RC1（2026-03-07）" class="headerlink" title="RC1（2026-03-07）"></a>RC1（2026-03-07）</h4><ul>
 <li>新增「设置」界面<ul>
-<li>可选思源黑体，调整字号、字间距、字重。</li>
-<li>可调整背景可见度，或者直接隐藏背景图片。</li>
-<li>可隐藏「回到顶部」按钮。</li>
+<li>可选思源黑体，调整字号、字间距、字重</li>
+<li>可调整背景可见度，或者直接隐藏背景图片</li>
+<li>可隐藏「回到顶部」按钮</li>
 </ul>
 </li>
 <li>细节优化<ul>
-<li>不同文章的阅读界面现有各自的背景图。</li>
-<li>优化开灯模式下，头像、ID、个性签名的显示效果。</li>
-<li>将「关于网站」界面并入顶栏。</li>
+<li>不同文章的阅读界面现有各自的背景图</li>
+<li>优化开灯模式下，头像、ID、个性签名的显示效果</li>
+<li>将「关于网站」界面并入顶栏</li>
 </ul>
 </li>
 </ul>
 <hr>
 <h4 id="RC2（2026-03-12）"><a href="#RC2（2026-03-12）" class="headerlink" title="RC2（2026-03-12）"></a>RC2（2026-03-12）</h4><ul>
 <li>美学优化<ul>
-<li>新增首页背景水波纹动画，点击触发。</li>
-<li>新增鼠标移上头像时轻微放大的动画。</li>
-<li>修改手机端左上顶栏展开样式。</li>
+<li>新增首页背景水波纹动画，点击触发</li>
+<li>新增鼠标移上头像时轻微放大的动画</li>
+<li>修改手机端左上顶栏展开样式</li>
 </ul>
 </li>
 <li>修复 Bug<ul>
-<li>修复手机端搜索功能无作用的 Bug。</li>
-<li>修复图片放大后亮度偏低的 Bug。</li>
+<li>修复手机端搜索功能无作用的 Bug</li>
+<li>修复图片放大后亮度偏低的 Bug</li>
 </ul>
 </li>
-<li>文章二级链接后缀优化。</li>
+<li>文章二级链接后缀优化</li>
 </ul>
 <hr>
 <h4 id="RC3（2026-03-21）"><a href="#RC3（2026-03-21）" class="headerlink" title="RC3（2026-03-21）"></a>RC3（2026-03-21）</h4><ul>
+<li>图片加载体验优化：<ul>
+<li>由 .png 格式改为 .webp 格式，节省空间占用</li>
+<li>图片链接到本地存放，无需图床外链</li>
+</ul>
+</li>
 <li>阅读体验优化<ul>
-<li>新增「背景模糊度」设置，可调整文章背景的高斯模糊程度。</li>
-<li>手机端「目录」按钮显示逻辑（TODO）</li>
-<li>去除旧文章“距今已……”提示（TODO）</li>
-<li>修复超出60分钟的预计阅读时间显示问题（TODO）</li>
+<li>新增「背景模糊度」设置，可调整文章背景的高斯模糊程度</li>
+<li>优化手机端「目录」「回到顶部」按钮显示逻辑：向上滑动时弹出按钮，向下滑动时收起到右侧边</li>
+<li>去除较旧文章开头的提示</li>
+<li>修复超出 60 分钟的预计阅读时间显示问题</li>
 </ul>
 </li>
 <li>细节优化<ul>
-<li>调整首页默认背景可见度、头像亮度</li>
+<li>微调首页默认背景可见度、头像亮度</li>
 </ul>
 </li>
 </ul>
@@ -359,7 +363,7 @@
         <section class="post-author">
         
             <figure class="author-avatar">
-                <img src="https://p.sda1.dev/30/b607c3ac8e1a743c84cdefd243ebb295/e5cfcf0dc0a90381fcf28a112271d4c6.jpg" alt="Whatasiger" />
+                <img src="/images/webp/40df5751567c0aeb.webp" alt="Whatasiger" />
             </figure>
         
             <div class="author-info">
@@ -375,7 +379,7 @@
     (function () {
         // 文章有封面图时，将整站背景替换为该封面
         // 但"关于网站"页面使用主页背景
-        var cover = "https://picx.zhimg.com/100/v2-3144f8d01f2d123c2969a81e691c7da5_r.jpg";
+        var cover = "/images/webp/043eba537105a620.webp";
         var pageTitle = "关于网站";
         
         if (!cover) return;

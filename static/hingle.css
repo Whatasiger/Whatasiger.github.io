@@ -407,6 +407,21 @@ main{
     margin-top: 3.2em;
 }
 
+/* 文章页顶部阅读进度条（细线） */
+.reading-progress{
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    z-index: 100001;
+    position: fixed;
+    pointer-events: none;
+    transform: scaleX(0);
+    will-change: transform;
+    transform-origin: left center;
+    background-color: var(--blue);
+}
+
 main img {
     height: auto;
     transition: filter .3s;
@@ -1499,9 +1514,11 @@ article table tr:hover, .post-content table tr:hover {
     }
 }
 
-/* 强制抹除搜索框的占位文字（彻底解决“搜索什么？”删不掉的问题） */
-.head-search input::-webkit-input-placeholder { color: transparent !important; }
-.head-search input::placeholder { color: transparent !important; }
+/* 搜索框占位文字（未输入时显示灰色提示） */
+.head-search input::-webkit-input-placeholder { color: #999 !important; }
+.head-search input::placeholder { color: #999 !important; }
+.dark-theme .head-search input::-webkit-input-placeholder { color: #aaa !important; }
+.dark-theme .head-search input::placeholder { color: #aaa !important; }
 
 /* =========================================
    桌面端导航菜单定位修复（nav 已移至 header 外）
@@ -2107,6 +2124,17 @@ html, body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 加个极其轻微的浮层阴影 */
 }
 
+/* 回到顶部：隐藏时仅快速淡出，不再向右滑出 */
+.buttons .to-top {
+    transform: translateX(0) !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s cubic-bezier(0.4, 0, 1, 1),
+                background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
 /* 按钮间的间距 */
 .buttons .toggle-list {
     display: none;
@@ -2127,6 +2155,8 @@ html, body {
 /* 4. 激活状态（滑出屏幕） */
 .buttons .to-top.active {
     transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
 }
 
 /* 5. 鼠标悬停的高级反馈 */
@@ -2161,6 +2191,43 @@ html, body {
 .dark-theme .buttons .to-top:hover, .dark-theme .buttons .toggle-list:hover {
     background-color: #8bb4e0; /* 悬停反白发光 */
     color: #111;
+}
+
+/* 手机端阅读页目录按钮：下滑半隐藏，上滑/点击恢复 */
+@media screen and (max-width: 599px) {
+    body .buttons .to-top.active {
+        display: block !important;
+        transform: translateX(0) !important;
+        opacity: 1;
+        will-change: transform, opacity;
+        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                    background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                    color 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    body .buttons .to-top.active.to-top-docked {
+        /* 与目录按钮一致：向右半隐藏并降低透明度 */
+        transform: translateX(calc(50% + 1.5em)) !important;
+        opacity: 0.45;
+    }
+
+    body.has-trees .buttons .toggle-list {
+        display: block !important;
+        transform: translateX(0) !important;
+        opacity: 1;
+        will-change: transform, opacity;
+        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                    background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                    color 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    body.has-trees .buttons .toggle-list.toc-toggle-docked {
+        /* 按钮容器本身有 right: 1.5em，需要额外位移越过这段留白后才会真正“半隐藏” */
+        transform: translateX(calc(50% + 1.5em)) !important;
+        opacity: 0.45;
+    }
 }
 
 /* 用户关闭「回到顶部」时隐藏按钮 */

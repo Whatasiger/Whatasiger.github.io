@@ -41,7 +41,7 @@ var Paul_Hingle = function (config) {
     }
 
     var defaultSettings = {
-        showToTop: true,       // 是否显示「回到顶部」
+        showToTop: false,      // 默认隐藏「回到顶部」
         hideBackground: false, // 是否隐藏背景图片
         fontFamily: "noto-sans-sc", // 字体：noto-sans-sc（思源黑体）或 system-default（系统默认）
         fontWeight: getWeightFromLevel(3), // 正文字重第三档
@@ -386,16 +386,75 @@ var Paul_Hingle = function (config) {
         });
         buttons.appendChild(btn);
 
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+
+            var shouldForceOpenToc = false;
+
+            // 手机端：目录按钮处于“半隐藏”时，点击后按钮先弹出，并且直接打开目录
+            if (window.innerWidth < 600 && btn.classList.contains("toc-toggle-docked")) {
+                btn.classList.remove("toc-toggle-docked");
+                shouldForceOpenToc = true;
+
+                // 与目录按钮保持同步：同时让“回到顶部”按钮弹出
+                var toTopBtn = document.getElementsByClassName("to-top")[0];
+                if (toTopBtn) {
+                    toTopBtn.classList.remove("to-top-docked");
+                }
+            }
+
             // ★修改点 3：智能判断设备
             if (window.innerWidth >= 800) {
                 // 如果是电脑端，点击悬浮按钮就解除收起状态，目录滑回来
                 body.classList.remove("toc-collapsed");
             } else {
-                // 如果是手机端，维持原版逻辑，从底部弹起
-                trees.classList.toggle("active");
+                // 如果是手机端，半隐藏状态点击后直接打开目录，否则维持切换逻辑
+                if (shouldForceOpenToc) {
+                    trees.classList.add("active");
+                } else {
+                    trees.classList.toggle("active");
+                }
             }
         });
+
+        // 移动端：目录展开后，点击目录外区域自动收起
+        document.addEventListener("click", function (e) {
+            if (window.innerWidth >= 800) return;
+            if (!trees.classList.contains("active")) return;
+            if (trees.contains(e.target) || btn.contains(e.target)) return;
+            trees.classList.remove("active");
+        });
+
+        // 手机端目录按钮：下滑半隐藏，上滑恢复
+        const mobileMedia = window.matchMedia("(max-width: 599px)");
+        let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+
+        function updateMobileTocButtonState() {
+            if (!btn) return;
+
+            // 非手机端或目录抽屉已展开时，按钮始终保持正常位置
+            if (!mobileMedia.matches || trees.classList.contains("active")) {
+                btn.classList.remove("toc-toggle-docked");
+                lastScrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+                return;
+            }
+
+            const currentTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+            const delta = currentTop - lastScrollTop;
+
+            // 设定小阈值，避免轻微抖动导致频繁触发动画
+            if (delta > 6 && currentTop > 24) {
+                btn.classList.add("toc-toggle-docked");
+            } else if (delta < -4) {
+                btn.classList.remove("toc-toggle-docked");
+            }
+
+            lastScrollTop = currentTop;
+        }
+
+        window.addEventListener("scroll", updateMobileTocButtonState, { passive: true });
+        window.addEventListener("resize", updateMobileTocButtonState);
+        updateMobileTocButtonState();
     };
 
     // 自动添加外链
@@ -424,19 +483,94 @@ var Paul_Hingle = function (config) {
     };
 
     // 返回页首
+    var toTopMobileMedia = window.matchMedia("(max-width: 599px)");
+    var lastToTopScrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+
     this.to_top = function () {
         var btn = document.getElementsByClassName("to-top")[0];
-        var scroll = document.documentElement.scrollTop || document.body.scrollTop;
+        var scroll = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
 
         if (!btn) return;
 
         // 用户主动关闭回到顶部时，强制保持隐藏
         if (!currentSettings.showToTop) {
             btn.classList.remove("active");
+            btn.classList.remove("to-top-docked");
+            lastToTopScrollTop = scroll;
             return;
         }
 
-        scroll >= window.innerHeight / 2 ? btn.classList.add("active") : btn.classList.remove("active");
+        if (scroll >= window.innerHeight / 2) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+            btn.classList.remove("to-top-docked");
+            lastToTopScrollTop = scroll;
+            return;
+        }
+
+        // 与目录按钮保持一致：移动端下滑半隐藏、上滑弹出
+        if (!toTopMobileMedia.matches) {
+            btn.classList.remove("to-top-docked");
+            lastToTopScrollTop = scroll;
+            return;
+        }
+
+        // 移动端目录展开时，回到顶部按钮保持弹出，不参与半隐藏逻辑
+        var activeToc = document.querySelector(".article-list.active");
+        if (activeToc) {
+            btn.classList.remove("to-top-docked");
+            lastToTopScrollTop = scroll;
+            return;
+        }
+
+        var delta = scroll - lastToTopScrollTop;
+        if (delta > 6 && scroll > 24) {
+            btn.classList.add("to-top-docked");
+        } else if (delta < -4) {
+            btn.classList.remove("to-top-docked");
+        }
+
+        lastToTopScrollTop = scroll;
+    };
+
+    // 文章阅读进度条（仅文章页）
+    this.reading_progress = function () {
+        if (!body.classList.contains("post-page")) return;
+
+        var article = document.querySelector(".post-content");
+        if (!article) return;
+
+        var bar = document.createElement("div");
+        bar.className = "reading-progress";
+        body.appendChild(bar);
+
+        var ticking = false;
+        var doc = document.documentElement;
+
+        function update() {
+            var scrollTop = window.pageYOffset || doc.scrollTop || body.scrollTop || 0;
+            var articleTop = article.getBoundingClientRect().top + scrollTop;
+            var articleBottom = articleTop + article.offsetHeight;
+            var ratio = (scrollTop - articleTop) / Math.max(1, articleBottom - articleTop);
+
+            if (ratio < 0) ratio = 0;
+            if (ratio > 1) ratio = 1;
+
+            bar.style.transform = "scaleX(" + ratio + ")";
+            ticking = false;
+        }
+
+        function requestUpdate() {
+            if (ticking) return;
+            ticking = true;
+            window.requestAnimationFrame(update);
+        }
+
+        window.addEventListener("scroll", requestUpdate, { passive: true });
+        window.addEventListener("resize", requestUpdate);
+        window.addEventListener("load", requestUpdate);
+        requestUpdate();
     };
 
     this.header();
@@ -446,6 +580,8 @@ var Paul_Hingle = function (config) {
         this.links();
         this.comment_list();
     }
+
+    this.reading_progress();
 
     // 返回页首
     window.addEventListener("scroll", this.to_top);
