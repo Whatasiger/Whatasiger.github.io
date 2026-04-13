@@ -1,261 +1,319 @@
 @charset "UTF-8";
 
 /* ----
-# Hingle Theme (Refactored)
+# Hingle Theme (Refactored by Whatasiger)
 # Original By: Dreamer-Paul
-# Last Update: 2024.9.2
-# Refactored: 2026.3.29
-
-一个简洁大气，含夜间模式的 Hexo 博客模板。
-本代码为奇趣保罗原创，并遵守 MIT 开源协议。欢迎访问我的博客：https://paugram.com
+# Refactored By: Whatasiger
+# Original Release: 2024.9.2
+# Refactored Release: 2026.3.29
+# Latest Update: 2026.4.11
 ---- */
 
 /* =========================================
    0 - 变量与全局
    ========================================= */
 
+/* 全局 CSS 变量定义，修改这里可统一调整主题色、边框色、圆角等 */
 :root {
-    --blue: #6f9fc7;
-    --light-blue: #9fcff7;
-    --border: #ddd;
-    --light-border: #eee;
-    --light-background: #fff;
-    --radius: .25em;
-    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
-    --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --blue: #6f9fc7;             /* 主题蓝色，用于链接、按钮、强调元素的主色调 */
+    --light-blue: #9fcff7;       /* 浅蓝色，用于悬停态的高亮色 */
+    --border: #ddd;              /* 标准边框颜色，用于分隔线、输入框等 */
+    --light-border: #eee;        /* 较浅的边框颜色，用于次要分隔 */
+    --light-background: #fff;    /* 浅色背景，用于卡片、输入框等元素 */
+    --radius: .25em;             /* 通用圆角半径，调整此值可改变所有圆角元素的弧度 */
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);      /* 弹性缓动曲线，用于有弹跳感的动画 */
+    --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* 平滑缓动曲线，用于柔和过渡的动画 */
 }
 
+/* 全局 body 样式，定义页面基础字体、颜色与背景图相关变量 */
 body {
-    color: #555;
-    font-weight: 550;
-    font-family: "Microsoft YaHei", sans-serif;
-    background: #fafafa;
-    transition: margin .3s, background .3s;
-    --reader-font-weight: 400;
-    --reader-letter-spacing: 0em;
-    --reader-font-size: 1rem;
-    --page-bg-image: none;
-    --bg-opacity: 0.1;
-    --bg-blur: 8px;
+    color: #555;                         /* 正文字体颜色，影响全局文字显示颜色 */
+    font-weight: 550;                    /* 全局字重，影响非正文区域的文字粗细 */
+    font-family: "Microsoft YaHei", sans-serif; /* 字体族，优先使用微软雅黑，影响全站字体 */
+    background: #fafafa;                 /* 页面背景色，影响整体底色 */
+    transition: margin .3s, background .3s; /* 背景色和边距的过渡动画时长 */
+
+    /* 以下为阅读模式可调参数，通过 JS 动态修改 */
+    --reader-font-weight: 400;           /* 阅读正文字重，影响文章正文的粗细 */
+    --reader-letter-spacing: 0em;        /* 阅读正文字间距，影响文章正文的字符间距 */
+    --reader-font-size: 1rem;            /* 阅读正文字号，影响文章正文的文字大小 */
+
+    /* 以下为背景图可调参数，通过 JS 动态修改 */
+    --page-bg-image: none;               /* 背景图地址，设为 url(...) 可为页面添加背景图 */
+    --bg-opacity: 0.1;                   /* 背景图透明度基值，值越大背景图越明显 */
+    --bg-blur: 8px;                      /* 背景图模糊程度，值越大背景越模糊 */
 }
 
+/* 防止页面水平滚动条出现 */
 html, body {
     overflow-x: hidden !important;
 }
 
+/* 全局背景图伪元素，固定铺满全屏、模糊处理，不影响页面交互 */
 body:before {
     content: '';
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    opacity: var(--bg-opacity);
-    filter: blur(var(--bg-blur));
-    z-index: -1;
+    opacity: var(--bg-opacity);          /* 透明度由 --bg-opacity 变量控制 */
+    filter: blur(var(--bg-blur));        /* 模糊度由 --bg-blur 变量控制 */
+    z-index: -1;                         /* 置于所有内容层级之下 */
     display: block;
     position: fixed;
     background: center/cover no-repeat;
-    background-image: var(--page-bg-image);
+    background-image: var(--page-bg-image); /* 背景图源由 --page-bg-image 变量控制 */
     transition: opacity 0.5s var(--ease-spring),
-                filter 0.8s var(--ease-smooth);
+                filter 0.8s var(--ease-smooth); /* 透明度与模糊的动画过渡时长 */
 }
 
+/* 亮色模式下，背景图透明度额外放大 1.5 倍 */
 body:not(.dark-theme):before {
     opacity: calc(var(--bg-opacity) * 1.5);
 }
 
+/* 夜间模式下，背景图透明度同样放大 1.5 倍 */
 body.dark-theme:before {
     opacity: calc(var(--bg-opacity) * 1.5);
 }
 
+/* 背景图淡出状态：透明度降低至基值的 20%，用于页面切换时的过渡效果 */
 body.bg-faded:before {
     opacity: calc(var(--bg-opacity) * 0.2) !important;
 }
 
+/* 无背景图状态：强制隐藏背景图 */
 body.no-bg-image:before {
     background-image: none !important;
 }
 
+/* 禁用背景图过渡动画，用于需要立即切换背景的场景 */
 body.no-bg-transition:before {
     transition: none !important;
 }
 
+/* 自定义滚动条整体尺寸 */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 8px;   /* 竖向滚动条宽度，影响所有元素的竖滚动条粗细 */
+    height: 8px;  /* 横向滚动条高度，影响所有元素的横滚动条粗细 */
 }
+
+/* 滚动条滑块颜色：默认使用主题蓝色 */
 ::-webkit-scrollbar-thumb { background: #6f9fc7; background: var(--blue); }
+
+/* 滚动条滑块悬停颜色：使用浅蓝色 */
 ::-webkit-scrollbar-thumb:hover { background: #9fcff7; background: var(--light-blue); }
 
+/* body 竖向滚动条的背景与边框，使页面滚动条更精致 */
 body::-webkit-scrollbar {
     border-left: 1px solid #eee;
-    border-color: var(--light-border);
-    background: rgba(255, 255, 255, .6);
+    border-color: var(--light-border);   /* 滚动条左边框颜色，与浅边框变量保持一致 */
+    background: rgba(255, 255, 255, .6); /* 滚动条轨道背景，半透明白色 */
 }
 
+/* 全局链接默认颜色：使用主题蓝色 */
 a {
     color: #6f9fc7;
     color: var(--blue);
 }
+
+/* 链接悬停颜色：使用浅蓝色 */
 a:hover {
     color: #9fcff7;
     color: var(--light-blue);
 }
 
+/* 所有标题元素统一设为正常字重（由各区块单独加粗） */
 h1, h2, h3, h4, h5, h6 { font-weight: normal; }
 
+/* 水平分割线颜色 */
 hr { border-color: #eee; }
 
+/* 文章正文中 em 斜体元素的背景色（作为高亮标记使用） */
 em {
     background-color: #6f9fc7;
     background-color: var(--blue);
 }
 
+/* 按钮默认样式：白色文字 + 主题蓝色背景 */
 .btn {
     color: #fff;
     background-color: #6f9fc7;
     background-color: var(--blue);
 }
+
+/* 按钮悬停样式：背景变为浅蓝色 */
 .btn:hover {
     color: #fff;
     background: #9fcff7;
     background: var(--light-blue);
 }
 
+/* 代码块（pre）样式：带边框与斑马纹背景，增强代码可读性 */
 pre {
     color: inherit;
     border: 1px solid #ddd;
-    border-color: var(--border);
-    background: linear-gradient(rgba(0, 0, 0, .05) 50%, transparent 0);
-    background-size: auto 3em;
+    border-color: var(--border);         /* 代码块边框颜色，跟随全局边框变量 */
+    background: linear-gradient(rgba(0, 0, 0, .05) 50%, transparent 0); /* 斑马纹背景，每行深浅交替 */
+    background-size: auto 3em;           /* 斑马纹单行高度，应与代码行高保持一致 */
     background-origin: content-box;
 }
 
+/* 引用块（blockquote）样式 */
 blockquote {
-    border-color: #6f9fc7;
+    border-color: #6f9fc7;              /* 引用块左边框颜色，使用主题蓝色 */
     border-radius: .25em;
-    border-radius: var(--radius);
-    background-color: #ecf1f5;
+    border-radius: var(--radius);       /* 引用块圆角，跟随全局圆角变量 */
+    background-color: #ecf1f5;          /* 引用块背景色，浅蓝灰色 */
 }
 
+/* 输入框与文本域的背景色，跟随全局浅色背景变量 */
 input, textarea {
     background-color: #fff;
     background-color: var(--light-background);
 }
+
+/* 文本输入类控件与代码、分割线、表格行的边框颜色统一 */
 input[type="text"], input[type="search"], input[type="email"], input[type="url"], textarea, code, hr, tr {
     border-color: var(--border);
 }
+
+/* 输入框、文本域、代码块等元素的过渡动画，使主题切换更平滑 */
 input, textarea, pre, hr, blockquote {
     transition: border-color .3s, background .3s;
 }
 
+/* 文章正文与摘要区域统一使用正常字重 */
 .post-content, .post-content p, article, .post-card-description {
     font-weight: 400;
 }
 
+/* 文章阅读页正文的阅读模式参数，支持通过设置面板动态调整 */
 .post-page .post-content,
 .post-page .post-content p {
-    font-weight: var(--reader-font-weight);
-    letter-spacing: var(--reader-letter-spacing);
-    font-size: var(--reader-font-size);
+    font-weight: var(--reader-font-weight);       /* 阅读字重，由设置面板控制 */
+    letter-spacing: var(--reader-letter-spacing); /* 阅读字间距，由设置面板控制 */
+    font-size: var(--reader-font-size);           /* 阅读字号，由设置面板控制 */
 }
 
 /* =========================================
    1 - 夜间模式
    ========================================= */
 
+/* 夜间模式全局颜色覆盖：重新定义文字色、背景色与各 CSS 变量 */
 .dark-theme {
-    color: #bbb;
-    background-color: #222;
-    --blue: #6e8aad;
-    --light-blue: #6f9fc7;
-    --border: #444;
-    --light-border: #333;
-    --light-background: #333;
+    color: #bbb;                    /* 夜间模式正文颜色，浅灰色 */
+    background-color: #222;         /* 夜间模式页面背景色，深灰色 */
+    --blue: #6e8aad;                /* 夜间模式主题蓝，比亮色模式偏暗，降低刺激感 */
+    --light-blue: #6f9fc7;          /* 夜间模式浅蓝（悬停色），与亮色主题蓝相同 */
+    --border: #444;                 /* 夜间模式边框颜色，深灰 */
+    --light-border: #333;           /* 夜间模式浅边框颜色，更深的灰色 */
+    --light-background: #333;       /* 夜间模式浅色背景（卡片/输入框），深灰 */
 }
 
+/* 夜间模式 body 滚动条：透明边框 + 半透明白色轨道 */
 .dark-theme::-webkit-scrollbar {
     border-color: transparent;
-    background: rgba(255, 255, 255, .2);
+    background: rgba(255, 255, 255, .2); /* 夜间滚动条轨道透明度，值越大轨道越明显 */
 }
 
+/* 夜间模式图片亮度降低，减少强光刺激 */
 .dark-theme img {
-    filter: brightness(60%);
+    filter: brightness(60%);         /* 图片亮度百分比，越低越暗，60% 适合夜间环境 */
     -webkit-filter: brightness(60%);
 }
 
+/* 夜间模式下，图片库（ks-image）内的图片不做亮度处理，保持原貌 */
 .dark-theme .ks-image img {
     filter: none;
     -webkit-filter: none;
 }
 
+/* 夜间模式下，文章/页面正文图片不做全局压暗，避免阅读图像发灰 */
+.dark-theme article.post-content img,
+.dark-theme article.page-content img {
+    filter: none;
+    -webkit-filter: none;
+}
+
+/* 夜间模式代码块的斑马纹背景，改为浅色条纹（深色背景适配） */
 .dark-theme pre {
     background-image: linear-gradient(rgba(255, 255, 255, .05) 50%, transparent 0);
+    /* 条纹透明度 0.05，可适当增大以提升可读性 */
 }
 
+/* 夜间模式引用块样式：使用橙色左边框与半透明白色背景 */
 .dark-theme blockquote {
-    color: #ddd;
-    border-color: #eb9c26;
-    background-color: rgba(255, 255, 255, .05);
+    color: #ddd;                    /* 夜间引用块文字色，比正文稍亮 */
+    border-color: #eb9c26;          /* 夜间引用块左边框颜色，橙黄色 */
+    background-color: rgba(255, 255, 255, .05); /* 夜间引用块背景，极低透明度白色 */
 }
 
-.dark-theme iframe, .dark-theme em { opacity: .6; }
+/* 夜间模式 iframe 和 em 元素统一降低不透明度 */
+.dark-theme iframe, .dark-theme em { opacity: .6; /* 不透明度，值越低越透明，建议 0.5~0.7 */ }
 
+/* 夜间模式行内代码样式：红色文字 + 半透明白色背景 */
 .dark-theme :not(pre) > code {
-    color: #ffa5a5;
-    background: rgba(255, 255, 255, .2);
+    color: #ffa5a5;                 /* 夜间行内代码文字色，淡红色 */
+    background: rgba(255, 255, 255, .2); /* 夜间行内代码背景色，半透明白色 */
 }
 
 /* =========================================
    2 - 页眉与导航
    ========================================= */
 
+/* 顶部导航栏：固定在顶部，带毛玻璃效果 */
 header {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 99999;
+    z-index: 99999;                     /* 层级极高，确保始终位于内容之上 */
     line-height: 1em;
-    background-color: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
+    background-color: rgba(255, 255, 255, 0.7); /* 导航栏背景半透明度，0=全透明，1=不透明 */
+    backdrop-filter: blur(12px);        /* 导航栏毛玻璃模糊强度，值越大越模糊 */
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid #ddd;
     border-color: var(--border);
-    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.05); /* 导航栏底部阴影，增加层次感 */
     transition: border-color .3s, background-color .3s;
 }
 
+/* 夜间模式导航栏：深色背景 + 更重的阴影 */
 .dark-theme header {
-    background-color: rgba(30, 30, 30, 0.7);
-    box-shadow: 0 1px 15px rgba(0, 0, 0, 0.3);
+    background-color: rgba(30, 30, 30, 0.7); /* 夜间导航栏背景半透明度 */
+    box-shadow: 0 1px 15px rgba(0, 0, 0, 0.3); /* 夜间导航栏阴影强度 */
 }
 
+/* 导航栏左侧 Logo/站名 */
 .header-logo {
     position: absolute;
     top: 0;
-    left: 1.5em;
-    line-height: 3.2em;
-    font-size: 1.1em;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    left: 1.5em;                    /* Logo 距左侧距离，调整可改变 Logo 位置 */
+    line-height: 3.2em;             /* Logo 垂直居中高度，应与导航栏高度一致 */
+    font-size: 1.1em;               /* Logo 字号，影响站名文字大小 */
+    font-weight: 600;               /* Logo 字重，影响站名文字粗细 */
+    letter-spacing: 0.5px;          /* Logo 字间距，影响站名字符间距 */
     color: inherit;
     z-index: 10;
     transition: color 0.3s var(--ease-spring);
 }
 
+/* Logo 悬停：颜色变为主题蓝 */
 .header-logo:hover {
     color: var(--blue);
 }
 
+/* 导航栏居中标题（手机端显示），绝对定位覆盖整个导航栏 */
 .head-title {
     left: 0;
     right: 0;
-    line-height: 3.2em;
+    line-height: 3.2em;             /* 标题行高，应与导航栏高度一致 */
     position: absolute;
     text-align: center;
 }
 
+/* 导航菜单列表容器：水平排列居中 */
 .head-menu {
     display: flex;
     list-style: none;
@@ -263,33 +321,39 @@ header {
     justify-content: center;
 }
 
+/* 导航菜单链接基础样式 */
 .head-menu a {
     color: inherit;
     display: block;
     cursor: pointer;
     position: relative;
-    line-height: 2.25em;
-    font-weight: 600;
+    line-height: 2.25em;            /* 菜单项行高，影响导航栏垂直占用空间 */
+    font-weight: 600;               /* 菜单项字重 */
 }
-.head-menu a:hover { color: #ffa628; }
 
+/* 菜单链接悬停颜色：橙黄色高亮 */
+.head-menu a:hover { color: #ffa628; /* 导航链接悬停颜色，可改为任意颜色 */ }
+
+/* 含子菜单的菜单项，末尾添加向下箭头图标 */
 .head-menu .has-child > a:after {
     float: right;
-    content: "\f107";
+    content: "\f107";               /* FontAwesome 向下箭头图标代码 */
     margin-left: .3em;
     font-family: "FontAwesome";
 }
 
+/* 子菜单链接行高 */
 .head-menu .sub-menu a {
-    line-height: 2em;
+    line-height: 2em;               /* 子菜单每项行高，影响子菜单高度 */
     margin-right: .05em;
 }
 
+/* 导航栏按钮组（汉堡菜单、日夜切换、搜索、设置）的通用样式 */
 .toggle-btn, .light-btn, .search-btn, .settings-btn {
     z-index: 1;
     float: left;
-    width: 2em;
-    margin: .6em;
+    width: 2em;                     /* 按钮宽度，影响图标按钮的点击区域大小 */
+    margin: .6em;                   /* 按钮外边距，影响按钮与导航栏边缘的距离 */
     cursor: pointer;
     position: relative;
     border-radius: .25em;
@@ -297,280 +361,337 @@ header {
     transition: color .3s, background-color .3s;
 }
 
+/* 汉堡菜单按钮（手机端）：不需右边距 */
 .toggle-btn { margin-right: 0; }
+
+/* 搜索按钮：浮动到右侧 */
 .search-btn { float: right; display: block; }
+
+/* 设置按钮：浮动到右侧 */
 .settings-btn { float: right; }
+
+/* 日夜切换按钮：浮动到右侧，左边距略小 */
 .light-btn { float: right; margin-left: 0.5em; }
 
+/* 按钮悬停：浅黑色半透明背景 */
 .toggle-btn:hover, .light-btn:hover, .search-btn:hover, .settings-btn:hover {
-    background-color: rgba(0, 0, 0, .05);
+    background-color: rgba(0, 0, 0, .05); /* 按钮悬停背景透明度，影响按钮悬停反馈 */
 }
 
+/* 各按钮图标通用：使用 FontAwesome 字体图标 */
 .toggle-btn:before, .light-btn:before, .search-btn:before, .settings-btn:before {
     display: block;
     text-align: center;
-    font: 1em/2em "FontAwesome";
+    font: 1em/2em "FontAwesome";    /* 图标字号/行高，影响图标大小与垂直居中 */
 }
 
-.toggle-btn:before { content: "\f0c9"; }
-.light-btn:before { content: "\f0eb"; }
-.search-btn:before { content: "\f002"; }
-.settings-btn:before { content: "\f013"; }
+/* 各按钮对应的 FontAwesome 图标代码 */
+.toggle-btn:before { content: "\f0c9"; }    /* 汉堡菜单图标 */
+.light-btn:before { content: "\f0eb"; }     /* 灯泡/日夜切换图标 */
+.search-btn:before { content: "\f002"; }    /* 搜索图标 */
+.settings-btn:before { content: "\f013"; }  /* 齿轮/设置图标 */
 
+/* 搜索框容器：默认隐藏（透明度为0），激活后显示 */
 .head-search {
     z-index: 1;
-    opacity: 0;
+    opacity: 0;                     /* 初始透明度，0=隐藏 */
     float: right;
     margin: .6em 0;
     line-height: 1.5em;
     position: relative;
-    pointer-events: none;
-    transition: opacity .3s;
+    pointer-events: none;           /* 隐藏时禁止交互 */
+    transition: opacity .3s;        /* 显隐过渡时长 */
 }
+
+/* 搜索框激活状态：完全可见并可交互 */
 .head-search.active {
     opacity: 1;
     pointer-events: inherit;
 }
 
+/* 搜索输入框样式：圆角、浅灰背景、内嵌搜索图标 */
 .head-search input {
-    height: 2em;
+    height: 2em;                    /* 输入框高度 */
     min-height: auto;
-    border-radius: 20px;
-    background-color: #f0f0f0;
-    color: #333;
+    border-radius: 20px;            /* 圆角半径，值越大越圆润 */
+    background-color: #f0f0f0;      /* 输入框默认背景色 */
+    color: #333;                    /* 输入框文字颜色 */
     border: 1px solid transparent;
-    width: 180px;
+    width: 180px;                   /* 输入框默认宽度 */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23888' d='M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 16px;
-    padding-left: 15px;
-    padding-right: 35px;
+    background-position: right 12px center; /* 搜索图标距右侧距离，影响图标位置 */
+    background-size: 16px;          /* 内嵌搜索图标大小 */
+    padding-left: 15px;             /* 输入内容左内边距 */
+    padding-right: 35px;            /* 输入内容右内边距（为图标留空间） */
     transition: all 0.3s var(--ease-spring);
 }
 
+/* 夜间模式搜索输入框：深色背景与文字 */
 .dark-theme .head-search input {
-    background-color: #444;
-    color: #eee;
+    background-color: #444;         /* 夜间输入框背景色 */
+    color: #eee;                    /* 夜间输入框文字颜色 */
 }
+
+/* 夜间模式占位符文字颜色 */
 .dark-theme .head-search input::-webkit-input-placeholder { color: #bbb; }
 
+/* 搜索框聚焦状态：白色背景 + 红色光晕边框，视觉引导效果 */
 .head-search input:focus {
     outline: none;
     background-color: #fff;
-    border: 1px solid rgba(255, 100, 100, 0.7);
-    box-shadow: 0 0 12px rgba(255, 100, 100, 0.4), inset 0 0 6px rgba(255, 100, 100, 0.1);
+    border: 1px solid rgba(255, 100, 100, 0.7);               /* 聚焦边框颜色（红色系） */
+    box-shadow: 0 0 12px rgba(255, 100, 100, 0.4), inset 0 0 6px rgba(255, 100, 100, 0.1); /* 外发光强度 */
 }
 
+/* 夜间模式搜索框聚焦：深色背景 + 更强的红色光晕 */
 .dark-theme .head-search input:focus {
     background-color: #333;
     box-shadow: 0 0 12px rgba(255, 100, 100, 0.6), inset 0 0 6px rgba(255, 100, 100, 0.2);
 }
 
+/* 搜索框占位符文字颜色 */
 .head-search input::-webkit-input-placeholder { color: #999; }
 .head-search input::placeholder { color: #999; }
-.dark-theme .head-search input::placeholder { color: #aaa; }
+.dark-theme .head-search input::placeholder { color: #aaa; } /* 夜间模式占位符色 */
 
 /* =========================================
    3 - 首页与卡片
    ========================================= */
 
+/* 主内容区域：顶部留出导航栏高度，整体上下留白 */
 main {
-    padding: 3.5em 0;
-    margin-top: 3.2em;
+    padding: 3.5em 0;               /* 主内容上下内边距，影响内容与浏览器边缘的距离 */
+    margin-top: 3.2em;              /* 顶部外边距，应与导航栏高度一致，防止内容被遮挡 */
 }
 
+/* 顶部阅读进度条：固定在页面最顶部，随滚动通过 JS 控制 scaleX */
 .reading-progress {
     top: 0;
     left: 0;
     width: 100%;
-    height: 4px;
+    height: 4px;                    /* 进度条高度，影响进度条粗细 */
     z-index: 100001;
     position: fixed;
     pointer-events: none;
-    transform: scaleX(0);
+    transform: scaleX(0);           /* 初始宽度为 0（通过 JS 动态更新） */
     will-change: transform;
     transform-origin: left center;
-    background-color: var(--blue);
+    background-color: var(--blue);  /* 进度条颜色，跟随主题蓝色 */
 }
 
+/* 主内容区域图片：高度自适应，带过渡动画 */
 main img {
     height: auto;
-    transition: filter .3s;
+    transition: filter .3s;         /* 图片滤镜过渡（如夜间模式亮度变化） */
 }
 
+/* 首页顶部标题区域（博主信息/欢迎语），带淡入动画 */
 .home-title {
     text-align: center;
-    margin-bottom: 3em;
+    margin-bottom: 3em;             /* 标题区域底部间距，影响与文章列表的距离 */
     animation: fade-in-bottom .3s both;
     -webkit-animation: fade-in-bottom .3s both;
 }
 
+/* 首页主标题（博主名）颜色 */
 .home-title h1 {
-    color: #1a7fd6;
+    color: #1a7fd6;                 /* 首页博主名颜色，可修改为自定义颜色 */
     margin-bottom: 0.2em;
 }
 
+/* 首页副标题/个签文字样式 */
 .home-title span {
     display: block;
     margin-bottom: 1em;
-    font-style: oblique;
-    font-weight: 600;
+    font-style: oblique;            /* 斜体风格，影响个签文字倾斜 */
+    font-weight: 600;               /* 个签字重 */
 }
 
+/* 博主名颜色过渡动画（亮色/夜间切换时平滑变色） */
 .home-title h1,
 .home-profile-link h1 {
     transition: color 0.5s var(--ease-spring);
 }
 
+/* 博主头像链接悬停时，博主名变为高亮蓝色 */
 .home-profile-link:hover h1 {
     color: #1a7fd6;
 }
 
+/* 夜间模式博主名颜色：偏蓝灰 */
 .dark-theme .home-title h1,
 .dark-theme .home-profile-link:hover h1 {
     color: #8bb4e0;
 }
 
+/* 打字机效果文字容器，带光标闪烁动画 */
 #typewriter-text {
     margin-bottom: 0.4em;
-    color: #3a3a3a;
+    color: #3a3a3a;                 /* 打字机文字颜色（亮色模式） */
     transition: color 0.5s var(--ease-spring);
-    animation: blink-caret 0.8s step-end infinite;
+    animation: blink-caret 0.8s step-end infinite; /* 光标闪烁间隔，0.8s 为标准速度 */
 }
 
+/* 夜间模式下打字机文字颜色继承父元素 */
 .dark-theme #typewriter-text {
     color: inherit;
 }
 
+/* 光标闪烁关键帧动画：每 0.8s 切换一次边框颜色（模拟文本光标） */
 @keyframes blink-caret {
     from, to { border-color: transparent; }
-    50% { border-color: var(--blue); }
+    50% { border-color: var(--blue); } /* 光标显示时的颜色，跟随主题蓝 */
 }
 
+/* 博主头像悬浮动画：缩放放大 */
 .home-avatar {
     transition: box-shadow 0.5s var(--ease-spring),
                 filter 0.5s var(--ease-spring),
                 transform 0.5s var(--ease-spring);
 }
-.home-avatar:hover { transform: scale(1.08); }
 
+/* 博主头像悬停：轻微放大效果 */
+.home-avatar:hover { transform: scale(1.08); /* 悬停放大倍数，1.0=原始大小 */ }
+
+/* 夜间模式博主头像亮度降低 */
 .dark-theme .home-avatar {
-    filter: brightness(75%);
+    filter: brightness(75%);         /* 夜间头像亮度，75% 适合暗色背景 */
     -webkit-filter: brightness(75%);
 }
 
+/* 社交链接胶囊容器：毛玻璃效果，圆角胶囊形 */
 /* - 社交链接胶囊 */
 .home-social {
     cursor: default;
     user-select: none;
     display: inline-block;
-    background-color: rgba(255, 255, 255, 0.65);
-    border-radius: 40px;
-    padding: 12px 18px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.65); /* 胶囊背景透明度，影响毛玻璃效果 */
+    border-radius: 40px;             /* 胶囊圆角半径，值越大越圆润 */
+    padding: 12px 18px;              /* 胶囊内边距，影响图标与边缘的距离 */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06); /* 胶囊投影，增加立体感 */
+    backdrop-filter: blur(10px);     /* 胶囊毛玻璃模糊强度 */
     -webkit-backdrop-filter: blur(10px);
     transition: background-color 0.5s var(--ease-spring),
                 box-shadow 0.5s var(--ease-spring);
 }
 
+/* 夜间模式社交胶囊：更深的半透明背景与阴影 */
 .dark-theme .home-social {
-    background-color: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    background-color: rgba(255, 255, 255, 0.12); /* 夜间胶囊背景透明度 */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);   /* 夜间胶囊阴影强度 */
 }
 
+/* 社交链接：垂直居中排列的行内元素 */
 .home-social a {
     display: inline-block;
-    margin: 0 1px;
+    margin: 0 1px;                  /* 图标间距，影响社交图标之间的空隙 */
     color: inherit;
     vertical-align: middle;
 }
 
-.home-social i, .home-social svg { padding: .5em; }
-.home-social svg { width: 2em; height: 2em; }
+/* FontAwesome 图标内边距 */
+.home-social i, .home-social svg { padding: .5em; /* 图标点击区域大小 */ }
 
+/* SVG 图标尺寸 */
+.home-social svg { width: 2em; height: 2em; /* SVG 图标宽高，影响图标显示大小 */ }
+
+/* FontAwesome 图标悬停过渡动画 */
 .home-social a i[class^="fa-"] {
     transition: background-color 0.5s var(--ease-spring);
 }
 
+/* 夜间模式 FontAwesome 图标背景色（用于 mask 遮罩图标） */
 .dark-theme .home-social a i[class^="fa-"] {
     background-color: #ddd;
 }
 
-/* 社交图标 SVG 基础布局 */
+/* 社交图标 SVG 基础布局（小尺寸 SVG 图标） */
 .home-social a i.fa-bilibili-icon,
 .home-social a i.fa-bangumi-icon {
     display: inline-block;
-    width: 1.2em;
-    height: 1.2em;
+    width: 1.2em;                   /* 小图标宽度 */
+    height: 1.2em;                  /* 小图标高度 */
     background-size: contain;
     background-repeat: no-repeat;
     vertical-align: middle;
 }
 
+/* 自定义 SVG 图标（Bangumi/Bilibili/网易云音乐/Steam/GitHub/豆瓣/微信）的基础布局 */
 .home-social a i.fa-bgm-icon,
 .home-social a i.fa-bili-icon,
+.home-social a i.fa-netease-icon,
 .home-social a i.fa-steam-icon,
 .home-social a i.fa-github-icon,
 .home-social a i.fa-douban-icon,
 .home-social a i.fa-wechat-icon {
     display: inline-block;
-    width: 1.5em;
-    height: 1.5em;
+    width: 1.5em;                   /* 图标宽度，影响自定义 SVG 图标的显示大小 */
+    height: 1.5em;                  /* 图标高度，影响自定义 SVG 图标的显示大小 */
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     vertical-align: middle;
-    transition: transform 0.3s;
+    transition: transform 0.3s;     /* 悬停缩放过渡时长 */
 }
 
+/* 自定义 SVG 图标悬停放大效果 */
 .home-social a:hover i.fa-bgm-icon,
 .home-social a:hover i.fa-bili-icon,
+.home-social a:hover i.fa-netease-icon,
 .home-social a:hover i.fa-steam-icon,
 .home-social a:hover i.fa-github-icon,
 .home-social a:hover i.fa-douban-icon,
 .home-social a:hover i.fa-wechat-icon {
-    transform: scale(1.15);
+    transform: scale(1.2);         /* 悬停放大倍数，1.2 = 放大 20% */
 }
 
-/* Bangumi 图标 */
+/* Bangumi 图标：内嵌 SVG 数据 URI */
 .home-social a i.fa-bgm-icon {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M228.1 615.4c3.4 3.4 8.2 7.6 11.4 7.6 1.7 0 3.3-.3 4.7-1l147.6-61.9c5.1-2.1 6.3-8.8.3-22.6l-147.6-66.2c-5.9-2.7-12.7 1.8-10.1 22.4l121.7 54.6-121.4 50.9c-5.7 2.4-8.8 9-6.6 16.2zM399 628H239.5c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3H399c6.8 0 12.3-5.5 12.3-12.3S405.8 628 399 628zm0 39.5H239.5c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3H399c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm473.9-190.6l-133.3 58.4c-6.2 2.7-6.4 11.4-.4 22.3l133.3 64.1c1.8.8 3.6 1.2 5.3 1.2 6.8 0 12.3-5.5 12.3-12.3 0-4.4-2.3-8.2-5.3-11.1l-109.2-52.4 107.3-47.6c5.8-2.6 8.3-9.4 10-22.6zM877.9 628h-148.1c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3h148.1c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm0 39.5h-148.1c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3h148.1c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm-233-130.4H482c-6.3 0-11.9 4-10.7 18.3l81.4 145.1c3.2 5.7 12 5.7 15.2 0l81.4-145.1c1.2-14.3-4.4-18.3-10.7-18.3zm-81.4 132.3l-60.4-107.7h120.9l-60.5 107.7z' fill='%23000'/%3E%3Cpath d='M891.4 335H648.4c-6.8-15.1-19.8-28.4-36.9-38L803.1 19.3c3.7-4.2 2.7-10.7-2.1-14-4.8-3.2-11.5-2.2-15.1 2.7l-197.3 278.9c-15.4-4.6-31.5-7-45.4-7-10.7 0-21.4 1.1-31.9 3.4L240 4.7c-4.2-3.7-10.7-2.7-14 2.1-3.2 4.8-2.2 11.5 2.7 15.1l262.7 269.8c-22.1 9.8-39.1 25.1-47.3 43.2H132.5c-50.6 0-91.8 41.2-91.8 91.8v414.4c0 50.6 41.2 91.8 91.8 91.8h268l-19.9 47c-12.6 29.9 22.6 57.1 48.3 37.3l109.5-84.3h352.9c50.6 0 91.8-41.2 91.8-91.8V426.7c0-50.6-41.2-91.8-91.8-91.8zm34.8 463.8c0 33.5-27.2 60.7-60.7 60.7H585.7L487.9 933l-77 57.9 24.4-57.9 31-73.5H198.1c-33.5 0-60.7-27.2-60.7-60.7V440.3c0-33.5 27.2-60.7 60.7-60.7h667.5c33.5 0 60.7 27.2 60.7 60.7v358.5z' fill='%23000'/%3E%3C/svg%3E");
 }
 
-/* Bilibili 图标 */
+/* Bilibili 图标：内嵌 SVG 数据 URI */
 .home-social a i.fa-bili-icon {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M977.2 208.2c33.4 36.2 48.8 79.4 46.6 131.4v404.8c-.8 52.8-18.4 96.2-53 130.2-34.4 34-78.2 51.8-131 53.4H184.04c-52.9-1.6-96.42-19.6-130.56-54.4C19.36 838.8 1.53 793 0 736.4V339.6c1.53-52 19.36-95.2 53.48-131.4 34.14-32.7 77.66-50.66 130.56-52.2h58.76L192.1 104.38c-11.5-11.46-17.26-26-17.26-43.58 0-17.6 5.76-32.12 17.26-43.59C203.6 5.74 218.2 0 235.8 0s32.2 5.74 43.8 17.21L426.2 156h176l149-138.79C763.4 5.74 778.4 0 796 0c17.6 0 32.2 5.74 43.8 17.21 11.4 11.47 17.2 25.99 17.2 43.59 0 17.58-5.8 32.12-17.2 43.58L789.2 156h58.6c52.8 1.54 96 19.5 129.4 52.2zM899.6 347.6c-.8-19.2-7.4-34.8-21.4-47-10.4-12.2-28-18.8-45.4-19.6H192.1c-19.18.8-34.9 7.4-47.16 19.6-12.28 12.2-18.8 27.8-19.56 47v388.8c0 18.4 6.52 34 19.56 47s28.76 19.6 47.16 19.6H832.8c18.4 0 34-6.6 46.6-19.6 12.6-13 19.4-28.6 20.2-47V347.6zm-528.6 85.4c12.6 12.6 19.4 28.2 20.2 46.4V546c-.8 18.4-7.4 33.8-19.6 46.4-12.4 12.6-28 19-47.2 19-19.2 0-35-6.4-47.2-19-12.2-12.6-18.8-28-19.6-46.4v-66.6c.8-18.2 7.6-33.8 20.2-46.4 12.6-12.6 26.4-19.2 46.6-20 18.4.8 34 7.4 46.6 20zm383 0c12.6 12.6 19.4 28.2 20.2 46.4V546c-.8 18.4-7.4 33.8-19.6 46.4-12.2 12.6-28 19-47.2 19-19.2 0-34.8-6.4-47.2-19-14-12.6-18.8-28-19.4-46.4v-66.6c.6-18.2 7.4-33.8 20-46.4 12.6-12.6 28.2-19.2 46.6-20 18.4.8 34 7.4 46.6 20z'/%3E%3C/svg%3E");
 }
 
-/* Steam 图标 */
+/* 网易云音乐图标：内嵌 SVG 数据 URI */
+.home-social a i.fa-netease-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M623.61751703 18.30760297c26.82121482-7.73082075 55.55996445-7.34245925 82.64817779-1.11653927 31.10532741 7.39100445 60.53584592 21.67542518 85.86429629 41.14204445 9.24785778 7.02691555 17.59762963 15.76504889 21.84533334 26.76053333 6.57787259 16.26263703 4.81810963 35.7049837-4.89092742 50.35349334-8.47113482 13.15574518-22.87691852 22.31864889-38.39924148 24.28472888-12.40329482 1.69908148-25.40126815-0.93449482-36.0569363-7.5245037-6.00746667-3.53166222-10.58285037-8.98085925-16.61458962-12.47611259-16.17768297-10.26730667-34.80689778-18.35008-54.28565333-17.88890074-13.71401482 0.15777185-25.77749333 8.192-35.0738963 17.63403851-8.70172445 8.98085925-13.13147259 22.22155852-10.25517037 34.53989927 6.68709925 25.17067852 13.33778963 50.34135703 20.01275259 75.51203555 47.98691555 2.46366815 95.94955852 15.15823408 137.20082963 40.20754963 40.09832297 24.80658963 76.32516741 56.26386963 105.05178074 93.75288889 24.38181925 31.7728237 42.86539852 68.06034963 54.17642666 106.4838637 12.24552297 41.40904297 16.21409185 85.07543703 13.02224593 128.08647111-2.65784889 35.48653037-9.63621925 70.7667437-21.67542518 104.29933037-31.1296 81.65300148-88.7891437 153.24501333-163.00259555 199.64207408-54.43128889 34.38212741-116.94535111 55.12305778-180.69731556 63.03592297-44.00621037 5.49774222-88.84982518 5.52201482-132.63758222-1.9782163-89.97850075-14.86696297-174.30148741-59.71057778-238.29617778-124.48199112-63.59419259-63.71555555-107.85526518-146.41227852-125.75630222-234.6310163-13.20429037-64.33450667-12.60961185-131.50890667 2.03889778-195.55214221 17.90103703-78.97088 57.46536297-152.84451555 113.08600888-211.66914371 45.36547555-48.30245925 101.39875555-86.5196563 162.90550519-111.19274666 6.33514667-2.41512297 12.57320297-5.27928889 19.3209837-6.34728297 14.4057837-2.52434963 29.79460741 0.88594963 41.59108741 9.57553777 15.97136592 11.27461925 24.75804445 31.72427852 22.10019555 51.06953483-2.19666963 19.74575408-16.21409185 37.54970075-34.89185185 44.30961777-62.13783703 23.22887111-117.23662222 64.73500445-156.89803851 117.87984593-35.45012148 47.16164741-58.58190222 103.49833482-66.33699557 162.00741925-7.82791111 57.91440592-0.86167703 117.72207408 19.89138964 172.33540742 29.97665185 79.84469333 89.57800297 148.54826667 165.56335408 187.65141333 45.75383703 23.70218667 97.26027852 36.08120889 148.77885628 35.7292563 42.37994667-0.54613333 84.89339259-7.35459555 124.72471705-22.08805926 35.02535111-13.01010963 67.85403259-32.22186667 95.76751407-57.12554667 26.02021925-23.05896297 47.67137185-50.92389925 64.18887111-81.49522963 8.27695408-15.59514075 15.92282075-31.65146075 20.59529482-48.72722963 13.78683259-48.8121837 16.17768297-101.71429925 1.43208295-150.59930074-12.19697778-40.99640889-37.29483852-77.53879703-69.34679703-105.61005037-14.17519408-12.40329482-29.32129185-23.77500445-45.5596563-33.33840593-14.34510222-8.05850075-30.01306075-13.54410667-45.99656295-17.29422222 11.14112 43.5693037 23.05896297 86.95656297 34.35785481 130.48945778 1.91753482 10.43721482 3.83506963 20.87442963 5.63124147 31.33591704 1.6505363 44.91643259-14.1023763 90.16054518-43.07171555 124.5184-26.99112297 32.37963852-65.31754667 55.15946667-106.77513481 62.98737777-44.68584297 8.90804148-92.73344 0.49758815-131.10840889-24.27259259-36.63947852-23.22887111-63.70341925-60.01398518-77.9757037-100.73125926-8.08277333-22.77982815-12.1120237-46.8703763-12.91301927-70.99733334-2.45153185-52.48948148 11.27461925-106.11977482 41.2998163-149.53130666 35.28021333-51.80984889 90.90085925-87.42987852 150.53861926-104.80905482-4.39333925-16.79663408-8.88376889-33.56899555-13.32565334-50.36562963-11.51734518-36.25111703-9.06581333-76.95625482 8.11918223-111.03497481 9.27213037-19.0175763 23.05896297-35.58362075 39.0060563-49.35831703 17.75540148-15.18250667 38.48419555-27.17316741 61.08197925-33.38695111M481.22235259 413.16200297c-15.99563852 16.79663408-27.2095763 38.03515259-32.03982222 60.70575406-4.34479408 20.58315852-4.36906667 42.04013037-0.46117926 62.68397038 4.76956445 22.80410075 16.54177185 45.11061333 36.0569363 58.56976592 15.14609778 10.75275852 34.86757925 14.01742222 52.93852444 10.48576 33.4354963-5.87396741 60.71789037-36.63947852 61.65238518-70.68178963-1.27431111-8.43472592-2.66998518-16.86945185-5.04869925-25.07358815-12.48824889-47.23446518-25.08572445-94.43252148-37.50115556-141.69125925-28.25329778 8.71386075-55.14733037 23.39877925-75.59698963 45.00138667z'/%3E%3C/svg%3E");
+}
+
+/* Steam 图标：内嵌 SVG 数据 URI */
 .home-social a i.fa-steam-icon {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M511.1 0C242.26 0 21.8 207.36.94 470.91l274.43 113.41c30.12-16.13 56.45-25.17 81.58-25.17 2.69 0 5.33.17 8.02.26l122.07-176.73V380.16a193.19 193.19 0 0 1 193.02-193.02c106.41 0 193.02 86.66 193.02 193.15s-86.61 193.07-193.02 193.07h-4.48L612.74 697.56c0 2.22.17 4.48.17 6.78a144.73 144.73 0 0 1-144.64 144.9 145.58 145.58 0 0 1-142.12-116.35L18.6 651.52C79.45 866.43 276.74 1024 511.1 1024c282.75 0 511.96-229.25 511.96-512S793.81 0 511.1 0zm-189.39 776.96l-62.85-26.03c11.18 23.17 30.46 42.62 56.06 53.33a108.84 108.84 0 0 0 142.38-141.82 108.67 108.67 0 0 0-138.88-60.29l64.98 26.88a80.13 80.13 0 0 1-61.65 147.93h-.04zm487.04-396.93a128.81 128.81 0 0 0-128.64-128.64 128.64 128.64 0 1 0 128.64 128.64zm-224.98-.21a96.6 96.6 0 1 1 193.32 0 96.73 96.73 0 0 1-96.68 96.64 96.6 96.6 0 0 1-96.64-96.64z'/%3E%3C/svg%3E");
 }
 
-/* GitHub 图标 */
+/* GitHub 图标：内嵌 SVG 数据 URI */
 .home-social a i.fa-github-icon {
     background-image: url("data:image/svg+xml,%3Csvg t='1771702197263' class='icon' viewBox='0 0 1049 1024' version='1.1' xmlns='http://www.w3.org/2000/svg' p-id='14025'%3E%3Cpath d='M524.712986 0q107.255961 0 203.996632 41.009632 94.637613 39.958103 167.193116 112.513606t112.513606 167.193116q41.009632 96.740671 41.009632 203.996632 0 113.565135-46.267277 216.61498-45.215748 99.895258-126.709248 173.50229t-185.594874 108.30749q-17.875994 3.154587-28.391284-5.257645-7.360703-8.412232-7.360703-19.979052v-144.059477q0-34.700458-10.515291-60.988683-9.463761-23.133639-25.236696-36.803516 69.400916-7.360703 114.616664-27.339755 58.885626-26.288226 89.379967-77.813148 36.803516-58.885626 36.803517-153.523239 0-80.967735-54.67951-140.90489 8.412232-21.030581 10.51529-47.318806 3.154587-45.215748-15.772935-92.534555-18.927523-5.257645-56.782568 8.412232-26.288226 9.463761-59.937154 29.442813-27.339755 15.772935-27.339755 16.824465-64.143271-17.875994-131.441129-17.875994t-131.441129 17.875994l-27.339755-16.824465q-33.648929-19.979052-59.937154-29.442813-36.803516-13.669877-56.782568-8.412232-18.927523 47.318806-15.772935 92.534555 2.103058 26.288226 10.51529 47.318806-54.67951 59.937155-54.67951 140.90489 0 94.637613 36.803516 153.523239 30.494342 50.473393 89.379968 77.813148 45.215748 19.979052 113.565135 27.339755-27.339755 25.236697-33.648929 70.452445-35.751987 16.824464-70.452445 13.669877-51.524922-4.206116-82.019264-56.782568-12.618348-22.08211-33.648929-36.803516-14.721406-9.463761-32.5974-14.721406-9.463761-3.154587-14.721406-3.154587-31.545871 0-19.979052 15.772935 5.257645 8.412232 16.824465 16.824465 22.08211 9.463761 42.061161 44.164219 10.51529 16.824464 15.772935 32.5974 13.669877 41.009632 59.937155 57.834097 32.5974 11.566819 78.864677 8.412232 22.08211-1.051529 38.906574-4.206116l1.051529 97.792199q0 11.566819-8.412232 19.979052-10.51529 8.412232-28.391284 5.257645-104.101374-34.700458-185.594874-108.30749T46.267277 741.327966q-46.267277-103.049845-46.267277-216.61498 0-107.255961 41.009632-203.996632 39.958103-94.637613 112.513606-167.193116t167.193116-112.513606q97.7922-41.009632 203.996632-41.009632z'/%3E%3C/svg%3E");
 }
 
-/* 豆瓣图标 */
+/* 豆瓣图标：内嵌 SVG 数据 URI */
 .home-social a i.fa-douban-icon {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M745.26 308c-76.94-.65-153.9-.14-230.85-.14-78.59 0-157.18-.51-235.76.14-76.91.64-113.16 37.48-114.36 115.18-.53 34.37-.84 68.79.13 103.14 1.92 68.32 39.49 107.78 106.66 108.22 160.44 1.04 320.9 1 481.35 0 65.21-.4 103.7-38.24 106.99-103.12 1.9-37.56 1.57-75.33.38-112.94-1.35-73.75-38.81-109.85-113.54-110.48zM777.41 502.09c-1.68 36.82-13.99 50.21-50.94 51.24-50.73 1.41-101.52.42-152.29.44-21.29 0-42.58 0-63.87 0-67.14 0-134.29.44-201.43-.16-51.86-.46-62.32-11.63-63.06-64.29-.26-18.01-.95-36.1.35-54.02 2.24-31.02 14.77-45.41 46.03-45.62 145.74-1 291.49-1.01 437.24-.11 33.93.21 46.17 14.38 47.94 48.66.14 12.06.04 33.43-.93 54.68z'/%3E%3Cpath d='M861.44 820.17c-39.31-.46-78.62.2-117.93-.35-10.2-.14-20.37-2.97-33.44-5.02 8.25-15.9 14.03-27.51 20.23-38.88 6.27-11.49 12.97-22.75 19.45-34.13 9.77-17.16 11.23-34.14-2.02-50.23-19.68-23.87-49.12-20.51-68.79 9.95-19.52 30.23-37.16 61.74-54.21 93.45-9.58 17.81-21.53 26.11-42.63 25.49-47.46-1.39-95-.1-142.48.87-18.75.38-30.29-6.46-39.11-22.82-16.31-30.25-33.65-59.98-51.58-89.3-18.86-30.84-36.95-38.62-59.18-27.41-25.02 12.61-29.54 34.83-12.61 66.94 11.28 21.39 23.67 42.2 40.68 72.33-41.37 0-72.32-.03-103.28.01-22.93.03-45.93-.92-68.77.54-26.97 1.73-41.92 16-43.03 37.97-1.2 23.95 14.71 39.61 44.01 42.24 11.38 1.02 22.92.39 34.38.39 219.48 0 438.97.01 658.45 0 6.55 0 13.11.08 19.66-.04 41.87-.76 61.2-13.09 62.06-39.52.85-26.14-18.49-39.92-59.88-40.41z'/%3E%3Cpath d='M206.91 204.11c101.54.38 203.09.12 304.63.13 65.51 0 131.02.06 196.54-.01 42.58-.04 85.21.93 127.73-.74 29.95-1.18 44.88-17.37 43.53-41.86-1.22-22.22-15.99-35.76-42.65-38.61-6.48-.69-13.09-.31-19.64-.31-203.09-.01-406.17-.12-609.26.08-44.9.05-64.48 13.86-63.22 42.84 1.25 28.53 18.82 40.02 62.44 40.19z'/%3E%3C/svg%3E");
 }
 
-/* 微信图标 */
+/* 微信图标：内嵌 SVG 数据 URI */
 .home-social a i.fa-wechat-icon {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1184 1024'%3E%3Cpath d='M331.42 263.42q0-23.42-14.27-37.73t-37.73-14.27q-24.58 0-43.42 14.56t-18.85 37.44q0 22.27 18.85 36.86t43.42 14.56q23.42 0 37.73-14.02t14.27-37.44zm424.58 289.73q0-16-14.56-28.58t-37.44-12.58q-15.42 0-28.29 12.86t-12.86 28.29q0 16 12.86 28.86t28.29 12.86q22.85 0 37.44-12.58t14.56-29.15zM621.15 263.42q0-23.42-14.02-37.73t-37.44-14.27q-24.58 0-43.42 14.56t-18.85 37.44q0 22.27 18.85 36.86t43.42 14.56q23.42 0 37.44-14.02t14.02-37.44zM984 553.15q0-16-14.85-28.58t-37.15-12.58q-15.42 0-28.29 12.86t-12.86 28.29q0 16 12.86 28.86t28.29 12.86q22.27 0 37.15-12.58t14.85-29.15zM832 326.27q-17.73-2.27-40-2.27-96.58 0-177.73 44t-127.71 119.14-46.56 164.29q0 44.58 13.15 86.85-20 1.73-38.85 1.73-14.85 0-28.58-.86t-31.42-3.71-25.44-4-31.14-6.02-28.58-6.02l-144.58 72.58 41.15-124.58q-165.73-116-165.73-280 0-96.58 55.71-177.73t150.85-127.71 207.71-46.56q100.58 0 190.02 37.73t149.73 104.29 78.02 148.86zm338.27 320.58q0 66.85-39.14 127.71t-106.02 110.56l31.42 103.42-113.73-62.27q-85.73 21.15-124.58 21.15-96.58 0-177.73-40.29t-127.71-109.44-46.56-150.85 46.56-150.85 127.71-109.44 177.73-40.29q92 0 173.15 40.29t130.02 109.73 48.86 150.56z'/%3E%3C/svg%3E");
 }
 
+/* 文章列表条目：每篇文章之间的间距 */
 /* - 文章列表 */
 .post-item {
-    margin-bottom: 3em;
+    margin-bottom: 3em;             /* 文章条目下方间距，影响列表疏密程度 */
     word-break: break-word;
 }
+
+/* 最后一篇文章不需要底部间距 */
 .post-item:last-child { margin-bottom: 0; }
 
+/* 前 10 篇文章依次延迟淡入动画，制造错落感 */
 .post-item:nth-child(1) { animation: fade-in-top .3s .2s backwards; -webkit-animation: fade-in-top .3s .2s backwards; }
 .post-item:nth-child(2) { animation: fade-in-top .3s .3s backwards; -webkit-animation: fade-in-top .3s .3s backwards; }
 .post-item:nth-child(3) { animation: fade-in-top .3s .4s backwards; -webkit-animation: fade-in-top .3s .4s backwards; }
@@ -582,44 +703,50 @@ main img {
 .post-item:nth-child(9) { animation: fade-in-top .3s 1s backwards; -webkit-animation: fade-in-top .3s 1s backwards; }
 .post-item:nth-child(10) { animation: fade-in-top .3s 1.1s backwards; -webkit-animation: fade-in-top .3s 1.1s backwards; }
 
+/* 文章列表标题与标题链接下划线样式 */
 .post-item h2 { margin-bottom: .5em; }
 
 .post-item h2 a {
     line-height: 2em;
     padding-bottom: .3rem;
     border-bottom: 2px solid #eee;
-    border-color: var(--light-border);
+    border-color: var(--light-border); /* 标题下划线颜色，跟随浅边框变量 */
     transition: color .3s, border-color .3s;
 }
 
+/* 文章列表中编辑链接的字号 */
 .post-item .edit-link {
-    font-size: 1rem;
+    font-size: 1rem;                /* 编辑链接字号 */
     line-height: inherit;
 }
 
+/* 卡片式文章条目：带封面图的全宽卡片，悬停时图片模糊并显示摘要 */
 /* - 卡片样式 */
 .post-item.card-style {
     position: relative;
-    height: 240px;
-    border-radius: 12px;
+    height: 270px;                  /* 卡片高度，影响封面图展示区域大小 */
+    border-radius: 24px;            /* 卡片圆角，影响卡片外观弧度 */
     overflow: hidden;
-    margin-bottom: 2.5em;
+    margin-bottom: 2.5em;           /* 卡片下方间距 */
     cursor: pointer;
     padding: 0;
     border: none;
     background: #000;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    transition: box-shadow 0.8s var(--ease-spring),
-                transform 0.8s var(--ease-spring);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); /* 卡片投影，增加立体感 */
+    transition: box-shadow 1.2s var(--ease-spring),
+                transform 1.2s var(--ease-spring);
 }
 
+/* 卡片式文章隐藏普通 h2 标题（由卡片内部标题代替） */
 .post-item.card-style > h2 { display: none; }
 
+/* 卡片悬停效果：上浮 + 更重阴影 */
 .post-item.card-style:hover {
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-    transform: translateY(-4px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); /* 悬停阴影扩散范围，影响悬浮感强度 */
+    transform: translateY(-8px);                  /* 悬停上移距离，调整可改变上浮幅度 */
 }
 
+/* 夜间模式卡片投影：颜色更深 */
 .dark-theme .post-item.card-style {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
@@ -627,30 +754,33 @@ main img {
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
 }
 
+/* 卡片背景图层：铺满卡片区域，悬停时缩放并模糊 */
 .post-card-bg {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     background-size: cover;
     background-position: center;
-    transition: transform 0.8s var(--ease-spring),
-                filter 0.8s var(--ease-spring);
+    transition: transform 1.2s var(--ease-spring),
+                filter 1.2s var(--ease-spring);
     z-index: 1;
 }
 
+/* 卡片遮罩层：半透明黑色叠加，保证文字可读性 */
 .post-card-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.35); /* 遮罩透明度，影响封面图与文字的对比度 */
     z-index: 2;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 2em;
+    padding: 2em;                   /* 卡片内容与边缘的距离 */
     box-sizing: border-box;
     transition: background 0.8s var(--ease-spring);
 }
 
+/* 卡片标题容器，悬停时向上位移 */
 .post-item.card-style .post-card-title {
     margin: 0;
     padding: 0;
@@ -659,202 +789,242 @@ main img {
     transition: transform 0.8s var(--ease-spring);
 }
 
+/* 卡片标题链接：白色文字 + 阴影提升可读性 */
 .post-item.card-style .post-card-title a {
     color: #fff;
-    font-size: 1.25em;
-    font-weight: 500;
+    font-size: 1.3em;              /* 卡片标题字号，影响标题大小 */
+    font-weight: 600;               /* 卡片标题字重 */
     line-height: 1.4;
     padding-bottom: 0;
     text-decoration: none;
     border-bottom: none;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6); /* 标题文字阴影，提升可读性 */
 }
 
+/* 卡片底部信息区（摘要+元数据）：默认隐藏，悬停时滑入 */
 .post-card-info {
     position: absolute;
-    bottom: 25px;
+    bottom: 25px;                   /* 信息区距卡片底部的距离 */
     left: 2em;
     right: 2em;
     width: auto;
-    opacity: 0;
-    transform: translateY(10px);
+    opacity: 0;                     /* 初始透明（隐藏状态） */
+    transform: translateY(10px);    /* 初始向下偏移，悬停时回归原位 */
     transition: all 0.8s var(--ease-spring);
     color: #fff;
 }
 
+/* 卡片文章摘要：多行截断，最多显示 2 行 */
 .post-card-description {
-    font-size: 0.9em;
+    font-size: 0.9em;               /* 摘要字号 */
     color: #eee;
     margin-bottom: 12px;
-    line-height: 1.6;
+    line-height: 1.6;               /* 摘要行高，影响文字疏密 */
     text-indent: 0;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 2;          /* 最多显示行数，超出部分省略 */
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
+/* 卡片元数据（日期/分类）：两端对齐 */
 .post-card-meta {
-    font-size: 0.85em;
+    font-size: 0.85em;              /* 元数据字号 */
     color: #ccc;
     display: flex;
     justify-content: space-between;
 }
 
+/* 卡片悬停：背景图放大并模糊 */
 .post-item.card-style:hover .post-card-bg {
-    transform: scale(1.15);
-    filter: blur(6px) brightness(0.5);
+    transform: scale(1.35);         /* 背景图放大倍数，影响悬停时的动态感 */
+    filter: blur(8px) brightness(0.6); /* 模糊度与亮度，影响背景图暗化程度 */
 }
 
+/* 卡片悬停：标题向上移动为摘要腾出空间 */
 .post-item.card-style:hover .post-card-title {
-    transform: translateY(-20px);
+    transform: translateY(-15px);   /* 标题上移距离，需与摘要区高度协调 */
 }
 
+/* 卡片悬停：摘要信息淡入并归位 */
 .post-item.card-style:hover .post-card-info {
     opacity: 1;
     transform: translateY(0);
 }
 
+/* 文章列表分页导航 */
 /* - 换页 */
 .page-navigator {
     cursor: default;
-    margin-top: 3em;
-    font-size: 1.25em;
+    margin-top: 3em;                /* 分页导航与文章列表的间距 */
+    font-size: 1.25em;              /* 分页导航字号 */
     text-align: center;
     font-weight: normal;
     animation: fade-in-top .3s .7s both;
     -webkit-animation: fade-in-top .3s .7s both;
 }
 
+/* 分页链接与当前页码的内边距 */
 .page-navigator a, .page-navigator span { padding: 0 .3em; }
 
 /* =========================================
    4 - 文章与页面
    ========================================= */
 
+/* 文章属性（发布时间/分类/标签等）条：横向滚动，隐藏滚动条 */
 /* - 文章属性 */
 .post-meta {
     overflow: auto;
     white-space: nowrap;
 }
+
+/* 隐藏文章属性的横向滚动条 */
 .post-meta::-webkit-scrollbar { height: 0; }
+
+/* 文章属性链接继承父元素颜色 */
 .post-meta a { color: inherit; }
 
+/* 文章属性标签的间距与字重 */
 .post-meta span, .post-meta time {
-    margin-right: .8em;
+    margin-right: .8em;             /* 属性标签右侧间距，影响属性之间的距离 */
     display: inline-block;
-    font-weight: 600;
+    font-weight: 600;               /* 属性标签字重 */
 }
 
+/* 最后一个属性标签不需要右边距 */
 .post-meta span:last-child { margin-right: 0; }
 
+/* 属性标签图标（FontAwesome）的通用设置 */
 .post-meta span:before, .post-meta time:before {
     font-size: inherit;
-    margin-right: .4em;
+    margin-right: .4em;             /* 图标与文字的间距 */
     display: inline-block;
     font-family: "FontAwesome";
     font-weight: normal;
 }
 
-.post-meta .date:before { content: "\f073"; }
-.post-meta .category:before { content: "\f07b"; }
-.post-meta .tags:before { content: "\f02c"; }
-.post-meta .user:before { content: "\f007"; }
-.post-meta .comments:before { content: "\f086"; }
-.post-meta .view:before { content: "\f080"; }
-.post-meta .word-count:before { content: "\f040"; }
-.post-meta .read-time:before { content: "\f017"; }
+/* 各属性标签对应的 FontAwesome 图标 */
+.post-meta .date:before { content: "\f073"; }        /* 日历图标（发布时间） */
+.post-meta .category:before { content: "\f07b"; }    /* 文件夹图标（分类） */
+.post-meta .tags:before { content: "\f02c"; }        /* 标签图标（标签） */
+.post-meta .user:before { content: "\f007"; }        /* 人物图标（作者） */
+.post-meta .comments:before { content: "\f086"; }    /* 评论图标（评论数） */
+.post-meta .view:before { content: "\f080"; }        /* 统计图标（阅读量） */
+.post-meta .word-count:before { content: "\f040"; }  /* 铅笔图标（字数） */
+.post-meta .read-time:before { content: "\f017"; }   /* 时钟图标（阅读时间） */
 
+/* 文章/页面顶部标题区域：带下边框分隔与淡入动画 */
 /* - 阅读页标题 */
 .post-title, .page-title {
     margin-bottom: 1em;
     padding-bottom: 1em;
     transition: border-color .3s;
     border-bottom: 1px solid #ddd;
-    border-color: var(--border);
+    border-color: var(--border);    /* 标题区域分隔线颜色 */
     animation: fade-in-bottom .3s both;
     -webkit-animation: fade-in-bottom .3s both;
 }
 
+/* 文章/页面标题 h2 样式 */
 .post-title h2, .page-title h2 {
-    color: #6e8aad;
+    color: #6e8aad;                 /* 标题文字颜色，蓝灰色 */
     margin-right: .25rem;
     display: inline-block;
-    font-weight: 600;
+    font-weight: 600;               /* 标题字重 */
 }
 
+/* 独立页面标题无下边距 */
 .page-title h2 { margin-bottom: 0; }
 
+/* 标题区域的编辑链接：行内块显示 */
 .post-item .edit-link, .page-title .edit-link, .post-title .edit-link {
     display: inline-block;
 }
 
+/* 文章正文链接：带虚线下划线 */
 /* - 阅读页正文 */
 article a { border-bottom: 1px dashed currentColor; }
+
+/* 文章正文图片：圆角处理 */
 article img {
     border-radius: .25em;
-    border-radius: var(--radius);
+    border-radius: var(--radius);   /* 图片圆角，跟随全局圆角变量 */
 }
 
+/* 文章正文与页面正文：淡入动画 */
 .post-content, .page-content {
     animation: fade-in-top .3s .2s backwards;
     -webkit-animation: fade-in-top .3s .2s backwards;
 }
+
+/* 文章正文、相关文章、标签、作者区块的底部间距 */
 .post-content, .page-content, .post-near, .post-tags, .post-author {
-    margin-bottom: 3em;
+    margin-bottom: 3em;             /* 各区块底部间距，影响阅读页各部分的垂直间隔 */
 }
 
+/* 文章正文段落：取消首行缩进 */
 article p {
-    text-indent: 2em;
+    text-indent: 0;                 /* 取消段落首行自动缩进 */
 }
 
+/* 隐藏文章正文中的第一个 ks-notice（如版权声明等，通过 JS 控制显示） */
 .post-content > .ks-notice {
     display: none;
 }
 
+/* 文章正文 h1~h3 标题：蓝色左边框 + 滚动锚点偏移 */
 article h1, article h2, article h3 {
-    margin-top: 3rem;
-    scroll-margin-top: 3.2em;
-    border-left: 4px solid var(--blue);
-    padding-left: 12px;
+    margin-top: 3rem;               /* 标题上方间距，影响段落标题与上文的距离 */
+    scroll-margin-top: 3.2em;       /* 锚点跳转时的顶部偏移，应与导航栏高度一致 */
+    border-left: 4px solid var(--blue); /* 标题左边框宽度与颜色，主题蓝色 */
+    padding-left: 12px;             /* 标题左内边距，边框与文字的间距 */
     line-height: 1.2;
 }
 
+/* 文章正文 h4~h6 标题：仅设置锚点偏移，无左边框 */
 article h4, article h5, article h6 {
-    scroll-margin-top: 3.2em;
+    scroll-margin-top: 3.2em;       /* 锚点跳转顶部偏移 */
 }
 
+/* 清空 h1~h3 的 before 伪元素内容（避免与主题其他样式冲突） */
 article h1:before,
 article h2:before,
 article h3:before {
     content: "";
 }
 
-article h2 { font-size: 1.8em; }
-article h3 { font-size: 1.6em; }
-article h4 { font-size: 1.3em; }
-article h5 { font-size: 1em; }
-article h6 { font-size: .9em; }
+/* 文章正文各级标题字号 */
+article h2 { font-size: 1.8em; }   /* h2 标题字号 */
+article h3 { font-size: 1.6em; }   /* h3 标题字号 */
+article h4 { font-size: 1.3em; }   /* h4 标题字号 */
+article h5 { font-size: 1em; }     /* h5 标题字号（与正文同大） */
+article h6 { font-size: .9em; }    /* h6 标题字号（略小于正文） */
 
+/* 文章正文中 em 斜体：恢复为普通斜体（不再作为高亮标记） */
 article em, .post-content em {
     background-color: transparent;
     color: inherit;
-    font-style: italic;
+    font-style: italic;             /* 斜体样式 */
 }
 
+/* 文章正文表格行悬停：浅色高亮 */
 article table tr:hover, .post-content table tr:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(0, 0, 0, 0.05); /* 表格行悬停背景透明度 */
 }
+
+/* 夜间模式表格行悬停：白色高亮 */
 .dark-theme article table tr:hover, .dark-theme .post-content table tr:hover {
     background-color: rgba(255, 255, 255, 0.08);
 }
 
+/* 阅读页相关文章（上一篇/下一篇）区块：淡入动画 */
 /* - 阅读页其他文章 */
 .post-near {
     animation: fade-in-top .3s .3s backwards;
     -webkit-animation: fade-in-top .3s .3s backwards;
 }
 
+/* 阅读页文章标签区域：弹性布局，可换行 */
 /* - 阅读页文章标签 */
 .post-tags {
     display: flex;
@@ -863,111 +1033,140 @@ article table tr:hover, .post-content table tr:hover {
     animation: fade-in-top .3s .3s backwards;
     -webkit-animation: fade-in-top .3s .3s backwards;
 }
+
+/* 标签区域前置标签图标（FontAwesome） */
 .post-tags:before {
-    content: "\f02c";
+    content: "\f02c";               /* 标签图标代码 */
     margin-right: .75em;
     font-family: "FontAwesome";
 }
+
+/* 每个标签链接的右边距与底部边距 */
 .post-tags a { margin: 0 .75em .5em 0; }
 
+/* 阅读页作者信息区块：上下边框分隔，带淡入动画 */
 /* - 阅读页作者信息 */
 .post-author {
     display: table;
-    padding: 1.5em 0;
+    padding: 1.5em 0;               /* 作者区块上下内边距 */
     position: relative;
     border-top: 1px solid #ddd;
     border-bottom: 1px solid #ddd;
-    border-color: var(--border);
+    border-color: var(--border);    /* 作者区块上下边框颜色 */
     transition: border-color .3s, filter .3s;
     animation: fade-in-top .3s .4s backwards;
     -webkit-animation: fade-in-top .3s .4s backwards;
 }
 
+/* 作者头像：固定宽度，垂直居中 */
 .post-author .author-avatar {
-    width: 5em;
+    width: 5em;                     /* 作者头像区域宽度，影响头像大小 */
     display: table-cell;
     vertical-align: middle;
 }
 
-.post-author img { border-radius: 66%; }
+/* 作者头像圆形裁剪 */
+.post-author img { border-radius: 66%; /* 圆角百分比，66% 约等于圆形 */ }
+
+/* 作者信息区域（名字/简介）左边距 */
 .post-author .author-info { margin-left: 1.5em; }
 
+/* 作者名字样式 */
 .post-author h4 {
     font-weight: bold;
     margin-bottom: .5em;
 }
 
+/* 阅读页评论区：自动换行，锚点跳转偏移，带淡入动画 */
 /* - 阅读页评论 */
 .post-comments {
     word-break: break-word;
-    scroll-margin-top: 5em;
+    scroll-margin-top: 5em;         /* 评论区锚点偏移，防止导航栏遮挡 */
     animation: fade-in-top .3s .5s backwards;
     -webkit-animation: fade-in-top .3s .5s backwards;
 }
 
+/* 评论区输入框：移除 iOS/安卓原生样式 */
 .post-comments input, .post-comments textarea {
     -webkit-appearance: none;
     -moz-appearance: none;
 }
 
+/* 评论表单底部间距 */
 .comment-form { margin-bottom: 2em; }
 
+/* 每条评论的基础布局：左侧留空用于头像 */
 .comment-list .comment-single {
     position: relative;
-    padding-left: 3.75em;
-    margin-bottom: 1.5em;
-    scroll-margin-top: 5em;
+    padding-left: 3.75em;           /* 头像区域宽度，需与 .avatar max-width 协调 */
+    margin-bottom: 1.5em;           /* 评论之间的间距 */
+    scroll-margin-top: 5em;         /* 评论锚点跳转偏移 */
     transition: transform .3s;
 }
-.comment-list .comment-single.active { transform: scale(1.05); }
-.comment-list .comment-child { margin-left: 2em; }
 
+/* 高亮当前锚定的评论：轻微放大 */
+.comment-list .comment-single.active { transform: scale(1.05); /* 高亮放大倍数 */ }
+
+/* 子评论（回复）缩进 */
+.comment-list .comment-child { margin-left: 2em; /* 回复缩进距离 */ }
+
+/* 评论头像：圆形，悬停时旋转 */
 .comment-list .avatar {
     top: 0;
     left: 0;
-    min-width: 45px;
-    max-width: 45px;
+    min-width: 45px;                /* 头像最小宽度 */
+    max-width: 45px;                /* 头像最大宽度，固定头像尺寸 */
     position: absolute;
-    border-radius: 100%;
+    border-radius: 100%;            /* 圆形头像 */
     transition: filter .3s, transform .3s;
 }
 
+/* 评论头像悬停：旋转 360 度动画 */
 .comment-list .comment-single:hover .avatar {
-    transform: rotate(1turn);
+    transform: rotate(1turn);       /* 旋转一圈（360°），悬停交互彩蛋 */
     -webkit-transform: rotate(1turn);
 }
 
+/* 评论元数据（作者名+时间）底部间距 */
 .comment-list .comment-meta { margin-bottom: .25em; }
 
+/* 评论时间前置时钟图标 */
 .comment-list .comment-time:before {
-    content: "\f017";
+    content: "\f017";               /* FontAwesome 时钟图标 */
     margin-right: .4em;
     display: inline-block;
     font-family: "FontAwesome";
 }
 
+/* 评论作者名与时间的右边距 */
 .comment-list .comment-author,
 .comment-list .comment-time {
-    margin-right: .8em;
+    margin-right: .8em;             /* 评论元数据间距 */
 }
 
+/* 回复按钮：默认隐藏，悬停时显示 */
 .comment-single .comment-reply {
-    opacity: 0;
+    opacity: 0;                     /* 初始透明（隐藏） */
     float: right;
     line-height: 1.8;
     transition: opacity .3s;
 }
+
+/* 评论悬停时显示回复按钮 */
 .comment-single:hover .comment-reply { opacity: 1; }
 
+/* 回复/取消回复链接颜色 */
 .comment-reply a, .cancel-comment-reply a { color: #aaa; }
 .comment-reply a:hover, .cancel-comment-reply a:hover { color: #555; }
 
+/* 取消回复链接：块级右对齐 */
 .cancel-comment-reply {
     display: block;
     margin: .5em 0;
     text-align: right;
 }
 
+/* 404 等错误页面：居中显示，带淡入动画 */
 /* - 错误页面 */
 .error-page {
     text-align: center;
@@ -975,66 +1174,78 @@ article table tr:hover, .post-content table tr:hover {
     -webkit-animation: fade-in-bottom .3s backwards;
 }
 
+/* 错误码大字号（如 "404"） */
 .error-page h1 {
-    font-size: 5em;
+    font-size: 5em;                 /* 错误码字号，影响错误页数字的大小 */
     line-height: 1em;
 }
 
-.error-page img { width: 25em; }
+/* 错误页配图宽度 */
+.error-page img { width: 25em; /* 错误页图片宽度，影响插图大小 */ }
 
 /* =========================================
    5 - 页尾与悬浮按钮
    ========================================= */
 
+/* 页脚整体过渡动画 */
 footer {
     transition: all 0.5s var(--ease-spring);
 }
 
+/* 亮色模式页脚：半透明毛玻璃效果 */
 body:not(.dark-theme) footer {
-    background-color: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(6px);
+    background-color: rgba(255, 255, 255, 0.7); /* 亮色页脚背景透明度 */
+    backdrop-filter: blur(6px);                  /* 亮色页脚毛玻璃模糊强度 */
     -webkit-backdrop-filter: blur(6px);
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);  /* 页脚顶部分隔线 */
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03); /* 页脚顶部阴影 */
 }
 
+/* 亮色模式页脚链接过渡 */
 body:not(.dark-theme) footer a {
     transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
+/* 亮色模式页脚链接悬停：蓝色 + 光晕 */
 body:not(.dark-theme) footer a:hover {
     color: #6f9fc7;
-    text-shadow: 0 0 12px rgba(111, 159, 199, 0.6);
+    text-shadow: 0 0 12px rgba(111, 159, 199, 0.6); /* 链接悬停光晕强度 */
 }
 
+/* 夜间模式页脚：深色半透明毛玻璃 */
 .dark-theme footer {
-    background-color: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(10px);
+    background-color: rgba(0, 0, 0, 0.45);          /* 夜间页脚背景透明度 */
+    backdrop-filter: blur(10px);                      /* 夜间页脚毛玻璃模糊强度 */
     -webkit-backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    color: #e0e0e0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08); /* 夜间页脚顶部分隔线透明度 */
+    color: #e0e0e0;                                   /* 夜间页脚文字颜色 */
     font-weight: 550;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);      /* 夜间页脚文字阴影 */
 }
 
+/* 夜间模式页脚链接颜色 */
 .dark-theme footer a {
-    color: #a6cff5;
+    color: #a6cff5;                 /* 夜间页脚链接颜色，浅蓝色 */
     font-weight: inherit;
     transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
+/* 夜间模式页脚链接悬停：白色 + 蓝色光晕 */
 .dark-theme footer a:hover {
     color: #ffffff;
-    text-shadow: 0 0 10px rgba(166, 207, 245, 0.6), 0 2px 6px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 0 10px rgba(166, 207, 245, 0.6), 0 2px 6px rgba(0, 0, 0, 0.8); /* 悬停光晕颜色与强度 */
 }
 
+/* 夜间模式页脚小工具列表前置箭头透明度 */
 .dark-theme footer .widget ul li:before {
-    opacity: 0.7;
+    opacity: 0.7;                   /* 夜间箭头透明度，值越大越明显 */
     color: #ffffff;
 }
 
-footer .widget { padding: 2em 0; }
+/* 页脚小工具上下内边距 */
+footer .widget { padding: 2em 0; /* 小工具区域上下留白 */ }
 
+/* 页脚小工具标题后置 FontAwesome 图标 */
 footer .title-comments:after,
 footer .title-recent:after,
 footer .title-date:after,
@@ -1044,105 +1255,125 @@ footer .title-tags:after {
     font-family: "FontAwesome";
 }
 
-footer .title-comments:after { content: "\f0e6"; }
-footer .title-recent:after { content: "\f040"; }
-footer .title-date:after { content: "\f017"; }
-footer .title-tags:after { content: "\f02c"; }
+/* 各小工具标题对应的 FontAwesome 图标 */
+footer .title-comments:after { content: "\f0e6"; } /* 评论小工具标题图标 */
+footer .title-recent:after { content: "\f040"; }   /* 最近文章标题图标 */
+footer .title-date:after { content: "\f017"; }     /* 归档/日期标题图标 */
+footer .title-tags:after { content: "\f02c"; }     /* 标签云标题图标 */
 
+/* 页脚小工具列表：无样式列表 */
 footer .widget ul {
     margin: 0;
     list-style: none;
 }
 
+/* 页脚小工具列表每项：单行截断，防止长文章名撑破布局 */
 footer .widget ul li {
     overflow: hidden;
-    margin-bottom: .5em;
+    margin-bottom: .5em;            /* 列表项间距 */
     white-space: nowrap;
-    text-overflow: ellipsis;
+    text-overflow: ellipsis;        /* 超长内容显示省略号 */
 }
+
+/* 列表项前置箭头图标（半透明） */
 footer .widget ul li:before {
-    opacity: .3;
-    content: "\f105";
+    opacity: .3;                    /* 箭头透明度，影响前置箭头的明显程度 */
+    content: "\f105";               /* FontAwesome 向右箭头图标 */
     margin-right: .75em;
     font-family: "FontAwesome";
 }
 
+/* 页脚版权信息区域（最底部） */
 footer .sub-footer {
     padding: 1em 0;
     text-align: center;
 }
 
-footer .sub-footer p { font-size: .875em; }
+/* 版权信息文字大小 */
+footer .sub-footer p { font-size: .875em; /* 版权信息字号，略小于正文 */ }
 
+/* 右下角悬浮按钮组（回到顶部 + 目录切换） */
 /* - 悬浮按钮 */
 .buttons {
-    right: 1.5em;
-    bottom: 5em;
+    right: 1.5em;                   /* 按钮组距右边缘距离 */
+    bottom: 5em;                    /* 按钮组距底部距离 */
     z-index: 100000;
     position: fixed;
 }
 
+/* 回到顶部与目录切换按钮的共用样式 */
 .buttons .to-top, .buttons .toggle-list {
-    padding: 0.6em;
+    padding: 0.6em;                 /* 按钮内边距，影响按钮点击区域大小 */
     display: block;
     cursor: pointer;
-    color: var(--blue);
-    background-color: var(--light-background);
-    border-radius: 8px;
+    color: var(--blue);             /* 按钮图标颜色 */
+    background-color: var(--light-background); /* 按钮背景色 */
+    border-radius: 8px;             /* 按钮圆角 */
     border: 1px solid var(--border);
-    transform: translateX(8em);
+    transform: translateX(8em);     /* 默认偏移到视口右侧外，通过 JS 控制显示 */
     transition: all 0.4s var(--ease-spring);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 按钮投影 */
 }
 
+/* 回到顶部按钮：默认透明隐藏，通过 JS 添加 .active 显示 */
 .buttons .to-top {
     transform: translateX(0);
-    opacity: 0;
-    pointer-events: none;
+    opacity: 0;                     /* 初始透明，不可见 */
+    pointer-events: none;           /* 隐藏时禁止交互 */
     transition: opacity 0.18s cubic-bezier(0.4, 0, 1, 1),
                 background-color 0.35s var(--ease-spring),
                 color 0.35s var(--ease-spring),
                 transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* 目录切换按钮：默认隐藏（桌面端通过媒体查询显示） */
 .buttons .toggle-list {
     display: none;
-    margin-top: 0.8em;
+    margin-top: 0.8em;              /* 两个按钮之间的间距 */
 }
 
+/* 悬浮按钮图标样式 */
 .buttons .to-top:before, .buttons .toggle-list:before {
     width: 1.5em;
     display: block;
     text-align: center;
     font-family: "FontAwesome";
-    font-size: 1.1em;
+    font-size: 1.1em;               /* 按钮图标字号，影响图标大小 */
 }
-.buttons .to-top:before { content: "\f062"; }
-.buttons .toggle-list:before { content: '\f00b'; }
 
+/* 各悬浮按钮对应图标 */
+.buttons .to-top:before { content: "\f062"; }      /* 向上箭头（回到顶部） */
+.buttons .toggle-list:before { content: '\f00b'; } /* 列表图标（目录切换） */
+
+/* 回到顶部按钮激活状态：显示并可交互 */
 .buttons .to-top.active {
     transform: translateX(0);
     opacity: 1;
     pointer-events: auto;
 }
 
+/* 悬浮按钮悬停：主题蓝背景 + 白色图标 + 轻微放大 */
 .buttons .to-top:hover, .buttons .toggle-list:hover {
-    background-color: var(--blue);
+    background-color: var(--blue);  /* 悬停背景色 */
     color: #fff;
-    transform: scale(1.05);
+    transform: scale(1.05);         /* 悬停放大倍数 */
 }
 
+/* 夜间模式悬浮按钮样式 */
 .dark-theme .buttons .to-top, .dark-theme .buttons .toggle-list {
-    background-color: rgba(40, 40, 40, 0.85);
+    background-color: rgba(40, 40, 40, 0.85); /* 夜间按钮背景透明度 */
     border-color: rgba(255, 255, 255, 0.08);
-    color: #8bb4e0;
-    backdrop-filter: blur(5px);
-}
-.dark-theme .buttons .to-top:hover, .dark-theme .buttons .toggle-list:hover {
-    background-color: #8bb4e0;
-    color: #111;
+    color: #8bb4e0;                            /* 夜间按钮图标颜色 */
+    backdrop-filter: blur(5px);                /* 夜间按钮毛玻璃效果 */
 }
 
+/* 夜间模式悬浮按钮悬停颜色 */
+.dark-theme .buttons .to-top:hover, .dark-theme .buttons .toggle-list:hover {
+    background-color: #8bb4e0;      /* 夜间悬停背景色 */
+    color: #111;                    /* 夜间悬停图标颜色 */
+}
+
+/* 强制隐藏回到顶部按钮（通过 JS 添加 .hide-to-top 类） */
 body.hide-to-top .buttons .to-top {
     display: none !important;
 }
@@ -1151,213 +1382,251 @@ body.hide-to-top .buttons .to-top {
    6 - 附加组件
    ========================================= */
 
+/* 文章目录（侧边栏）：桌面端固定在右侧，移动端从底部弹出 */
 /* - 文章目录 */
 .article-list {
     right: 0;
     bottom: 0;
-    opacity: 0;
+    opacity: 0;                     /* 移动端默认隐藏 */
     z-index: 1;
-    width: 15em;
+    width: 15em;                    /* 目录侧边栏宽度（桌面端） */
     padding: 1em;
     overflow: auto;
     position: fixed;
     transform: translateY(0%);
-    background-color: rgba(255, 255, 255, .5);
+    background-color: rgba(255, 255, 255, .5); /* 目录背景透明度（移动端） */
     transition: transform .3s, border-color .3s, opacity .3s, background-color .3s;
 }
+
+/* 目录激活状态（移动端弹出时）：完全可见 */
 .article-list.active {
     opacity: 1;
     background-color: #fff;
-    background-color: var(--light-background);
+    background-color: var(--light-background); /* 激活后背景色，跟随全局浅色背景 */
     transform: translateY(0%);
 }
+
+/* 隐藏目录自身的滚动条 */
 .article-list::-webkit-scrollbar { width: 0; height: 0; }
 
+/* 目录标题居中，相对定位用于放置收起按钮 */
 .article-list h4 {
     text-align: center;
     position: relative;
 }
 
+/* 目录整体、目录小标题、目录链接加粗显示 */
 .article-list,
 .article-list .title,
 .article-list a {
-    font-weight: 600;
+    font-weight: 600;               /* 目录字重，影响目录文字粗细 */
 }
 
+/* 目录分类标题：带上下边框的内联块 */
 .article-list .title {
     padding: .25em 1em;
     display: inline-block;
     transition: border-color .3s;
     border-top: 1px solid #ddd;
     border-bottom: 1px solid #ddd;
-    border-color: var(--border);
+    border-color: var(--border);    /* 目录标题分隔线颜色 */
 }
 
+/* 目录每项链接：块级显示，有底部间距 */
 .article-list a {
     display: block;
-    margin-bottom: .5em;
+    margin-bottom: .5em;            /* 目录项间距 */
 }
 
+/* 目录层级缩进前置符号（右边距统一） */
 .article-list .item-2:before,
 .article-list .item-3:before,
 .article-list .item-4:before,
 .article-list .item-5:before,
 .article-list .item-6:before {
-    margin-right: .5em;
+    margin-right: .5em;             /* 缩进符号与文字的间距 */
 }
 
+/* 各层级目录项的前置缩进符号（用短横线表示层级深度） */
 .article-list .item-2:before { content: "-"; }
 .article-list .item-3:before { content: "--"; }
 .article-list .item-4:before { content: "---"; }
 .article-list .item-5:before { content: "----"; }
 .article-list .item-6:before { content: "-----"; }
 
+/* 默认隐藏 h2~h4 层级目录（只显示 h1 级别，通过 JS 或设置控制） */
 .article-list .item-2,
 .article-list .item-3,
 .article-list .item-4 {
     display: none;
 }
 
-/* 目录收起按钮 */
+/* 目录收起按钮（桌面端右上角） */
 #close-toc-btn {
     position: absolute;
     right: 0;
     top: 50%;
     transform: translateY(-50%);
-    width: 24px;
-    height: 24px;
+    width: 24px;                    /* 按钮宽度 */
+    height: 24px;                   /* 按钮高度 */
     line-height: 24px;
     text-align: center;
     cursor: pointer;
-    color: var(--blue);
+    color: var(--blue);             /* 按钮图标颜色 */
     transition: transform 0.3s var(--ease-spring), color 0.3s;
 }
 
+/* 目录收起按钮图标：双右箭头 */
 #close-toc-btn::before {
-    content: "\f101";
+    content: "\f101";               /* FontAwesome 双右箭头图标 */
     font-family: "FontAwesome";
-    font-size: 1.2em;
+    font-size: 1.2em;               /* 图标字号 */
 }
 
+/* 收起按钮悬停：放大效果 */
 #close-toc-btn:hover {
-    transform: translateY(-50%) scale(1.25);
+    transform: translateY(-50%) scale(1.25); /* 悬停放大倍数 */
     color: #9fcff7;
 }
 
+/* 夜间模式收起按钮颜色 */
 .dark-theme #close-toc-btn { color: #8bb4e0; }
 .dark-theme #close-toc-btn:hover { color: #fff; }
 
+/* 本地搜索结果下拉面板：绝对定位，浮于导航栏下方 */
 /* - 本地搜索结果 */
 #local-search-result {
-    display: none;
+    display: none;                  /* 默认隐藏，有输入时通过 JS 显示 */
     position: absolute;
-    top: 45px;
+    top: 45px;                      /* 距导航栏底部的距离（应与导航栏高度匹配） */
     right: 0;
-    width: 280px;
-    border-radius: 12px;
+    width: 280px;                   /* 搜索结果面板宽度 */
+    border-radius: 12px;            /* 面板圆角 */
     overflow: hidden;
     z-index: 100000;
-    max-height: 60vh;
+    max-height: 60vh;               /* 最大高度，超出时内部滚动 */
     overflow-y: auto;
-    background-color: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.95); /* 面板背景透明度 */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);  /* 面板投影 */
+    backdrop-filter: blur(10px);    /* 面板毛玻璃效果 */
     -webkit-backdrop-filter: blur(10px);
 }
 
+/* 搜索结果列表：重置列表样式 */
 .search-result-list {
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
+/* 搜索结果每项：底部分隔线 */
 .search-result-item {
     margin: 0;
     padding: 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06); /* 结果项分隔线透明度 */
 }
+
+/* 最后一项无下边框 */
 .search-result-item:last-child { border-bottom: none; }
 
+/* 搜索结果链接：块级，带内边距 */
 .search-result-link {
     display: block;
-    padding: 14px 18px;
+    padding: 14px 18px;             /* 结果项内边距，影响点击区域大小 */
     text-decoration: none;
     transition: background-color 0.25s ease;
 }
 
+/* 搜索结果链接悬停：浅色背景 */
 .search-result-link:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: rgba(0, 0, 0, 0.04); /* 悬停背景透明度 */
 }
 
+/* 搜索结果标题：主题蓝色，略大字号 */
 .search-result-title {
-    font-size: 1.05em;
-    font-weight: 500;
-    color: var(--blue);
+    font-size: 1.05em;              /* 结果标题字号 */
+    font-weight: 500;               /* 结果标题字重 */
+    color: var(--blue);             /* 结果标题颜色，跟随主题蓝 */
 }
 
+/* 搜索结果标签提示文字（如"[标签]"） */
 .search-result-tag-hint {
-    font-size: 0.8em;
+    font-size: 0.8em;               /* 标签提示字号 */
     color: #999;
     margin-left: 6px;
 }
 
+/* 无搜索结果的提示文字 */
 .search-no-result {
     padding: 20px;
     text-align: center;
     color: #888;
-    font-size: 0.95em;
+    font-size: 0.95em;              /* 无结果提示字号 */
 }
 
+/* 夜间模式搜索结果面板样式 */
 .dark-theme #local-search-result {
-    background-color: rgba(35, 35, 35, 0.95);
+    background-color: rgba(35, 35, 35, 0.95); /* 夜间面板背景透明度 */
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
+
+/* 夜间模式搜索结果分隔线 */
 .dark-theme .search-result-item {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* 夜间模式搜索结果标题颜色 */
 .dark-theme .search-result-title {
     color: #8bb4e0;
 }
+
+/* 夜间模式搜索结果悬停背景 */
 .dark-theme .search-result-link:hover {
     background-color: rgba(255, 255, 255, 0.08);
 }
+
+/* 夜间模式标签提示与无结果提示颜色 */
 .dark-theme .search-result-tag-hint,
 .dark-theme .search-no-result {
     color: #aaa;
 }
 
+/* 设置面板：右上角浮层，带毛玻璃效果，点击设置按钮时显示 */
 /* - 设置面板 */
 .settings-panel {
     position: fixed;
-    top: 4.2em;
-    right: 1.2em;
-    width: 280px;
-    max-width: 92vw;
-    padding: 0.9em 1em 1.1em;
-    border-radius: 0.9em;
-    background: rgba(255, 255, 255, 0.96);
+    top: 4.2em;                     /* 面板距顶部距离（应在导航栏下方） */
+    right: 1.2em;                   /* 面板距右边缘距离 */
+    width: 280px;                   /* 面板宽度 */
+    max-width: 92vw;                /* 面板最大宽度（防止小屏溢出） */
+    padding: 0.9em 1em 1.1em;       /* 面板内边距 */
+    border-radius: 0.9em;           /* 面板圆角 */
+    background: rgba(255, 255, 255, 0.96); /* 面板背景透明度 */
     border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(12px);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18); /* 面板投影强度 */
+    backdrop-filter: blur(12px);    /* 面板毛玻璃模糊强度 */
     -webkit-backdrop-filter: blur(12px);
-    font-size: 0.9rem;
+    font-size: 0.9rem;              /* 面板内字号 */
     line-height: 1.4;
     color: #333;
     z-index: 10001;
-    opacity: 0;
-    transform: translateY(-8px);
+    opacity: 0;                     /* 初始隐藏 */
+    transform: translateY(-8px);    /* 初始向上偏移，打开时滑入 */
     pointer-events: none;
     transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
+/* 设置面板打开状态：完全可见并可交互 */
 .settings-panel.open {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
 }
 
+/* 设置面板内容容器 */
 .settings-panel-inner { width: 100%; }
 
+/* 设置面板头部：标题与提示文字两端对齐 */
 .settings-panel-header {
     display: flex;
     align-items: baseline;
@@ -1365,96 +1634,109 @@ body.hide-to-top .buttons .to-top {
     margin-bottom: 0.4em;
 }
 
+/* 设置面板标题字号与字重 */
 .settings-panel-title {
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-size: 0.95rem;             /* 面板标题字号 */
+    font-weight: 600;               /* 面板标题字重 */
 }
 
+/* 设置面板副标题/提示文字 */
 .settings-panel-hint {
-    font-size: 0.7rem;
+    font-size: 0.7rem;              /* 面板提示字号（较小） */
     color: #888;
 }
 
+/* 设置面板主体：纵向弹性布局 */
 .settings-panel-body {
     display: flex;
     flex-direction: column;
-    gap: 0.35em;
+    gap: 0.35em;                    /* 设置项之间的间距 */
 }
 
+/* 设置分组标题（如"字体"/"显示"等小节标题） */
 .settings-group-title {
     margin-top: 0.4em;
     margin-bottom: 0.1em;
-    font-size: 0.78rem;
-    letter-spacing: 0.08em;
+    font-size: 0.78rem;             /* 分组标题字号 */
+    letter-spacing: 0.08em;         /* 分组标题字间距，使大写字母更易读 */
     text-transform: uppercase;
     color: #999;
 }
 
+/* 设置行：标签与控件两端对齐 */
 .settings-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75em;
+    gap: 0.75em;                    /* 标签与控件之间的间距 */
 }
 
+/* 设置行标签文字 */
 .settings-row span {
-    font-size: 0.85rem;
+    font-size: 0.85rem;             /* 设置项标签字号 */
     white-space: nowrap;
 }
 
+/* 设置行复选框样式 */
 .settings-row input[type="checkbox"] {
-    width: 1.15em;
-    height: 1.15em;
+    width: 1.15em;                  /* 复选框宽度 */
+    height: 1.15em;                 /* 复选框高度 */
     cursor: pointer;
 }
 
+/* 设置行下拉选择框样式 */
 .settings-row select {
-    width: 120px;
+    width: 120px;                   /* 下拉框宽度，影响选项文字显示空间 */
     padding: 0.3em 0.5em;
     border-radius: 0.3em;
     border: 1px solid #ddd;
     background: #fff;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.85rem;             /* 下拉框字号 */
 }
 
+/* 设置行滑动条（range）样式：扁平轨道 + 渐变背景 */
 .settings-row-range input[type="range"] {
     flex: 1;
     -webkit-appearance: none;
     appearance: none;
-    height: 4px;
+    height: 4px;                    /* 滑动条轨道高度，影响轨道粗细 */
     border-radius: 999px;
-    background: linear-gradient(90deg, rgba(111,159,199,0.25), rgba(111,159,199,0.8));
+    background: linear-gradient(90deg, rgba(111,159,199,0.25), rgba(111,159,199,0.8)); /* 轨道渐变颜色 */
     outline: none;
 }
 
+/* 滑动条拖动手柄（WebKit） */
 .settings-row-range input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 14px;
-    height: 14px;
+    width: 14px;                    /* 手柄宽度 */
+    height: 14px;                   /* 手柄高度 */
     border-radius: 50%;
-    background: #fff;
-    border: 2px solid var(--blue);
-    box-shadow: 0 0 0 4px rgba(111,159,199,0.25);
+    background: #fff;               /* 手柄背景色 */
+    border: 2px solid var(--blue);  /* 手柄边框颜色，跟随主题蓝 */
+    box-shadow: 0 0 0 4px rgba(111,159,199,0.25); /* 手柄光晕半径 */
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
+/* 滑动条手柄悬停（WebKit）：放大 + 加强光晕 */
 .settings-row-range input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.08);
-    box-shadow: 0 0 0 6px rgba(111,159,199,0.3);
+    transform: scale(1.08);         /* 手柄悬停放大倍数 */
+    box-shadow: 0 0 0 6px rgba(111,159,199,0.3); /* 悬停光晕半径 */
 }
 
+/* 滑动条轨道（Firefox） */
 .settings-row-range input[type="range"]::-moz-range-track {
-    height: 4px;
+    height: 4px;                    /* Firefox 滑动条轨道高度 */
     border-radius: 999px;
     background: linear-gradient(90deg, rgba(111,159,199,0.25), rgba(111,159,199,0.8));
 }
 
+/* 滑动条手柄（Firefox） */
 .settings-row-range input[type="range"]::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
+    width: 14px;                    /* Firefox 手柄宽度 */
+    height: 14px;                   /* Firefox 手柄高度 */
     border-radius: 50%;
     background: #fff;
     border: 2px solid var(--blue);
@@ -1463,124 +1745,145 @@ body.hide-to-top .buttons .to-top {
     transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
+/* Firefox 手柄悬停 */
 .settings-row-range input[type="range"]::-moz-range-thumb:hover {
     transform: scale(1.08);
     box-shadow: 0 0 0 6px rgba(111,159,199,0.3);
 }
 
+/* RTL（从右到左）方向的滑动条：水平翻转 */
 .settings-row-range-rtl input[type="range"] {
-    transform: scaleX(-1);
+    transform: scaleX(-1);          /* 水平镜像，用于字号等从大到小方向的滑动条 */
 }
 
+/* 夜间模式设置面板样式 */
 .dark-theme .settings-panel {
-    background: rgba(24, 24, 24, 0.96);
+    background: rgba(24, 24, 24, 0.96);         /* 夜间面板背景透明度 */
     border-color: rgba(255, 255, 255, 0.06);
     color: #ddd;
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65); /* 夜间面板投影强度 */
 }
 
+/* 夜间模式面板提示与分组标题颜色 */
 .dark-theme .settings-panel-hint { color: #aaa; }
 .dark-theme .settings-group-title { color: #777; }
-.dark-theme .settings-row input[type="checkbox"] { accent-color: #8bb4e0; }
 
+/* 夜间模式复选框主题色 */
+.dark-theme .settings-row input[type="checkbox"] { accent-color: #8bb4e0; /* 夜间复选框选中颜色 */ }
+
+/* 设置面板底部区域（重置按钮区） */
 .settings-panel-footer {
     margin-top: 0.8em;
     padding-top: 0.6em;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-top: 1px solid rgba(0, 0, 0, 0.08); /* 底部分隔线透明度 */
 }
 
+/* 重置设置按钮 */
 .settings-reset-btn {
     width: 100%;
     padding: 0.5em 1em;
     border: none;
-    border-radius: 0.4em;
-    background: linear-gradient(135deg, #6f9fc7, #5a8db5);
+    border-radius: 0.4em;           /* 按钮圆角 */
+    background: linear-gradient(135deg, #6f9fc7, #5a8db5); /* 按钮背景渐变颜色 */
     color: #fff;
-    font-size: 0.85rem;
+    font-size: 0.85rem;             /* 按钮文字字号 */
     font-weight: 500;
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
+/* 重置按钮悬停：上移 + 蓝色光晕 */
 .settings-reset-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(111, 159, 199, 0.4);
-    background: linear-gradient(135deg, #5a8db5, #4a7ca0);
+    transform: translateY(-1px);    /* 悬停上移距离 */
+    box-shadow: 0 4px 12px rgba(111, 159, 199, 0.4); /* 悬停投影颜色与强度 */
+    background: linear-gradient(135deg, #5a8db5, #4a7ca0); /* 悬停渐变颜色（略深） */
 }
 
+/* 重置按钮点击：下压效果 */
 .settings-reset-btn:active {
     transform: translateY(0);
     box-shadow: 0 2px 6px rgba(111, 159, 199, 0.3);
 }
 
+/* 夜间模式设置面板底部分隔线 */
 .dark-theme .settings-panel-footer {
     border-top-color: rgba(255, 255, 255, 0.08);
 }
 
+/* 夜间模式下拉选择框样式 */
 .dark-theme .settings-row select {
-    background: #333;
-    border-color: #555;
-    color: #ddd;
+    background: #333;               /* 夜间下拉框背景色 */
+    border-color: #555;             /* 夜间下拉框边框颜色 */
+    color: #ddd;                    /* 夜间下拉框文字颜色 */
 }
 
+/* Prism 代码高亮主题：各种 token 类型的颜色定义 */
 /* - Prism 代码块 */
-.token.comment, .token.block-comment, .token.prolog, .token.doctype, .token.cdata { color: #7D8B99; }
-.token.punctuation { color: #5F6364; }
-.token.property, .token.tag, .token.boolean, .token.number, .token.function-name, .token.constant, .token.symbol, .token.deleted { color: #c92c2c; }
-.token.selector, .token.attr-name, .token.string, .token.char, .token.function, .token.builtin, .token.inserted { color: #2f9c0a; }
+.token.comment, .token.block-comment, .token.prolog, .token.doctype, .token.cdata { color: #7D8B99; } /* 注释颜色 */
+.token.punctuation { color: #5F6364; }                                                                  /* 标点符号颜色 */
+.token.property, .token.tag, .token.boolean, .token.number, .token.function-name, .token.constant, .token.symbol, .token.deleted { color: #c92c2c; } /* 属性/标签/数字/布尔值颜色（红色系） */
+.token.selector, .token.attr-name, .token.string, .token.char, .token.function, .token.builtin, .token.inserted { color: #2f9c0a; } /* 选择器/字符串/函数颜色（绿色系） */
 
-.token.operator, .token.entity, .token.url, .token.variable { color: #a67f59; }
-.token.atrule, .token.attr-value, .token.keyword, .token.class-name { color: #1990b8; }
-.token.regex, .token.important { color: #e90; }
+.token.operator, .token.entity, .token.url, .token.variable { color: #a67f59; }          /* 操作符/URL/变量颜色（棕色系） */
+.token.atrule, .token.attr-value, .token.keyword, .token.class-name { color: #1990b8; }  /* 关键字/类名颜色（蓝色系） */
+.token.regex, .token.important { color: #e90; }                                           /* 正则/重要关键字颜色（橙色系） */
 
+/* CSS 字符串特殊处理：带半透明白色背景 */
 .language-css .token.string, .style .token.string {
     color: #a67f59;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.5); /* CSS 字符串背景透明度 */
 }
 
+/* 代码块 token 修饰样式 */
 .token.bold { font-weight: bold; }
 .token.italic { font-style: italic; }
 .token.entity { cursor: help; }
 .token.important { font-weight: normal; }
 
+/* 命名空间降低不透明度 */
 .namespace { opacity: .7; }
 
+/* 带行号的代码块：左侧留出行号区域 */
 pre[class*="language-"].line-numbers {
     position: relative;
-    padding-left: 3.8em;
+    padding-left: 3.8em;            /* 行号区域宽度，调整可改变行号列宽 */
     counter-reset: linenumber;
 }
 
+/* 行号列表容器：绝对定位在代码块左侧 */
 .line-numbers .line-numbers-rows {
     top: 0;
     left: 0;
     padding: 1em 0;
-    user-select: none;
+    user-select: none;              /* 行号不可被选中，只选代码内容 */
     position: absolute;
     pointer-events: none;
-    width: 3em;
+    width: 3em;                     /* 行号列宽度 */
     border-right: 1px solid #ddd;
-    border-color: var(--border);
+    border-color: var(--border);    /* 行号列右边框颜色 */
     transition: border-color .3s;
 }
 
+/* 每行行号的计数 */
 .line-numbers-rows > span {
     display: block;
-    counter-increment: linenumber;
+    counter-increment: linenumber;  /* 自动递增计数器 */
 }
 
+/* 行号数字样式：右对齐灰色数字 */
 .line-numbers-rows > span::before {
-    content: counter(linenumber);
-    color: #999;
+    content: counter(linenumber);   /* 显示计数器当前值（即行号） */
+    color: #999;                    /* 行号颜色 */
     display: block;
-    padding-right: 0.8em;
+    padding-right: 0.8em;           /* 行号右内边距，影响行号与代码的间距 */
     text-align: right;
 }
 
+/* 打印样式：隐藏不必要的元素，优化打印输出 */
 /* - 打印样式 */
 @media print {
     body { background: none; }
-    body:before, header, .post-comments, .post-near, footer { display: none; }
+    body:before, header, .post-comments, .post-near, footer { display: none; } /* 打印时隐藏的元素 */
     main { margin-top: 0; padding: 1.25em 0; }
     .post-author { margin-bottom: 0; }
 }
@@ -1590,96 +1893,117 @@ pre[class*="language-"].line-numbers {
    ========================================= */
 
 /* -- 桌面端 (>= 800px) */
+/* 桌面端：页面右移为目录让出空间 */
 @media screen and (min-width: 800px) {
-    body.has-trees { margin-right: 15em; }
+    /* 有目录时 body 右移，避免内容被目录遮挡 */
+    body.has-trees { margin-right: 15em; /* 目录宽度，应与 .article-list width 一致 */ }
+
+    /* 夜间模式目录背景 */
     .dark-theme .article-list { background-color: rgba(0, 0, 0, .1); }
 
+    /* 桌面端目录：固定在顶部下方，始终可见 */
     .article-list {
-        top: 3.2em;
+        top: 3.2em;                 /* 目录距顶部距离（等于导航栏高度） */
         opacity: 1;
         visibility: visible;
         border-left: 1px solid #ddd;
         border-color: var(--border);
     }
 
+    /* 桌面端目录过渡动画 */
     .article-list {
         transition: transform 0.5s var(--ease-spring), opacity 0.5s, background-color 0.3s;
     }
 
+    /* 目录收起状态：滑出视口右侧 */
     body.toc-collapsed .article-list {
-        transform: translateX(100%);
+        transform: translateX(100%); /* 水平移出，值为 100% 时完全隐藏 */
         opacity: 0;
         pointer-events: none;
     }
 
+    /* body 右边距过渡动画（目录展开/收起时同步） */
     body.has-trees {
         transition: margin-right 0.5s var(--ease-spring);
     }
 
+    /* 目录收起时 body 右边距归零 */
     body.has-trees.toc-collapsed {
         margin-right: 0;
     }
 
+    /* 目录收起时在页脚显示目录切换按钮（提醒用户可展开） */
     body.toc-collapsed footer .toggle-list {
         display: block;
         transform: translateX(0);
         animation: fade-in-bottom 0.5s both;
     }
 
+    /* 目录收起时在悬浮按钮区显示目录切换按钮 */
     body.toc-collapsed .buttons .toggle-list {
         display: block;
         transform: translateX(0);
         animation: fade-in-bottom 0.5s both;
     }
 
+    /* 桌面端始终显示目录切换按钮 */
     .buttons .toggle-list {
         display: block;
         transform: translateX(0);
     }
 }
 
+/* 宽度小于 800px：目录变为底部弹出抽屉 */
 @media screen and (max-width: 799px) {
     .article-list {
         left: 0;
-        width: 100%;
-        min-height: 40%;
-        max-height: 80%;
+        width: 100%;                /* 移动端目录宽度占满屏幕 */
+        min-height: 40%;            /* 目录最小高度（防止内容太少时太矮） */
+        max-height: 80%;            /* 目录最大高度（防止遮挡太多内容） */
         background-color: #fff;
         background-color: var(--light-background);
-        transform: translateY(100%);
+        transform: translateY(100%); /* 默认在屏幕底部外，激活时滑入 */
         border-top: 1px solid #ddd;
         border-color: var(--border);
     }
 
+    /* 移动端隐藏目录收起按钮（通过其他方式关闭） */
     #close-toc-btn { display: none; }
 }
 
+/* 宽度小于等于 800px：作者信息区块调整为顶部头像悬浮布局 */
 @media screen and (max-width: 800px) {
     .post-author {
-        margin-top: 6em;
+        margin-top: 6em;            /* 作者区块上方间距（为悬浮头像留空间） */
         padding-top: 3em;
     }
+    /* 作者头像绝对定位到区块顶部居中 */
     .post-author .author-avatar {
         left: 0;
         right: 0;
-        top: -3em;
+        top: -3em;                  /* 头像向上偏移，形成悬浮感 */
         margin: auto;
         position: absolute;
     }
     .post-author .author-info { margin-left: 0; }
-    .post-author h4 { text-align: center; }
+    .post-author h4 { text-align: center; }  /* 作者名居中 */
 
+    /* 移动端显示目录切换按钮 */
     .buttons .toggle-list {
         display: block;
         transform: translateX(0);
     }
 }
 
-/* -- 桌面端导航 (>= 600px) */
+/* -- 桌面端导航 (>= 600px)：水平导航菜单 */
 @media screen and (min-width: 600px) {
+    /* 桌面端隐藏居中标题（由 Logo 代替） */
     .head-title { display: none; }
+
+    /* 桌面端隐藏汉堡菜单按钮 */
     .toggle-btn { display: none; }
 
+    /* 桌面端导航菜单：固定在顶部，透明背景 */
     .head-menu {
         position: fixed;
         top: 0;
@@ -1693,47 +2017,54 @@ pre[class*="language-"].line-numbers {
         border: none;
         box-shadow: none;
         opacity: 1;
-        pointer-events: none;
+        pointer-events: none;       /* 容器本身不可点，仅子元素可交互 */
         transform: none;
     }
 
+    /* 桌面端导航链接和有子菜单的项目可以交互 */
     .head-menu a,
     .head-menu .has-child {
         pointer-events: auto;
     }
 
+    /* 桌面端导航链接的内边距与行高 */
     .head-menu > a, .has-child > a {
         padding: .6em 0;
         line-height: 2em;
-        margin-right: 1em;
+        margin-right: 1em;          /* 导航项之间的间距 */
     }
     .head-menu > a:last-child { margin-right: 0; }
 
+    /* 有子菜单的项目使用相对定位（子菜单绝对定位参考） */
     .head-menu .has-child { position: relative; }
+
+    /* 子菜单悬停/焦点时显示 */
     .head-menu .has-child:hover > .sub-menu,
     .head-menu .has-child:focus-within .sub-menu {
         opacity: 1;
         visibility: visible;
     }
 
+    /* 子菜单下拉面板样式 */
     .head-menu .sub-menu {
         opacity: 0;
-        top: 3.2em;
+        top: 3.2em;                 /* 子菜单距顶部（等于导航栏高度） */
         left: -1em;
         background-color: #fff;
         background-color: var(--light-background);
-        padding: .5em 1em;
+        padding: .5em 1em;          /* 子菜单内边距 */
         visibility: hidden;
         position: absolute;
         white-space: nowrap;
         border: 1px solid #ddd;
         border-color: var(--border);
-        border-radius: 0 0 .25em .25em;
+        border-radius: 0 0 .25em .25em; /* 子菜单下方圆角 */
         transition: background-color .15s, border-color .15s, opacity .15s, visibility .15s;
     }
 
+    /* 子菜单上方的三角形箭头（伪元素模拟） */
     .head-menu .sub-menu:before {
-        left: 2em;
+        left: 2em;                  /* 三角形距左侧距离，影响箭头位置 */
         top: -.5em;
         width: 1em;
         height: 1em;
@@ -1743,14 +2074,16 @@ pre[class*="language-"].line-numbers {
         background-color: var(--light-background);
         border: 1px solid;
         position: absolute;
-        transform: rotate(-45deg);
+        transform: rotate(-45deg);  /* 旋转形成三角形 */
         border-color: #ddd #ddd transparent transparent;
         border-color: var(--border) var(--border) transparent transparent;
         transition: background-color .15s, border-color .15s;
     }
 
+    /* 桌面端隐藏搜索按钮（搜索框始终展开） */
     .search-btn { display: none; }
 
+    /* 桌面端搜索框：始终显示，不需要激活 */
     .head-search {
         opacity: 1;
         pointer-events: auto;
@@ -1760,147 +2093,176 @@ pre[class*="language-"].line-numbers {
     }
 }
 
-/* -- 手机端 (< 600px) */
+/* -- 手机端 (< 600px)：汉堡菜单与收起式搜索框 */
 @media screen and (max-width: 599px) {
+    /* 手机端隐藏 Logo（空间不足） */
     .header-logo {
         display: none;
     }
 
+    /* 手机端导航菜单：点击汉堡菜单后从左上角弹出 */
     .head-menu {
         position: fixed;
-        top: 3.4em;
-        left: 0.8em;
+        top: 3.4em;                 /* 菜单距顶部（等于导航栏高度） */
+        left: 0.8em;                /* 菜单距左侧距离 */
         right: auto;
         width: auto;
-        min-width: 8em;
-        max-height: 75vh;
+        min-width: 8em;             /* 菜单最小宽度 */
+        max-height: 75vh;           /* 菜单最大高度（防止溢出屏幕） */
         overflow-y: auto;
         display: block;
         padding: 0.5em 0.4em;
         margin: 0;
         border-right: none;
-        background-color: rgba(255, 255, 255, 0.88);
-        backdrop-filter: blur(20px);
+        background-color: rgba(255, 255, 255, 0.88); /* 手机端菜单背景透明度 */
+        backdrop-filter: blur(20px);                  /* 手机端菜单毛玻璃模糊强度 */
         -webkit-backdrop-filter: blur(20px);
-        border-radius: 14px;
+        border-radius: 14px;                          /* 手机端菜单圆角 */
         border: 1px solid rgba(255, 255, 255, 0.65);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06); /* 菜单投影 */
         z-index: 100002;
-        opacity: 0;
+        opacity: 0;                 /* 默认隐藏 */
         pointer-events: none;
-        transform: scale(0.85) translateY(-12px);
+        transform: scale(0.85) translateY(-12px); /* 初始缩小并向上偏移 */
         transform-origin: top left;
         transition: opacity 0.18s ease-in, transform 0.2s ease-in;
     }
 
+    /* 手机端导航菜单激活（展开）动画 */
     .head-menu.active {
         opacity: 1;
         pointer-events: auto;
         transform: scale(1) translateY(0);
         transition: opacity 0.3s var(--ease-spring),
-                    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); /* 带弹性的展开动画 */
     }
 
+    /* 手机端子菜单：左侧缩进 */
     .head-menu .sub-menu { margin-left: 1.5em; }
+
+    /* 手机端子菜单链接：列表项样式（小圆点） */
     .head-menu .sub-menu a {
         display: list-item;
         list-style-type: circle;
     }
 
+    /* 手机端导航菜单内部滚动条 */
     .head-menu::-webkit-scrollbar { width: 8px; height: 8px; }
     .head-menu::-webkit-scrollbar-thumb {
         border-radius: 5px;
-        background: rgba(0, 0, 0, .1);
+        background: rgba(0, 0, 0, .1); /* 滚动条颜色（菜单内部） */
     }
 
+    /* 夜间模式手机端菜单 */
     .dark-theme .head-menu {
-        background-color: rgba(25, 25, 25, 0.92);
+        background-color: rgba(25, 25, 25, 0.92); /* 夜间菜单背景透明度 */
         border-color: rgba(255, 255, 255, 0.1);
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
     }
 
+    /* 手机端显示搜索图标按钮 */
     .search-btn { display: block; }
 
+    /* 手机端搜索框：默认收起（宽度为 0），激活后展开 */
     .head-search {
         position: absolute;
         top: 0;
-        right: 7em;
+        right: 7em;                 /* 搜索框距右侧的偏移（为各按钮留空间） */
         margin: 0.6em 0;
-        width: 0;
+        width: 0;                   /* 初始宽度为 0（隐藏） */
         opacity: 0;
         pointer-events: none;
         overflow: hidden;
         transition: width 0.4s var(--ease-spring), opacity 0.3s ease;
     }
 
+    /* 手机端搜索框激活：展开并覆盖大部分导航栏宽度 */
     .head-search.active {
         opacity: 1;
-        width: calc(100% - 11em);
+        width: calc(100% - 11em);   /* 展开后的宽度（扣除各按钮区域） */
         pointer-events: auto;
         overflow: visible;
         z-index: 100001;
     }
 
+    /* 手机端搜索框输入框：宽度铺满，无内嵌图标 */
     .head-search input {
         width: 100%;
-        background-image: none;
+        background-image: none;     /* 移除内嵌搜索图标（空间不足） */
         padding-left: 15px;
         padding-right: 15px;
     }
 
+    /* 导航栏中心标题过渡（搜索框展开时淡出） */
     .head-title {
         transition: opacity 0.4s ease;
     }
 
+    /* 搜索框展开时隐藏中心标题 */
     header:has(.head-search.active) .head-title {
         opacity: 0;
         pointer-events: none;
     }
 
+    /* 手机端按钮间距调整（屏幕窄，缩小间距） */
     .light-btn, .search-btn, .settings-btn {
-        margin-left: 0.2em;
-        margin-right: 0.2em;
+        margin-left: 0.2em;         /* 手机端按钮左边距 */
+        margin-right: 0.2em;        /* 手机端按钮右边距 */
     }
 
+    /* 手机端卡片文章高度略降低 */
     .post-item.card-style {
-        height: 200px;
+        height: 200px;              /* 手机端卡片高度（比桌面端矮） */
         aspect-ratio: auto;
     }
+
+    /* 手机端卡片标题字号略小 */
     .post-item.card-style .post-card-title a {
-        font-size: 1.1em;
+        font-size: 1.1em;           /* 手机端卡片标题字号 */
         line-height: 1.3;
     }
+
+    /* 手机端卡片悬停标题移动幅度更小 */
     .post-item.card-style:hover .post-card-title {
-        transform: translateY(-5px);
-    }
-    .post-card-info { bottom: 12px; }
-    .post-card-description {
-        font-size: 0.8em;
-        margin-bottom: 5px;
-        -webkit-line-clamp: 1;
+        transform: translateY(-5px); /* 手机端标题悬停上移距离 */
     }
 
+    /* 手机端卡片底部信息区位置 */
+    .post-card-info { bottom: 12px; /* 手机端信息区距底部距离 */ }
+
+    /* 手机端卡片摘要：字号更小，仅显示 1 行 */
+    .post-card-description {
+        font-size: 0.8em;           /* 手机端摘要字号 */
+        margin-bottom: 5px;
+        -webkit-line-clamp: 1;      /* 手机端摘要显示行数（仅 1 行） */
+    }
+
+    /* 手机端搜索结果面板：铺满宽度，固定在搜索框下方 */
     #local-search-result {
         top: 35px;
         left: 0;
         width: 100%;
         box-sizing: border-box;
-        border-radius: 0 0 12px 12px;
+        border-radius: 0 0 12px 12px; /* 手机端结果面板仅下方圆角 */
     }
 
+    /* 手机端评论提交按钮：宽度铺满 */
     .comment-form button { width: 100%; }
 }
 
+/* 宽度小于等于 600px：设置面板宽度自适应 */
 @media screen and (max-width: 600px) {
     .settings-panel {
-        top: 3.7em;
-        right: 0.6em;
-        left: 0.6em;
+        top: 3.7em;                 /* 手机端面板顶部距离（略小于桌面端） */
+        right: 0.6em;               /* 面板右边距 */
+        left: 0.6em;                /* 面板左边距（两端对称，宽度自适应） */
         width: auto;
     }
 }
 
+/* 手机端（< 600px）悬浮按钮特殊行为 */
 @media screen and (max-width: 599px) {
+    /* 手机端回到顶部按钮激活状态 */
     body .buttons .to-top.active {
         display: block;
         transform: translateX(0);
@@ -1912,11 +2274,13 @@ pre[class*="language-"].line-numbers {
                     color 0.35s var(--ease-spring);
     }
 
+    /* 手机端回到顶部按钮停靠状态（滚动到底部附近时半透明收到右侧） */
     body .buttons .to-top.active.to-top-docked {
-        transform: translateX(calc(50% + 1.5em));
-        opacity: 0.45;
+        transform: translateX(calc(50% + 1.5em)); /* 收起时的横向位移（移到屏幕右侧外） */
+        opacity: 0.45;                             /* 收起时的透明度 */
     }
 
+    /* 手机端有目录时显示目录切换按钮 */
     body.has-trees .buttons .toggle-list {
         display: block;
         transform: translateX(0);
@@ -1928,8 +2292,9 @@ pre[class*="language-"].line-numbers {
                     color 0.35s var(--ease-spring);
     }
 
+    /* 手机端目录切换按钮停靠状态（半透明收到右侧） */
     body.has-trees .buttons .toggle-list.toc-toggle-docked {
-        transform: translateX(calc(50% + 1.5em));
-        opacity: 0.45;
+        transform: translateX(calc(50% + 1.5em)); /* 收起时的横向位移 */
+        opacity: 0.45;                             /* 收起时的透明度 */
     }
 }

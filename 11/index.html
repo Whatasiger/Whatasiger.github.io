@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    
+    <meta charset="UTF-8">
+    <title>「主播女孩重度依赖」动画分集浅读 - Whatasiger</title>
+    <link rel="shortcut icon" href="/static/img/icon.png">
+    <link rel="icon" href="/static/img/icon.png" sizes="192x192"/>
+    
+<link rel="stylesheet" href="/static/kico.css">
+<link rel="stylesheet" href="/static/hingle.css">
+
+    
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta property="og:site_name" content="Whatasiger">
+    <meta property="og:title" content="「主播女孩重度依赖」动画分集浅读"/>
+    
+    <style>body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
+    
+    <!-- 引入思源黑体完整字重 (300,400,500,600,700) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+  <body class="dark-theme post-page">
+    <script>
+    (function() {
+        // 核心修复：把普通的博客文章 (is_post) 和独立页面 (is_page) 都视为"阅读界面"
+        var isArticle = true;
+        var isFromArticle = sessionStorage.getItem("is_from_article") === "true";
+        var theme = sessionStorage.getItem("theme");
+
+        // 0. 立即应用字体设置，避免字体闪烁
+        try {
+            var SETTINGS_KEY = "whatasiger_reader_settings";
+            var savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+            var fontChoice = (savedSettings && savedSettings.fontFamily) ? savedSettings.fontFamily : "noto-sans-sc";
+            if (fontChoice === "noto-sans-sc") {
+                document.body.style.fontFamily = '"Noto Sans SC", "Microsoft YaHei", sans-serif';
+            } else {
+                document.body.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
+            }
+        } catch (e) {
+            document.body.style.fontFamily = '"Noto Sans SC", "Microsoft YaHei", sans-serif';
+        }
+
+        // 0.1 背景可见度：与设置面板共用唯一数据源 whatasiger_reader_settings.bgOpacity
+        var targetBgOpacity = 0.50; // 与 hingle.js defaultSettings.bgOpacity=35 对应
+        var defaultBgOpacityValue = 50; // 默认档位（0~100），用于“从文章回首页”时重置
+        try {
+            var readerSettings = JSON.parse(localStorage.getItem("whatasiger_reader_settings"));
+            if (readerSettings && typeof readerSettings.bgOpacity === "number") {
+                var v = readerSettings.bgOpacity;
+                if (v >= 0 && v <= 100) targetBgOpacity = v / 100;
+            }
+            // 从文章回到首页时：强制恢复为默认可见度，并写回设置
+            if (!isArticle && isFromArticle) {
+                targetBgOpacity = defaultBgOpacityValue / 100;
+                if (readerSettings && typeof readerSettings === "object") {
+                    readerSettings.bgOpacity = defaultBgOpacityValue;
+                    try { localStorage.setItem("whatasiger_reader_settings", JSON.stringify(readerSettings)); } catch (e) {}
+                }
+            }
+        } catch (e) {
+            // 忽略错误，使用默认 0.35
+        }
+
+        // 0.2 背景模糊度：文章页使用用户保存值（默认8px），首页始终为0
+        var DEFAULT_ARTICLE_BLUR = 8;
+        var savedBlur = DEFAULT_ARTICLE_BLUR;
+        try {
+            if (readerSettings && typeof readerSettings.bgBlur === "number") {
+                var bv = readerSettings.bgBlur;
+                if (bv >= 0 && bv <= 20) savedBlur = bv;
+            }
+        } catch (e) {}
+        // 目标模糊度：文章页=用户设置，首页=0
+        var targetBgBlur = isArticle ? savedBlur : 0;
+        // 初始（瞬间）模糊度：来自文章页则从 savedBlur 开始，便于过渡动画
+        var initialBgBlur = isFromArticle ? savedBlur : 0;
+        // 文章→文章时 initialBgBlur == targetBgBlur，rAF 不触发动画
+
+        // 1. 初始状态：全面封印动画，防止页面刚加载时的任何闪烁
+        document.body.classList.add("no-bg-transition");
+
+        // 1.1 立即设置背景可见度和模糊度（封印状态，无动画）
+        document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
+        document.body.style.setProperty("--bg-blur", initialBgBlur + "px");
+
+        // 2. 瞬间敲定日夜模式
+        if (theme === "light") {
+            document.body.classList.remove("dark-theme");
+        } else {
+            document.body.classList.add("dark-theme");
+            sessionStorage.setItem("theme", "dark");
+        }
+
+        // 3. 敲定刚进网页瞬间的背景状态
+        if (isArticle && isFromArticle) {
+            // 阅读页跳阅读页：瞬间淡化
+            document.body.classList.add("bg-faded");
+        } else if (!isArticle && isFromArticle) {
+            // 阅读页跳主页：必须先瞬间淡化，为后面的淡出动画做准备
+            document.body.classList.add("bg-faded");
+        }
+
+        // 4. 更新记忆，留给下一次跳转使用
+        sessionStorage.setItem("is_from_article", isArticle ? "true" : "false");
+
+        // 5. 释放封印，并触发需要的丝滑动画
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                // 解除动画封印
+                document.body.classList.remove("no-bg-transition");
+
+                // 背景可见度：与设置面板统一，不再在跳转时覆盖为固定值，保持当前 targetBgOpacity 即可
+                document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
+
+                // 背景模糊度：设置目标值，触发平滑过渡
+                // 文章→文章时 initialBgBlur == targetBgBlur，此处赋值无变化，不触发动画
+                document.body.style.setProperty("--bg-blur", targetBgBlur + "px");
+
+                // 触发跨界面的过渡动画（保留原有逻辑）
+                if (isArticle && !isFromArticle) {
+                    // 主页跳阅读页：此时开始平滑变淡
+                    document.body.classList.add("bg-faded");
+                } else if (!isArticle && isFromArticle) {
+                    // 阅读页跳主页：此时开始平滑变清晰
+                    document.body.classList.remove("bg-faded");
+                }
+            });
+        });
+    })();
+</script>
+<header>
+    <a href="/" class="header-logo">Whatasiger - RC3.1</a>
+    <div class="head-title">
+        <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
+            <h4>Whatasiger</h4>
+        </a>
+    </div>
+    <div class="head-action">
+        <div class="toggle-btn"></div>
+        <div class="light-btn"></div>
+        <div class="settings-btn"></div>
+        
+    </div>
+
+    
+
+    <div class="settings-panel" id="reader-settings-panel">
+        <div class="settings-panel-inner">
+            <div class="settings-panel-header">
+                <span class="settings-panel-title">阅读设置</span>
+                <span class="settings-panel-hint">仅在文章页对正文生效</span>
+            </div>
+            <div class="settings-panel-body">
+                <label class="settings-row">
+                    <span>显示「回到顶部」</span>
+                    <input type="checkbox" id="setting-show-top">
+                </label>
+                <label class="settings-row">
+                    <span>隐藏背景图片</span>
+                    <input type="checkbox" id="setting-hide-bg">
+                </label>
+                <label class="settings-row">
+                    <span>字体</span>
+                    <select id="setting-font-family">
+                        <option value="noto-sans-sc">思源黑体</option>
+                        <option value="system-default">系统默认</option>
+                    </select>
+                </label>
+                <div class="settings-group-title">文章字体</div>
+                <label class="settings-row settings-row-range">
+                    <span>字重</span>
+                    <input type="range" id="setting-font-weight" min="1" max="5" step="1">
+                </label>
+                <label class="settings-row settings-row-range">
+                    <span>字间距</span>
+                    <input type="range" id="setting-letter-spacing" min="-2" max="8" step="1">
+                </label>
+                <label class="settings-row settings-row-range">
+                    <span>字号</span>
+                    <input type="range" id="setting-font-size" min="90" max="130" step="10">
+                </label>
+                <div class="settings-group-title">背景</div>
+                <label class="settings-row settings-row-range">
+                    <span>背景可见度</span>
+                    <input type="range" id="setting-bg-opacity" min="0" max="50" step="2.5">
+                </label>
+                <label class="settings-row settings-row-range settings-row-range-rtl">
+                    <span>背景模糊度</span>
+                    <input type="range" id="setting-bg-blur" min="0" max="20" step="1">
+                </label>
+            </div>
+            <div class="settings-panel-footer">
+                <button id="setting-reset-btn" class="settings-reset-btn">重置</button>
+            </div>
+        </div>
+    </div>
+
+</header>
+<nav class="head-menu">
+    <a href="/">首页</a>
+    
+        <a href="/about-me">关于我</a>
+    
+        <a href="/about-website">关于网站</a>
+    
+        <a href="/comments">留言板</a>
+    
+</nav>
+    <main>
+    <div class="wrap min">
+        <section class="post-title">
+            <h2>「主播女孩重度依赖」动画分集浅读</h2>
+            <div class="post-meta">
+                <time class="date">2026.04.12</time>
+
+                
+                <span class="word-count">约 2600 字</span>
+                <span class="read-time">预计阅读 5 分钟</span>
+            
+            </div>
+        </section>
+        <article class="post-content">
+            <blockquote>
+<p>没玩过原作；本文感想性质大于解析性质，可能（一定）有纰漏和错误之处，仅供参考。</p>
+</blockquote>
+<hr>
+<p><a target="_blank" rel="noopener" href="https://bgm.tv/subject/606263">「主播女孩重度依赖」</a></p>
+<hr>
+<h2 id="EP-01"><a href="#EP-01" class="headerlink" title="EP 01"></a><strong>EP 01</strong></h2><p>后现代主义作品，后现代的症结。追逐着「Lain」的形，是否得乎其神则需要后续解答。</p>
+<p>相比起已经不新颖的意识流手法，叙事的碎片化更容易让人迷惑。目前来看除了围绕着かちぇ有推进之外，其他零散的叙事都是即用即弃，充当表达作者理念的工具。然而这一表达的形式又回归到最低级的方式——直接以角色之口说出来。这也值得让人警惕作品里搭建的场景与符号究竟是确有其所指还是仅营造氛围感的堆砌。另外，导演 &#x2F; nyalra 需要想清楚一件事，长达 4 小时的 TV 动画是不可能一直保持意识流到底的。希望 EP1 只是作为一种炒作 &#x2F; 开幕雷击，而非全作的核心基调。</p>
+<hr>
+<p>EP1 时未发觉大众对本作的拒绝理解，遂未进行挖掘。直到 EP2 意识到这份工作除我之外无人在做时才开始动笔。能挖掘出东西的不一定是优秀的作品，也许反之，正因为作者表达得不明晰（能力不足或是刻意为之）才需要「挖」。本文可以看作一种阅读理解训练。</p>
+<hr>
+<h2 id="EP-02"><a href="#EP-02" class="headerlink" title="EP 02"></a><strong>EP 02</strong></h2><p>属于是周指活了，其他的作品（典型如「淡岛百景」）你不看也能知道大概是怎么回事，不会偏离预期太多，然而「NGO」足够有趣，无法预料会将观众带向怎样的终点。所以说本作就像一个过山车，即使座椅破破烂烂，安全装置老化严重、制动也不够灵敏，但上坡的路上仍然让人心潮澎湃。（后面应该会有大的吧？没有的话我就急了）</p>
+<p>那么还是得清算一下这个过山车的硬伤。</p>
+<p>EP2 比 EP1 显然得少了很多灵性，毕竟不是监督回。缺乏 EP1 的古灵精怪，象征演出极少，镜头也比较平庸，而对于文字演出的应用显然频繁了很多，甚至有些路径依赖——稍显重要的台词就会直接黑底白字打在屏幕上，仿佛抱着必出名句的决心！由于没有看过物语系列，但就扫过几眼的 「化物语」EP1 来讲，其文字演出与「NGO」完全不是一个概念。物语的文字演出有两个作用，其一是模拟第一人称的快速的思维活动（持续时间较短），其二是补充未展现的背后信息（持续时间较长）。然而「NGO」的文字演出仅有一个作用，就是强调突出台词本身。那么台词如何呢？基本止于纯粹的观点输出，而且比 EP1 更严重。以至于我感到好奇，关于后现代、网络、社交的症结真的足够输出13集吗？就连「Lain」前期也是相当规整的悬疑故事。然而本作目前的情节提取出来连一集都填不满。</p>
+<p>目前的叙事主轴有两条，其一是围绕着卡茜，其二是围绕着超天酱。与超天酱联动的三人组中，美血华是卡茜的朋友。</p>
+<p>其实对于<a target="_blank" rel="noopener" href="https://bgm.tv/character/197931">洛丽波</a>的情节，我个人已经比较满意。对于一个曾带给自己动力的形象，你会想成为、然后超越他，这其实是非常能共感的。对这一点的叙事也基本没有观点输出，而更多是在吐槽洛丽波对于超天酱的喜爱，以及不愿承认的傲娇。</p>
+<p>值得注意的是，这个瞳孔颜色的变化应该很明显了（03:16）。</p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/1357ab9449a42.webp"></p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/719109ecc4823.webp"></p>
+<p>之后紧跟着是糖糖（剧里只在EP1 8 ~ 9分钟左右的地方提及了名字，但当时的头发是披散的，不太好认出来，也没什么能将其与超天酱联系起来的线索）的一段情节。网络言论攻击，碎碎念，对阿P的依赖。糖糖是超天酱的真实形态，还是作为超天酱的一种内心展现？那么包括EP1 8 ~ 9分钟在内，糖糖所处的房间或许也并非真实的房间，可以看作一种内心世界的演出。而ED后的海边是真实的吗？</p>
+<p>还有一个比较有趣的演出：</p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/ec04c8ea74a9d.webp"></p>
+<p>数不清的电视和蓝屏&#x2F;故障，在EP1 8~9分钟也有类似的意象。不过这个超天酱（掉色白毛版）忧郁地坐在这里（之后躺了下来），看着自己在台上与三人组的互动，还是有点意义不明了。如果没有时间的蒙太奇，那就是一种对自我内心的审视？</p>
+<p>补充：想了一下，理解了一些。确实应该是与台上的互动同时发生的情景。这是蓝屏的电脑熄屏之后重启的画面（17:41）：</p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/fa7a2da2766f0.webp"></p>
+<p>紧接着：</p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/c2437fb1a9d14.webp"></p>
+<p>所以这一段是超天酱引出的回忆，洛丽波说要跟超天酱玩格斗游戏的往事。</p>
+<p>之后超天酱从坐着到躺下，再到扭过头不再看屏幕，然后身后的电脑蓝屏：</p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/6605b0db2828e.webp"></p>
+<p>洛丽波其实算是本作一个正面例子吧，氛围很阳光，真正从超天酱身上获得光明，被激励到的人。超天酱是如何看待她偶像活动的意义的呢？如果是带给大家幸福与快乐，那么她在洛丽波身上，应该看到了自己努力的成果，并为此感到欣慰。然而超天酱无神地凝视着天花板，可以解读成一种配得感缺失：我OD、自残、精神崩溃，只是想利用着偶像活动赚钱，却阴差阳错地带给你光明与温暖，我真的配得到你的喜欢吗？</p>
+<p>前面超天酱也说过「身处顶点，真是孤独又寂寞」，回忆洛丽波的故事之后说道「（那条留言）让我记得这孩子（洛丽波）也很寂寞」。我们应该思考，超天酱口中的孤独与寂寞是一种清高自傲吗？显然不是，其实更像是一种求救信号，粉丝和人气既是她的托举，也扼得让她窒息。我们应当每时每刻都要想起，超天酱是一个自残、OD、精神疾病缠身的、但在大众面前表现得光鲜亮丽的人。她通过确认洛丽波的寂寞，来合理化自己多年来的病态与孤独。</p>
+<p>这些都在能解读的范围之内，然而这个画面我是真不知道怎么解读了（18:29）：</p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/6ea4c60de7f33.webp"></p>
+<p>这肯定会让人想起「EVA」，把脚本直接搬上画面，但要表达什么呢？虽然本作确实有些 meta 的暗示，但远不到如此程度，出现的时机也很诡异，非常突兀，看不到必要性。暂且观察吧。我倒是有一种比较坏的猜测，meta 有时是作者的无能和摆烂的遮羞布，希望不要是那样。</p>
+<p>此外还有蝴蝶，也是值得玩味的一点。不仅在上述超天酱的内心世界（暂定）里出现了，在联动的台上也出现了。</p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/4c519e563c98c.webp"></p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/291bdb89c4203.webp"></p>
+<p>那么蝴蝶到底作为一种怎样的表达，还需要后续揭晓。</p>
+<p>虽然本集看起来最爆的是结尾的入脑粉持刀闹事，但仅仅在开头有铺垫，整个情节相当单薄，如果没有后续的描绘那基本只是路边小插曲。</p>
+<p>但还是有点值得注意的地方：</p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/43ecd614184de.webp"></p>
+<p>在被刺之前，超天酱看到了什么如此开心？是阿P的信息吗？这也可以呼应后面那句「阿P在等我」。</p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/d49f3ca1e56bb.webp"></p>
+<p>接下了刀，手掌流血。毕竟是肉身。眼神坚定，没有鄙夷，更没有恐惧，这让女子的复仇变得毫无意义。如果受害者不害怕，施暴者的力量就瞬间坍塌了。</p>
+<p><img src="https://lsky.ry.mk/i/2026/04/12/9b9aba92f4b45.webp"></p>
+<p>将血擦在衣服上，极具轻蔑感的动作。「既然你认为你的烂生活归咎于我，那我就把这代价（血）还给你，从此我们两清。」从中我们可以瞥见超天酱的塑造，她绝非一个纯粹的堆满阴暗要素的个体，在与洛丽波的交流之后，她是一个找到了微弱光亮的灵魂。即使破碎不堪，即使摇摇欲坠。</p>
+<p>此外也有把整场直播包含持刀乱入事件完全看作是象征舞台的解读。</p>
+<p>ED非常不错啊，歌和画面都是。Moaang 还是强！</p>
+
+        </article>
+        <section class="post-near">
+            <ul>
+                
+                    <li>上一篇: 看完啦 (つд⊂)</li>
+                
+                
+                    <li>下一篇: <a href="/10/">2026-02 ~ 2026-04 随笔</a></li>
+                
+            </ul>
+        </section>
+        
+            <section class="post-tags">
+            <a class="-none-link" href="/tags/%E8%AF%84%E6%9E%90/" rel="tag">评析</a>
+            </section>
+        
+    
+        <section class="post-author">
+        
+            <figure class="author-avatar">
+                <img src="/images/webp/40df5751567c0aeb.webp" alt="Whatasiger" />
+            </figure>
+        
+            <div class="author-info">
+                <h4>Whatasiger</h4>
+                <p>本站未注明转载的文章均为原创，并采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="nofollow">CC BY-NC-SA 4.0</a> 授权协议，<span style="color: #E91E63">转载请注明来源</span>。</p>
+            </div>
+        </section>
+    
+    </div>
+</main>
+
+<script>
+    (function () {
+        // 文章有封面图时，将整站背景替换为该封面
+        // 但"关于网站"页面使用主页背景
+        var cover = "/images/webp/606263_3fRrj.webp";
+        var pageTitle = "「主播女孩重度依赖」动画分集浅读";
+        
+        if (!cover) return;
+        
+        // 如果是"关于网站"页面，不使用封面图，使用主页背景
+        if (pageTitle === "关于网站") {
+            document.body.style.removeProperty("--page-bg-image");
+            return;
+        }
+
+        // 等待 DOM 就绪后再修改 CSS 变量，避免和首屏样式冲突
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", function () {
+                document.body.style.setProperty("--page-bg-image", "url(" + cover + ")");
+            });
+        } else {
+            document.body.style.setProperty("--page-bg-image", "url(" + cover + ")");
+        }
+    })();
+</script>
+
+    <footer>
+    <div class="wrap min">
+        <section class="widget">
+            <div class="row">
+                <div class="col-m-4">
+                    <h3 class="title-recent">最新文章：</h3>
+                    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/11/">「主播女孩重度依赖」动画分集浅读</a></li><li class="post-list-item"><a class="post-list-link" href="/10/">2026-02 ~ 2026-04 随笔</a></li><li class="post-list-item"><a class="post-list-link" href="/about-website/">关于网站</a></li><li class="post-list-item"><a class="post-list-link" href="/8/">2026-02-16 除夕</a></li><li class="post-list-item"><a class="post-list-link" href="/7/">1月14日：失败了</a></li><li class="post-list-item"><a class="post-list-link" href="/6/">我们的时间从什么时候起停下来了</a></li></ul>
+                </div>
+                <div class="col-m-4">
+                    <h3 class="title-date">时光机：</h3>
+                    <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/04/">April 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/02/">February 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/01/">January 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/12/">December 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/01/">January 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/07/">July 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li></ul>
+                </div>
+                <div class="col-m-4">
+                    <h3 class="title-tags">标签云：</h3>
+                    <a href="/tags/%E5%B0%8F%E8%AF%B4/" style="font-size: 16.67px;">小说</a> <a href="/tags/%E7%89%B9%E6%AE%8A/" style="font-size: 13.33px;">特殊</a> <a href="/tags/%E8%AF%84%E6%9E%90/" style="font-size: 10px;">评析</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 20px;">随笔</a>
+                </div>
+            </div>
+        </section>
+        <section class="sub-footer">
+            <p>© 2026 <a href="/">Whatasiger</a>. All Rights Reserved. Theme By <a href="https://github.com/Dreamer-Paul/Hingle" target="_blank" rel="nofollow">Hingle</a>.</p>
+        </section>
+    </div>
+</footer>
+
+<div class="buttons">
+    <button class="to-top" href="#"></button>
+</div>
+
+
+<script src="/static/kico.js"></script>
+<script src="/static/hingle.js"></script>
+
+
+<script>var hingle = new Paul_Hingle({"copyright":false,"night":true});</script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const toTopBtn = document.querySelector('.to-top');
+        if (toTopBtn) {
+          toTopBtn.addEventListener('click', function(e) {
+            e.preventDefault(); // 阻止默认行为
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // 平滑滚动到顶部
+          });
+        }
+      });
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const searchBox = document.querySelector('.head-search');
+        const searchBtn = document.querySelector('.search-btn');
+
+        if (searchBox && searchBtn) {
+          // 监听整个网页的点击事件
+          document.addEventListener('click', function(event) {
+            // 如果搜索框当前是展开状态 (active)
+            if (searchBox.classList.contains('active')) {
+              // 且手指点击的位置既不在搜索框内部，也不在放大镜图标上
+              if (!searchBox.contains(event.target) && !searchBtn.contains(event.target)) {
+                // 移除 active 状态，触发 CSS 动画收回搜索框
+                searchBox.classList.remove('active');
+              }
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
