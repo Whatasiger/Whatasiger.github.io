@@ -136,7 +136,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - RC3.1</a>
+    <a href="/" class="header-logo">Whatasiger - GA 1.0</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -223,6 +223,9 @@
                 
                 <span class="word-count">约 11000 字</span>
                 <span class="read-time">预计阅读 19 分钟</span>
+                <span id="busuanzi_container_page_pv" class="view" style="display:none;">
+                    <span id="busuanzi_value_page_pv"></span> 次阅读
+                </span>
             
             </div>
         </section>
@@ -633,16 +636,7 @@
 <p>fin.</p>
 
         </article>
-        <section class="post-near">
-            <ul>
-                
-                    <li>上一篇: <a href="/4/">2025年12月深夜日记</a></li>
-                
-                
-                    <li>下一篇: <a href="/2/">『末班花火』</a></li>
-                
-            </ul>
-        </section>
+
         
             <section class="post-tags">
             <a class="-none-link" href="/tags/%E5%B0%8F%E8%AF%B4/" rel="tag">小说</a>
@@ -661,6 +655,117 @@
             </div>
         </section>
     
+    
+
+<section class="post-comments">
+    <div
+        id="tcomment"
+        data-env-id="https://comment.whatasiger.xyz"
+        data-lang="zh-CN"
+        data-blogger-nick="Whatasiger"
+        data-blogger-label="博主"
+        data-blogger-avatar="/images/webp/40df5751567c0aeb.webp"></div>
+    <script src="https://cdn.jsdelivr.net/npm/twikoo@1.7.7/dist/twikoo.min.js"></script>
+    <script>
+        (function () {
+            var container = document.getElementById('tcomment');
+            if (!container) return;
+
+            var bloggerNick = container.dataset.bloggerNick || 'Whatasiger';
+            var bloggerLabel = container.dataset.bloggerLabel || '博主';
+            var bloggerAvatar = container.dataset.bloggerAvatar || '';
+            var envId = container.dataset.envId || '';
+            var lang = container.dataset.lang || 'zh-CN';
+            var observer = null;
+
+            function __textOf(selector, root) {
+                var el = root.querySelector(selector);
+                return el ? (el.textContent || '').trim() : '';
+            }
+
+            function __isBloggerComment(commentEl) {
+                if (!commentEl) return false;
+                if (commentEl.classList.contains('tk-admin')) return true;
+
+                var nickText = __textOf('.tk-nick', commentEl) || __textOf('.tk-nick-link', commentEl);
+                if (nickText === bloggerNick) return true;
+
+                var tagNodes = commentEl.querySelectorAll('.tk-tag, .tk-extra, .tk-meta span, .tk-nick + span');
+                for (var i = 0; i < tagNodes.length; i++) {
+                    var text = (tagNodes[i].textContent || '').trim();
+                    if (text === bloggerLabel) return true;
+                }
+                return false;
+            }
+
+            function __replaceAvatar(commentEl) {
+                if (!bloggerAvatar || !__isBloggerComment(commentEl)) return;
+
+                var avatarImg = commentEl.querySelector('.tk-avatar img, .tk-avatar-img');
+                if (!avatarImg) return;
+
+                if (avatarImg.getAttribute('src') !== bloggerAvatar) {
+                    avatarImg.setAttribute('src', bloggerAvatar);
+                }
+                avatarImg.removeAttribute('srcset');
+                avatarImg.setAttribute('data-force-blogger-avatar', 'true');
+            }
+
+            function __applyBloggerAvatar(root) {
+                if (!bloggerAvatar) return;
+                var scope = root || document;
+                var comments = scope.querySelectorAll('.tk-comment');
+                for (var i = 0; i < comments.length; i++) {
+                    __replaceAvatar(comments[i]);
+                }
+            }
+
+            function __watchComments() {
+                var target = document.querySelector('#twikoo, #tcomment, .twikoo');
+                if (!target || observer) return;
+
+                observer = new MutationObserver(function (mutations) {
+                    for (var i = 0; i < mutations.length; i++) {
+                        var mutation = mutations[i];
+                        for (var j = 0; j < mutation.addedNodes.length; j++) {
+                            var node = mutation.addedNodes[j];
+                            if (!node || node.nodeType !== 1) continue;
+                            if (node.matches && node.matches('.tk-comment')) {
+                                __replaceAvatar(node);
+                            } else if (node.querySelectorAll) {
+                                __applyBloggerAvatar(node);
+                            }
+                        }
+                    }
+                });
+                observer.observe(target, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+
+            function __initTwikoo() {
+                if (!window.twikoo) return;
+                twikoo.init({
+                    envId: envId,
+                    el: '#tcomment',
+                    lang: lang,
+                    onCommentLoaded: function () {
+                        __applyBloggerAvatar();
+                        __watchComments();
+                    }
+                });
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', __initTwikoo);
+            } else {
+                __initTwikoo();
+            }
+        })();
+    </script>
+</section>
+
+
     </div>
 </main>
 
@@ -724,6 +829,7 @@
 
 
 <script>var hingle = new Paul_Hingle({"copyright":false,"night":true});</script>
+<script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const toTopBtn = document.querySelector('.to-top');

@@ -236,6 +236,17 @@ input, textarea, pre, hr, blockquote {
     -webkit-filter: none;
 }
 
+/* 夜间模式下，Twikoo 评论头像不跟随全局图片压暗 */
+.dark-theme #tcomment .tk-avatar img,
+.dark-theme #tcomment .tk-avatar-img,
+.dark-theme #twikoo .tk-avatar img,
+.dark-theme #twikoo .tk-avatar-img,
+.dark-theme .twikoo .tk-avatar img,
+.dark-theme .twikoo .tk-avatar-img {
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+
 /* 夜间模式代码块的斑马纹背景，改为浅色条纹（深色背景适配） */
 .dark-theme pre {
     background-image: linear-gradient(rgba(255, 255, 255, .05) 50%, transparent 0);
@@ -1090,6 +1101,44 @@ article table tr:hover, .post-content table tr:hover {
 .post-comments input, .post-comments textarea {
     -webkit-appearance: none;
     -moz-appearance: none;
+}
+
+/* Twikoo 评论正文：用更强覆盖拉开与上下信息区的距离 */
+#tcomment .tk-comment .tk-content,
+#twikoo .tk-comment .tk-content,
+.twikoo .tk-comment .tk-content {
+    display: block;
+    padding: .8em 1.6em !important;
+}
+
+#tcomment .tk-comment .tk-content > :first-child,
+#twikoo .tk-comment .tk-content > :first-child,
+.twikoo .tk-comment .tk-content > :first-child {
+    margin-top: 0 !important;
+}
+
+#tcomment .tk-comment .tk-content > :last-child,
+#twikoo .tk-comment .tk-content > :last-child,
+.twikoo .tk-comment .tk-content > :last-child {
+    margin-bottom: 0 !important;
+}
+
+#tcomment .tk-comment .tk-content p,
+#tcomment .tk-comment .tk-content ul,
+#tcomment .tk-comment .tk-content ol,
+#tcomment .tk-comment .tk-content blockquote,
+#tcomment .tk-comment .tk-content pre,
+#twikoo .tk-comment .tk-content p,
+#twikoo .tk-comment .tk-content ul,
+#twikoo .tk-comment .tk-content ol,
+#twikoo .tk-comment .tk-content blockquote,
+#twikoo .tk-comment .tk-content pre,
+.twikoo .tk-comment .tk-content p,
+.twikoo .tk-comment .tk-content ul,
+.twikoo .tk-comment .tk-content ol,
+.twikoo .tk-comment .tk-content blockquote,
+.twikoo .tk-comment .tk-content pre {
+    margin: .55em 0 !important;
 }
 
 /* 评论表单底部间距 */

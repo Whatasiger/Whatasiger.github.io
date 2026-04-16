@@ -136,7 +136,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - RC3.1</a>
+    <a href="/" class="header-logo">Whatasiger - GA 1.0</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -221,13 +221,106 @@
                 <time class="date">2026.02.20</time>
 
                 
-                <span class="word-count">约 1100 字</span>
-                <span class="read-time">预计阅读 2 分钟</span>
+                <span class="word-count">约 2600 字</span>
+                <span class="read-time">预计阅读 5 分钟</span>
+                <span id="busuanzi_container_page_pv" class="view" style="display:none;">
+                    <span id="busuanzi_value_page_pv"></span> 次阅读
+                </span>
             
             </div>
         </section>
         <article class="post-content">
-            <h3 id="建站流程"><a href="#建站流程" class="headerlink" title="建站流程"></a><strong>建站流程</strong></h3><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1odZYBKEQV/">成为冻鳗糕手第一步？教你零基础搭建属于自己的个人博客！丨Hexo建站经验分享</a></p>
+            <style>
+#bsz-stats {
+  display: none;
+  gap: 1rem;
+  margin: 0 0 2rem;
+}
+#bsz-stats.loaded { display: flex; }
+.bsz-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  padding: 1.4rem 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  transition: transform .25s, box-shadow .25s;
+}
+.bsz-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.11);
+}
+.bsz-icon {
+  font-size: 1.4rem;
+  color: var(--blue);
+}
+.bsz-num {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--blue);
+  line-height: 1.15;
+}
+.bsz-label {
+  font-size: .78rem;
+  color: #999;
+  font-weight: 500;
+  letter-spacing: .04em;
+}
+.dark-theme .bsz-card {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.dark-theme .bsz-label { color: #666; }
+@media (max-width: 600px) {
+  #bsz-stats { flex-direction: column; }
+}
+</style>
+
+<div id="bsz-stats">
+  <div class="bsz-card">
+    <span class="bsz-icon"><i class="fa fa-eye"></i></span>
+    <span class="bsz-num"><span id="busuanzi_container_site_pv" style="display:inline;"><span id="busuanzi_value_site_pv">…</span></span></span>
+    <span class="bsz-label">本站访问量（PV）</span>
+  </div>
+  <div class="bsz-card">
+    <span class="bsz-icon"><i class="fa fa-user"></i></span>
+    <span class="bsz-num"><span id="busuanzi_container_site_uv" style="display:inline;"><span id="busuanzi_value_site_uv">…</span></span></span>
+    <span class="bsz-label">本站访客数（UV）</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  function check() {
+    var pv = document.getElementById('busuanzi_value_site_pv');
+    var uv = document.getElementById('busuanzi_value_site_uv');
+    if (pv && uv && pv.textContent.trim() && pv.textContent.trim() !== '…'
+        && uv.textContent.trim() && uv.textContent.trim() !== '…') {
+      document.getElementById('bsz-stats').classList.add('loaded');
+    } else {
+      setTimeout(check, 250);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', check);
+  } else {
+    check();
+  }
+})();
+</script>
+
+<h3 id="基本信息"><a href="#基本信息" class="headerlink" title="基本信息"></a><strong>基本信息</strong></h3><p>搭建：<a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a></p>
+<p>基础主题：<a target="_blank" rel="noopener" href="https://github.com/Dreamer-Paul/Hingle">Hingle</a></p>
+<p>托管：<a target="_blank" rel="noopener" href="https://www.cloudflare.com/">Cloudflare Pages</a></p>
+<hr>
+<h3 id="建站流程"><a href="#建站流程" class="headerlink" title="建站流程"></a><strong>建站流程</strong></h3><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1odZYBKEQV/">成为冻鳗糕手第一步？教你零基础搭建属于自己的个人博客！丨Hexo建站经验分享</a></p>
 <p>with <a target="_blank" rel="noopener" href="https://aistudio.google.com/prompts/new_chat?model=gemini-3.1-pro-preview">Gemini 3.1 Pro</a></p>
 <p>with <a target="_blank" rel="noopener" href="https://cursor.com/">Cursor</a></p>
 <hr>
@@ -241,9 +334,9 @@
 </ul>
 <hr>
 <h4 id="Alpha（2026-02-21）"><a href="#Alpha（2026-02-21）" class="headerlink" title="Alpha（2026-02-21）"></a>Alpha（2026-02-21）</h4><ul>
-<li>由Github Pages更换为Cloudflare Pages驱动。</li>
+<li>由 Github Pages 更换为 Cloudflare Pages 驱动。</li>
 <li>购入专属域名。</li>
-<li>修复了about-me界面的一个格式错误。</li>
+<li>修复了 about-me 界面的一个格式错误。</li>
 </ul>
 <hr>
 <h4 id="Beta-1（2026-02-22）"><a href="#Beta-1（2026-02-22）" class="headerlink" title="Beta 1（2026-02-22）"></a>Beta 1（2026-02-22）</h4><ul>
@@ -271,7 +364,7 @@
 <li>文章内字数统计和阅读时间估计</li>
 <li>搜索功能（支持搜索标签）</li>
 <li>开关灯模式记忆</li>
-<li>PC端目录可收起</li>
+<li>PC 端目录可收起</li>
 </ul>
 </li>
 <li>视觉优化<ul>
@@ -284,7 +377,7 @@
 </ul>
 <hr>
 <h4 id="Beta-3（2026-02-22）"><a href="#Beta-3（2026-02-22）" class="headerlink" title="Beta 3（2026-02-22）"></a>Beta 3（2026-02-22）</h4><ul>
-<li>修复「回到顶部」「目录」按钮被置底的Bug</li>
+<li>修复「回到顶部」「目录」按钮被置底的 Bug</li>
 <li>优化细节<ul>
 <li>优化目录章节跳转不到位的问题</li>
 <li>优化主页文章卡片阴影</li>
@@ -294,7 +387,7 @@
 <li>加入「更新日志」板块</li>
 </ul>
 <hr>
-<h4 id="RC1（2026-03-07）"><a href="#RC1（2026-03-07）" class="headerlink" title="RC1（2026-03-07）"></a>RC1（2026-03-07）</h4><ul>
+<h4 id="RC-1（2026-03-07）"><a href="#RC-1（2026-03-07）" class="headerlink" title="RC 1（2026-03-07）"></a>RC 1（2026-03-07）</h4><ul>
 <li>新增「设置」界面<ul>
 <li>可选思源黑体，调整字号、字间距、字重</li>
 <li>可调整背景可见度，或者直接隐藏背景图片</li>
@@ -309,7 +402,7 @@
 </li>
 </ul>
 <hr>
-<h4 id="RC2（2026-03-12）"><a href="#RC2（2026-03-12）" class="headerlink" title="RC2（2026-03-12）"></a>RC2（2026-03-12）</h4><ul>
+<h4 id="RC-2（2026-03-12）"><a href="#RC-2（2026-03-12）" class="headerlink" title="RC 2（2026-03-12）"></a>RC 2（2026-03-12）</h4><ul>
 <li>美学优化<ul>
 <li>新增首页背景水波纹动画，点击触发</li>
 <li>新增鼠标移上头像时轻微放大的动画</li>
@@ -324,7 +417,7 @@
 <li>文章二级链接后缀优化</li>
 </ul>
 <hr>
-<h4 id="RC3（2026-03-29）"><a href="#RC3（2026-03-29）" class="headerlink" title="RC3（2026-03-29）"></a>RC3（2026-03-29）</h4><ul>
+<h4 id="RC-3（2026-03-29）"><a href="#RC-3（2026-03-29）" class="headerlink" title="RC 3（2026-03-29）"></a>RC 3（2026-03-29）</h4><ul>
 <li>全面精简重构前端样式代码（.css），提升渲染性能。</li>
 <li>图片加载体验优化<ul>
 <li>由 .png 格式改为 .webp 格式，节省空间占用。</li>
@@ -344,22 +437,18 @@
 </li>
 </ul>
 <hr>
-<h4 id="RC3-1（2026-04-13）"><a href="#RC3-1（2026-04-13）" class="headerlink" title="RC3.1（2026-04-13）"></a>RC3.1（2026-04-13）</h4><ul>
+<h4 id="RC-3-1（2026-04-13）"><a href="#RC-3-1（2026-04-13）" class="headerlink" title="RC 3.1（2026-04-13）"></a>RC 3.1（2026-04-13）</h4><ul>
 <li>微调首页文章卡片圆角、动画、模糊、缩放效果。</li>
 <li>修复文章内图片在深色模式下偏暗的问题。</li>
 </ul>
+<hr>
+<h4 id="GA-1-0（2026-04-13）"><a href="#GA-1-0（2026-04-13）" class="headerlink" title="GA 1.0（2026-04-13）"></a>GA 1.0（2026-04-13）</h4><ul>
+<li>添加基于 <a target="_blank" rel="noopener" href="https://twikoo.js.org/">Twikoo</a> 的评论功能。</li>
+<li>添加基于 <a target="_blank" rel="noopener" href="https://www.busuanzi.cc/">不蒜子</a> 的文章阅读量统计功能。</li>
+</ul>
 
         </article>
-        <section class="post-near">
-            <ul>
-                
-                    <li>上一篇: <a href="/10/">2026-02 ~ 2026-04 随笔</a></li>
-                
-                
-                    <li>下一篇: <a href="/8/">2026-02-16 除夕</a></li>
-                
-            </ul>
-        </section>
+
         
             <section class="post-tags">
             <a class="-none-link" href="/tags/%E7%89%B9%E6%AE%8A/" rel="tag">特殊</a>
@@ -378,6 +467,117 @@
             </div>
         </section>
     
+    
+
+<section class="post-comments">
+    <div
+        id="tcomment"
+        data-env-id="https://comment.whatasiger.xyz"
+        data-lang="zh-CN"
+        data-blogger-nick="Whatasiger"
+        data-blogger-label="博主"
+        data-blogger-avatar="/images/webp/40df5751567c0aeb.webp"></div>
+    <script src="https://cdn.jsdelivr.net/npm/twikoo@1.7.7/dist/twikoo.min.js"></script>
+    <script>
+        (function () {
+            var container = document.getElementById('tcomment');
+            if (!container) return;
+
+            var bloggerNick = container.dataset.bloggerNick || 'Whatasiger';
+            var bloggerLabel = container.dataset.bloggerLabel || '博主';
+            var bloggerAvatar = container.dataset.bloggerAvatar || '';
+            var envId = container.dataset.envId || '';
+            var lang = container.dataset.lang || 'zh-CN';
+            var observer = null;
+
+            function __textOf(selector, root) {
+                var el = root.querySelector(selector);
+                return el ? (el.textContent || '').trim() : '';
+            }
+
+            function __isBloggerComment(commentEl) {
+                if (!commentEl) return false;
+                if (commentEl.classList.contains('tk-admin')) return true;
+
+                var nickText = __textOf('.tk-nick', commentEl) || __textOf('.tk-nick-link', commentEl);
+                if (nickText === bloggerNick) return true;
+
+                var tagNodes = commentEl.querySelectorAll('.tk-tag, .tk-extra, .tk-meta span, .tk-nick + span');
+                for (var i = 0; i < tagNodes.length; i++) {
+                    var text = (tagNodes[i].textContent || '').trim();
+                    if (text === bloggerLabel) return true;
+                }
+                return false;
+            }
+
+            function __replaceAvatar(commentEl) {
+                if (!bloggerAvatar || !__isBloggerComment(commentEl)) return;
+
+                var avatarImg = commentEl.querySelector('.tk-avatar img, .tk-avatar-img');
+                if (!avatarImg) return;
+
+                if (avatarImg.getAttribute('src') !== bloggerAvatar) {
+                    avatarImg.setAttribute('src', bloggerAvatar);
+                }
+                avatarImg.removeAttribute('srcset');
+                avatarImg.setAttribute('data-force-blogger-avatar', 'true');
+            }
+
+            function __applyBloggerAvatar(root) {
+                if (!bloggerAvatar) return;
+                var scope = root || document;
+                var comments = scope.querySelectorAll('.tk-comment');
+                for (var i = 0; i < comments.length; i++) {
+                    __replaceAvatar(comments[i]);
+                }
+            }
+
+            function __watchComments() {
+                var target = document.querySelector('#twikoo, #tcomment, .twikoo');
+                if (!target || observer) return;
+
+                observer = new MutationObserver(function (mutations) {
+                    for (var i = 0; i < mutations.length; i++) {
+                        var mutation = mutations[i];
+                        for (var j = 0; j < mutation.addedNodes.length; j++) {
+                            var node = mutation.addedNodes[j];
+                            if (!node || node.nodeType !== 1) continue;
+                            if (node.matches && node.matches('.tk-comment')) {
+                                __replaceAvatar(node);
+                            } else if (node.querySelectorAll) {
+                                __applyBloggerAvatar(node);
+                            }
+                        }
+                    }
+                });
+                observer.observe(target, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+
+            function __initTwikoo() {
+                if (!window.twikoo) return;
+                twikoo.init({
+                    envId: envId,
+                    el: '#tcomment',
+                    lang: lang,
+                    onCommentLoaded: function () {
+                        __applyBloggerAvatar();
+                        __watchComments();
+                    }
+                });
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', __initTwikoo);
+            } else {
+                __initTwikoo();
+            }
+        })();
+    </script>
+</section>
+
+
     </div>
 </main>
 
@@ -441,6 +641,7 @@
 
 
 <script>var hingle = new Paul_Hingle({"copyright":false,"night":true});</script>
+<script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const toTopBtn = document.querySelector('.to-top');
