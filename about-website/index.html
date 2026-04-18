@@ -136,7 +136,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - GA 1.0</a>
+    <a href="/" class="header-logo">Whatasiger - GA 1.1</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -221,7 +221,7 @@
                 <time class="date">2026.02.20</time>
 
                 
-                <span class="word-count">约 2600 字</span>
+                <span class="word-count">约 2700 字</span>
                 <span class="read-time">预计阅读 5 分钟</span>
                 <span id="busuanzi_container_page_pv" class="view" style="display:none;">
                     <span id="busuanzi_value_page_pv"></span> 次阅读
@@ -446,6 +446,15 @@
 <li>添加基于 <a target="_blank" rel="noopener" href="https://twikoo.js.org/">Twikoo</a> 的评论功能。</li>
 <li>添加基于 <a target="_blank" rel="noopener" href="https://www.busuanzi.cc/">不蒜子</a> 的文章阅读量、网站访问量统计功能。</li>
 </ul>
+<hr>
+<h4 id="GA-1-1（2026-04-18）"><a href="#GA-1-1（2026-04-18）" class="headerlink" title="GA 1.1（2026-04-18）"></a>GA 1.1（2026-04-18）</h4><ul>
+<li>修复 Bug<ul>
+<li>修复首页的背景模糊度设为默认时，滑块未归位的问题。</li>
+<li>修复用户评论的头像显示错误问题。</li>
+</ul>
+</li>
+<li>新增404页面<a href="www.whatasiger.xyz/99999">彩蛋</a>。</li>
+</ul>
 
         </article>
 
@@ -490,19 +499,51 @@
             var lang = container.dataset.lang || 'zh-CN';
             var observer = null;
 
-            function __textOf(selector, root) {
-                var el = root.querySelector(selector);
+            // 判断某个后代节点是否属于 commentEl 自身（不跨越嵌套的 .tk-comment）
+            function __isOwnDescendant(commentEl, el) {
+                if (!el || !commentEl) return false;
+                var cur = el.parentNode;
+                while (cur && cur !== commentEl) {
+                    if (cur.nodeType === 1 && cur.classList && cur.classList.contains('tk-comment')) {
+                        return false;
+                    }
+                    cur = cur.parentNode;
+                }
+                return cur === commentEl;
+            }
+
+            // 仅在 commentEl 自身范围内查找（排除嵌套子评论）
+            function __ownQueryFirst(commentEl, selector) {
+                var all = commentEl.querySelectorAll(selector);
+                for (var i = 0; i < all.length; i++) {
+                    if (__isOwnDescendant(commentEl, all[i])) return all[i];
+                }
+                return null;
+            }
+
+            function __ownQueryAll(commentEl, selector) {
+                var all = commentEl.querySelectorAll(selector);
+                var own = [];
+                for (var i = 0; i < all.length; i++) {
+                    if (__isOwnDescendant(commentEl, all[i])) own.push(all[i]);
+                }
+                return own;
+            }
+
+            function __ownText(commentEl, selector) {
+                var el = __ownQueryFirst(commentEl, selector);
                 return el ? (el.textContent || '').trim() : '';
             }
 
             function __isBloggerComment(commentEl) {
                 if (!commentEl) return false;
+                // tk-admin 类只看自身，不受子回复影响，作为最可信证据
                 if (commentEl.classList.contains('tk-admin')) return true;
 
-                var nickText = __textOf('.tk-nick', commentEl) || __textOf('.tk-nick-link', commentEl);
-                if (nickText === bloggerNick) return true;
+                var nickText = __ownText(commentEl, '.tk-nick') || __ownText(commentEl, '.tk-nick-link');
+                if (nickText && nickText === bloggerNick) return true;
 
-                var tagNodes = commentEl.querySelectorAll('.tk-tag, .tk-extra, .tk-meta span, .tk-nick + span');
+                var tagNodes = __ownQueryAll(commentEl, '.tk-tag, .tk-extra, .tk-meta span, .tk-nick + span');
                 for (var i = 0; i < tagNodes.length; i++) {
                     var text = (tagNodes[i].textContent || '').trim();
                     if (text === bloggerLabel) return true;
@@ -513,7 +554,8 @@
             function __replaceAvatar(commentEl) {
                 if (!bloggerAvatar || !__isBloggerComment(commentEl)) return;
 
-                var avatarImg = commentEl.querySelector('.tk-avatar img, .tk-avatar-img');
+                // 头像也必须取自身的，避免拿到嵌套子评论的头像
+                var avatarImg = __ownQueryFirst(commentEl, '.tk-avatar img, .tk-avatar-img');
                 if (!avatarImg) return;
 
                 if (avatarImg.getAttribute('src') !== bloggerAvatar) {

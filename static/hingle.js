@@ -146,9 +146,9 @@ var Paul_Hingle = function (config) {
         if (bgInput) bgInput.value = ((typeof currentSettings.bgOpacity === "number"
             ? currentSettings.bgOpacity
             : defaultSettings.bgOpacity) / 2);
-        if (bgBlurInput) bgBlurInput.value = (typeof currentSettings.bgBlur === "number"
-            ? currentSettings.bgBlur
-            : defaultSettings.bgBlur);
+        if (bgBlurInput) bgBlurInput.value = body.classList.contains("post-page")
+            ? (typeof currentSettings.bgBlur === "number" ? currentSettings.bgBlur : defaultSettings.bgBlur)
+            : 0;
 
         // 打开 / 关闭面板
         btn.addEventListener("click", function (e) {
@@ -258,7 +258,7 @@ var Paul_Hingle = function (config) {
                 if (letterInput) letterInput.value = currentSettings.letterSpacing;
                 if (sizeInput) sizeInput.value = currentSettings.fontSize;
                 if (bgInput) bgInput.value = currentSettings.bgOpacity / 2;
-                if (bgBlurInput) bgBlurInput.value = currentSettings.bgBlur;
+                if (bgBlurInput) bgBlurInput.value = body.classList.contains("post-page") ? currentSettings.bgBlur : 0;
             });
         }
     }
