@@ -349,10 +349,9 @@ var Paul_Hingle = function (config) {
             firstLevel = 3;
         }
 
-        // 目录树节点（★修改点 1：增加了收起按钮的 HTML 结构）
         const trees = ks.create("section", {
             class: "article-list",
-            html: `<h4><span class="title">目录</span><div id="close-toc-btn" title="收起目录"></div></h4>`
+            html: `<h4><span class="title">目录</span><button id="close-toc-btn" type="button" title="收起目录" aria-label="收起目录"></button></h4>`
         });
 
         ks.each(headings, (t, index) => {
@@ -367,6 +366,36 @@ var Paul_Hingle = function (config) {
         });
 
         wrap.appendChild(trees);
+
+        function setActiveTocItem(activeIdx) {
+            if (activeIdx < 0 || activeIdx >= tocLinks.length) return;
+
+            if (activeIdx !== lastActive) {
+                lastActive = activeIdx;
+
+                for (var j = 0; j < tocLinks.length; j++) {
+                    if (j === activeIdx) {
+                        tocLinks[j].classList.add("active");
+                        tocLinks[j].setAttribute("aria-current", "true");
+                    } else {
+                        tocLinks[j].classList.remove("active");
+                        tocLinks[j].removeAttribute("aria-current");
+                    }
+                }
+
+                // 让当前激活项尽量出现在 TOC 视口里（仅滚动 TOC 容器内部）
+                var activeLink = tocLinks[activeIdx];
+                if (activeLink && trees.scrollHeight > trees.clientHeight) {
+                    var linkRect = activeLink.getBoundingClientRect();
+                    var listRect = trees.getBoundingClientRect();
+                    if (linkRect.top < listRect.top + 16 || linkRect.bottom > listRect.bottom - 16) {
+                        trees.scrollTop += linkRect.top - listRect.top - listRect.height / 2;
+                    }
+                }
+            }
+
+            syncActiveGroup(activeIdx);
+        }
 
         // ★修改点 2：给右上角的“收起”按钮绑定事件
         const closeBtn = document.getElementById("close-toc-btn");
@@ -403,10 +432,9 @@ var Paul_Hingle = function (config) {
                 }
             }
 
-            // ★修改点 3：智能判断设备
             if (window.innerWidth >= 800) {
-                // 如果是电脑端，点击悬浮按钮就解除收起状态，目录滑回来
-                body.classList.remove("toc-collapsed");
+                // 电脑端：悬浮目录按钮直接切换收起/展开，让阅读区更清爽
+                body.classList.toggle("toc-collapsed");
             } else {
                 // 如果是手机端，半隐藏状态点击后直接打开目录，否则维持切换逻辑
                 if (shouldForceOpenToc) {
@@ -455,6 +483,151 @@ var Paul_Hingle = function (config) {
         window.addEventListener("scroll", updateMobileTocButtonState, { passive: true });
         window.addEventListener("resize", updateMobileTocButtonState);
         updateMobileTocButtonState();
+
+        // ===== Scrollspy：高亮当前阅读到的章节 =====
+        var tocLinks = Array.prototype.slice.call(trees.querySelectorAll("a"));
+        var headingArr = Array.prototype.slice.call(headings);
+
+        // ===== 目录次级层级折叠（默认收起，滚动进入或点击箭头时展开） =====
+        var groupOf = {};            // groupKey -> { parent, children, hasChildren }
+        var groupKeyByLinkIdx = {};  // tocLinks 索引 -> 所属 groupKey
+        var activeGroupKey = -1;
+
+        function setGroupOpen(key, open) {
+            var g = groupOf[key];
+            if (!g || !g.hasChildren) return;
+            g.parent.classList.toggle("is-toc-open", open);
+            for (var ci = 0; ci < g.children.length; ci++) {
+                g.children[ci].classList.toggle("is-toc-open", open);
+            }
+        }
+
+        function syncActiveGroup(activeIdx) {
+            var key = groupKeyByLinkIdx[activeIdx];
+            if (key === undefined || key === activeGroupKey) return;
+            var prev = activeGroupKey;
+            activeGroupKey = key;
+            // 自动收起上一组（用户手动展开的会在该组离开活跃区时被收起一次，符合"目录跟随阅读"的预期）
+            if (prev !== -1) setGroupOpen(prev, false);
+            setGroupOpen(key, true);
+        }
+
+        (function buildTocGroups() {
+            var current = -1;
+            for (var li = 0; li < tocLinks.length; li++) {
+                var link = tocLinks[li];
+                var m = link.className.match(/(?:^|\s)item-(\d+)/);
+                var level = m ? parseInt(m[1], 10) : 1;
+                if (level === 1) {
+                    current = li;
+                    groupOf[current] = { parent: link, children: [], hasChildren: false };
+                    groupKeyByLinkIdx[li] = current;
+                } else if (current !== -1) {
+                    link.classList.add("is-toc-child");
+                    groupOf[current].children.push(link);
+                    groupOf[current].hasChildren = true;
+                    groupKeyByLinkIdx[li] = current;
+                }
+            }
+
+            Object.keys(groupOf).forEach(function (rawKey) {
+                var key = parseInt(rawKey, 10);
+                var g = groupOf[key];
+                if (!g.hasChildren) return;
+                g.parent.classList.add("has-toc-children");
+
+                // 点击父级目录项本身即可展开/收起子层级（不跳转锚点）
+                g.parent.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var willOpen = !g.parent.classList.contains("is-toc-open");
+                    setGroupOpen(key, willOpen);
+                    // 展开后如果用户想跳到该标题，仍然执行锚点滚动
+                    var href = g.parent.getAttribute("href");
+                    if (href) {
+                        var target = document.querySelector(href);
+                        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                });
+            });
+        })();
+
+        if (tocLinks.length > 0 && headingArr.length === tocLinks.length) {
+            var spyTicking = false;
+            var lastActive = -1;
+            // 点击目录跳转后 smooth scroll 期间短暂锁住高亮，防止误高亮上一项。
+            // 时间窗口短 + 用户主动滚动方向反转时立即解锁，保证跟随灵敏。
+            var pinnedIdx = -1;
+            var pinnedUntil = 0;
+            var pinnedScrollDir = 0;
+            var prevScrollY = window.pageYOffset || 0;
+
+            function updateScrollSpy() {
+                spyTicking = false;
+                var curY = window.pageYOffset || 0;
+
+                if (pinnedIdx !== -1) {
+                    var scrollDelta = curY - prevScrollY;
+                    // 用户主动反向滚动 → 立刻解锁
+                    if (pinnedScrollDir !== 0 && scrollDelta !== 0 &&
+                        ((pinnedScrollDir > 0 && scrollDelta < -2) ||
+                         (pinnedScrollDir < 0 && scrollDelta > 2))) {
+                        pinnedIdx = -1;
+                    } else if (Date.now() < pinnedUntil) {
+                        setActiveTocItem(pinnedIdx);
+                        prevScrollY = curY;
+                        return;
+                    } else {
+                        var pinnedHeading = headingArr[pinnedIdx];
+                        if (pinnedHeading) {
+                            var pinnedTop = pinnedHeading.getBoundingClientRect().top;
+                            if (Math.abs(pinnedTop - 60) > 20) {
+                                setActiveTocItem(pinnedIdx);
+                                prevScrollY = curY;
+                                return;
+                            }
+                        }
+                        pinnedIdx = -1;
+                    }
+                }
+
+                prevScrollY = curY;
+                var threshold = 80;
+                var activeIdx = -1;
+
+                for (var i = 0; i < headingArr.length; i++) {
+                    var rect = headingArr[i].getBoundingClientRect();
+                    if (rect.top - threshold <= 0) {
+                        activeIdx = i;
+                    } else {
+                        break;
+                    }
+                }
+                if (activeIdx === -1) activeIdx = 0;
+                setActiveTocItem(activeIdx);
+            }
+
+            function requestScrollSpy() {
+                if (spyTicking) return;
+                spyTicking = true;
+                window.requestAnimationFrame(updateScrollSpy);
+            }
+
+            window.addEventListener("scroll", requestScrollSpy, { passive: true });
+            window.addEventListener("resize", requestScrollSpy);
+            tocLinks.forEach(function (link, index) {
+                link.addEventListener("click", function () {
+                    var headingEl = headingArr[index];
+                    pinnedIdx = index;
+                    pinnedUntil = Date.now() + 600;
+                    pinnedScrollDir = headingEl
+                        ? (headingEl.getBoundingClientRect().top > 0 ? 1 : -1)
+                        : 0;
+                    setActiveTocItem(index);
+                });
+            });
+            requestScrollSpy();
+        }
     };
 
     // 自动添加外链
@@ -615,90 +788,150 @@ var Paul_Hingle = function (config) {
     // ! Hexo 特别功能
     //
 
-    // 本地标题与标签关键字搜索
+    // 本地全文搜索（标题 / 标签 / 正文 三路匹配，并显示正文片段）
     this.local_search = function () {
-        // 获取我们在 header.ejs 里写好的输入框和结果框
         var input = document.getElementById("local-search-input");
         var result = document.getElementById("local-search-result");
 
-        // 安全检查：如果这两个元素不存在（比如在文章页面），就直接退出，防止代码报错
         if (!input || !result) return;
 
-        // 发起网络请求，去获取 Hexo 生成的 search.xml 文件
+        // ----- 工具函数 -----
+        function escapeHtml(s) {
+            return String(s)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+        function escapeRegExp(s) {
+            return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
+        // 把 HTML 摘要里的标签去掉、空白压一压，得到纯文本
+        function plainText(html) {
+            return String(html || "")
+                .replace(/<style[\s\S]*?<\/style>/gi, " ")
+                .replace(/<script[\s\S]*?<\/script>/gi, " ")
+                .replace(/<[^>]+>/g, " ")
+                .replace(/&nbsp;/g, " ")
+                .replace(/&amp;/g, "&")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+        // 在 contentLower 里找 keyword，截一段上下文做高亮
+        function buildSnippet(content, keyword, contextLen) {
+            if (!content) return "";
+            var lower = content.toLowerCase();
+            var idx = lower.indexOf(keyword);
+            if (idx === -1) return "";
+
+            var half = Math.max(15, Math.floor((contextLen || 80) / 2));
+            var start = Math.max(0, idx - half);
+            var end = Math.min(content.length, idx + keyword.length + half);
+
+            var snippet = content.slice(start, end);
+            if (start > 0) snippet = "…" + snippet;
+            if (end < content.length) snippet = snippet + "…";
+
+            // 转义后再用占位符替换实现高亮，避免高亮标签被一并转义
+            var safeSnippet = escapeHtml(snippet);
+            var pattern = new RegExp(escapeRegExp(escapeHtml(keyword)), "gi");
+            return safeSnippet.replace(pattern, function (m) {
+                return '<mark class="search-result-mark">' + m + "</mark>";
+            });
+        }
+
+        // ----- 加载 search.xml -----
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "/search.xml", true);
         xhr.onload = function () {
-            // 当文件成功加载时 (状态码 200 左右)
-            if (xhr.status >= 200 && xhr.status < 400) {
-                var xml = xhr.responseXML;
+            if (xhr.status < 200 || xhr.status >= 400) return;
+            var xml = xhr.responseXML;
+            if (!xml) return;
 
-                // 将 XML 数据解析为我们好处理的 JavaScript 数组
-                var datas = Array.from(xml.querySelectorAll("entry")).map(function (entry) {
-                    // 【新增核心功能：提取标签】
-                    // 找到该文章下所有的 tag 节点，把它们的名字提取出来，用空格拼成一句话
-                    var tags = Array.from(entry.querySelectorAll("tags tag")).map(function(t) {
-                        return t.textContent;
-                    }).join(" ");
+            var datas = Array.from(xml.querySelectorAll("entry")).map(function (entry) {
+                var tags = Array.from(entry.querySelectorAll("tags tag")).map(function (t) {
+                    return t.textContent;
+                }).join(" ");
 
-                    return {
-                        title: entry.querySelector("title") ? entry.querySelector("title").textContent : "",
-                        url: entry.querySelector("url") ? entry.querySelector("url").textContent : "",
-                        tags: tags // 将拼好的标签内容也存入数据包
-                    };
-                });
+                var contentNode = entry.querySelector("content");
+                var contentText = contentNode ? plainText(contentNode.textContent) : "";
 
-                // 监听输入框，只要用户敲击键盘输入内容，就立刻执行下面的代码
-                input.addEventListener("input", function () {
-                    var keyword = this.value.trim().toLowerCase(); // 获取输入的字，并转为小写，防止大小写导致搜不到
-                    result.innerHTML = ""; // 每次输入新内容，先清空上一次的搜索结果
+                return {
+                    title: entry.querySelector("title") ? entry.querySelector("title").textContent : "",
+                    url: entry.querySelector("url") ? entry.querySelector("url").textContent : "",
+                    tags: tags,
+                    content: contentText
+                };
+            });
 
-                    // 如果用户把输入框删空了，就隐藏结果框，直接退出
-                    if (keyword.length <= 0) {
-                        result.style.display = "none";
-                        return;
+            var MAX_RESULTS = 8;
+            var debounceTimer = null;
+
+            function runSearch() {
+                var keyword = input.value.trim().toLowerCase();
+                result.innerHTML = "";
+
+                if (keyword.length <= 0) {
+                    result.style.display = "none";
+                    return;
+                }
+
+                var str = '<ul class="search-result-list">';
+                var hits = 0;
+
+                for (var i = 0; i < datas.length && hits < MAX_RESULTS; i++) {
+                    var data = datas[i];
+                    var titleLower = data.title.toLowerCase();
+                    var tagsLower = data.tags.toLowerCase();
+                    var contentLower = data.content.toLowerCase();
+
+                    var inTitle = titleLower.indexOf(keyword) > -1;
+                    var inTags = tagsLower.indexOf(keyword) > -1;
+                    var inContent = contentLower.indexOf(keyword) > -1;
+
+                    if (!inTitle && !inTags && !inContent) continue;
+
+                    str += '<li class="search-result-item">';
+                    str += '<a href="' + escapeHtml(data.url) + '" class="search-result-link">';
+                    str += '<span class="search-result-title">' + escapeHtml(data.title) + "</span>";
+
+                    if (inTags && !inTitle) {
+                        str += '<span class="search-result-tag-hint"> # 匹配到标签</span>';
                     }
-
-                    // 准备拼接 HTML 字符串，建立一个无序列表 <ul>
-                    var str = '<ul class="search-result-list">';
-                    var hasResult = false; // 用来记录到底有没有搜到东西
-
-                    // 遍历所有的文章数据进行匹配
-                    datas.forEach(function (data) {
-                        var titleLower = data.title.toLowerCase();
-                        var tagsLower = data.tags.toLowerCase();
-
-                        // 判断逻辑：如果 标题 里包含了关键字，或者 标签 里包含了关键字
-                        if (titleLower.indexOf(keyword) > -1 || tagsLower.indexOf(keyword) > -1) {
-
-                            // 开始拼接每一行的代码
-                            str += '<li class="search-result-item">';
-                            // 这里的 <a> 标签是我们等下用 CSS 撑满整行的关键
-                            str += '<a href="' + data.url + '" class="search-result-link">';
-                            str += '<span class="search-result-title">' + data.title + '</span>';
-
-                            // 锦上添花：如果是通过标签匹配到的，但在标题里没有这个字，我们就给个小提示
-                            if (tagsLower.indexOf(keyword) > -1 && titleLower.indexOf(keyword) === -1) {
-                                str += '<span class="search-result-tag-hint"> # 匹配到标签</span>';
-                            }
-
-                            str += '</a></li>';
-                            hasResult = true; // 标记我们搜到东西了
+                    if (inContent && !inTitle) {
+                        var snippet = buildSnippet(data.content, keyword, 80);
+                        if (snippet) {
+                            str += '<span class="search-result-snippet">' + snippet + "</span>";
                         }
-                    });
-
-                    // 如果搜到内容了，就把拼好的 HTML 塞进网页，并显示出来
-                    if (hasResult) {
-                        result.innerHTML = str + "</ul>";
-                        result.style.display = "block";
-                    } else {
-                        // 如果没搜到，给一个友好的提示，不要一片空白
-                        result.innerHTML = '<div class="search-no-result">呜... 没有找到与 "'+ keyword +'" 相关的文章</div>';
-                        result.style.display = "block";
                     }
-                });
+
+                    str += "</a></li>";
+                    hits++;
+                }
+
+                if (hits > 0) {
+                    result.innerHTML = str + "</ul>";
+                    result.style.display = "block";
+                } else {
+                    result.innerHTML =
+                        '<div class="search-no-result">呜... 没有找到与 "' +
+                        escapeHtml(keyword) +
+                        '" 相关的文章</div>';
+                    result.style.display = "block";
+                }
             }
+
+            input.addEventListener("input", function () {
+                if (debounceTimer) clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(runSearch, 80); // 输入节流，避免每个按键都跑一遍全文匹配
+            });
         };
-        xhr.send(); // 发送请求
+        xhr.send();
     };
 
 // 在文件初始化末尾，执行这个搜索功能

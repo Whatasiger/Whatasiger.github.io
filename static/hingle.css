@@ -1438,7 +1438,7 @@ body.hide-to-top .buttons .to-top {
     bottom: 0;
     opacity: 0;                     /* 移动端默认隐藏 */
     z-index: 1;
-    width: 15em;                    /* 目录侧边栏宽度（桌面端） */
+    width: calc(16em);        /* 目录侧边栏宽度（桌面端） */
     padding: 1em;
     overflow: auto;
     position: fixed;
@@ -1485,6 +1485,101 @@ body.hide-to-top .buttons .to-top {
 .article-list a {
     display: block;
     margin-bottom: .5em;            /* 目录项间距 */
+    padding: 4px 8px;
+    border-left: 2px solid transparent;
+    border-radius: 999px;
+    color: inherit;
+    transition: color .12s linear, border-color .12s linear, background-color .12s linear, box-shadow .12s linear, transform .12s linear;
+    line-height: 1.45;
+    word-break: break-word;
+}
+.article-list a:hover {
+    color: var(--blue);
+    background-color: rgba(111, 159, 199, 0.06);
+}
+
+/* 当前阅读章节（scrollspy 高亮） */
+.article-list a.active {
+    color: var(--blue);
+    border-left-color: rgba(111, 159, 199, 0.55);
+    background: linear-gradient(90deg, rgba(111, 159, 199, 0.14), rgba(111, 159, 199, 0.05));
+    box-shadow: inset 0 0 0 1px rgba(111, 159, 199, 0.08);
+}
+.dark-theme .article-list a.active {
+    background: linear-gradient(90deg, rgba(159, 207, 247, 0.16), rgba(159, 207, 247, 0.06));
+    box-shadow: inset 0 0 0 1px rgba(159, 207, 247, 0.10);
+}
+
+/* 有子层级的父级目录项：右侧显示展开/收起指示器 */
+.article-list a.has-toc-children {
+    position: relative;
+    padding-right: 1.6em;
+    cursor: pointer;
+}
+
+.article-list a.has-toc-children::after {
+    content: "";
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    border-right: 1.5px solid rgba(111, 159, 199, 0.55);
+    border-bottom: 1.5px solid rgba(111, 159, 199, 0.55);
+    transform: translateY(-65%) rotate(-45deg);
+    transition: transform .3s var(--ease-spring),
+                border-color .2s;
+}
+
+.article-list a.has-toc-children.is-toc-open::after {
+    transform: translateY(-35%) rotate(45deg);
+    border-color: var(--blue);
+}
+
+.article-list a.has-toc-children:hover::after {
+    border-color: var(--blue);
+}
+
+.dark-theme .article-list a.has-toc-children::after {
+    border-color: rgba(159, 207, 247, 0.55);
+}
+
+.dark-theme .article-list a.has-toc-children.is-toc-open::after,
+.dark-theme .article-list a.has-toc-children:hover::after {
+    border-color: #cfe5fb;
+}
+
+/* 子层级目录项：默认收起，配合舒缓的非线性曲线展开 */
+.article-list a.is-toc-child {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-left-width: 0;
+    pointer-events: none;
+    overflow: hidden;
+    transform: translateY(-2px);
+    transition: max-height .42s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity .26s ease,
+                margin-bottom .42s cubic-bezier(0.22, 1, 0.36, 1),
+                padding-top .42s cubic-bezier(0.22, 1, 0.36, 1),
+                padding-bottom .42s cubic-bezier(0.22, 1, 0.36, 1),
+                border-left-width .35s cubic-bezier(0.22, 1, 0.36, 1),
+                transform .35s cubic-bezier(0.22, 1, 0.36, 1),
+                color .12s linear,
+                background-color .12s linear;
+}
+
+.article-list a.is-toc-child.is-toc-open {
+    max-height: 8em;                /* 留足两到三行标题的展开空间 */
+    opacity: 1;
+    margin-bottom: .5em;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-left-width: 2px;
+    pointer-events: auto;
+    transform: translateY(0);
 }
 
 /* 目录层级缩进前置符号（右边距统一） */
@@ -1494,6 +1589,7 @@ body.hide-to-top .buttons .to-top {
 .article-list .item-5:before,
 .article-list .item-6:before {
     margin-right: .5em;             /* 缩进符号与文字的间距 */
+    opacity: 0.5;
 }
 
 /* 各层级目录项的前置缩进符号（用短横线表示层级深度） */
@@ -1503,11 +1599,32 @@ body.hide-to-top .buttons .to-top {
 .article-list .item-5:before { content: "----"; }
 .article-list .item-6:before { content: "-----"; }
 
-/* 默认隐藏 h2~h4 层级目录（只显示 h1 级别，通过 JS 或设置控制） */
-.article-list .item-2,
-.article-list .item-3,
-.article-list .item-4 {
+/* 二、三级目录：缩进 + 字号略小，营造层次感 */
+.article-list .item-2 {
+    font-size: 0.92em;
+    padding-left: 0.6em;
+    font-weight: 500;
+}
+.article-list .item-3 {
+    font-size: 0.86em;
+    padding-left: 1.2em;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+/* 仅隐藏 4 级及以下，避免目录过长 */
+.article-list .item-4,
+.article-list .item-5,
+.article-list .item-6 {
     display: none;
+}
+
+/* 锚点跳转使用平滑滚动（影响 TOC 点击和"回到顶部"以外的所有 # 跳转） */
+html {
+    scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
 }
 
 /* 目录收起按钮（桌面端右上角） */
@@ -1521,8 +1638,12 @@ body.hide-to-top .buttons .to-top {
     line-height: 24px;
     text-align: center;
     cursor: pointer;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
     color: var(--blue);             /* 按钮图标颜色 */
-    transition: transform 0.3s var(--ease-spring), color 0.3s;
+    transition: transform 0.3s var(--ease-spring), color 0.3s, background-color 0.3s;
 }
 
 /* 目录收起按钮图标：双右箭头 */
@@ -1535,12 +1656,16 @@ body.hide-to-top .buttons .to-top {
 /* 收起按钮悬停：放大效果 */
 #close-toc-btn:hover {
     transform: translateY(-50%) scale(1.25); /* 悬停放大倍数 */
+    background-color: rgba(111, 159, 199, 0.08);
     color: #9fcff7;
 }
 
 /* 夜间模式收起按钮颜色 */
 .dark-theme #close-toc-btn { color: #8bb4e0; }
-.dark-theme #close-toc-btn:hover { color: #fff; }
+.dark-theme #close-toc-btn:hover {
+    background-color: rgba(159, 207, 247, 0.12);
+    color: #fff;
+}
 
 /* 本地搜索结果下拉面板：绝对定位，浮于导航栏下方 */
 /* - 本地搜索结果 */
@@ -1605,6 +1730,30 @@ body.hide-to-top .buttons .to-top {
     margin-left: 6px;
 }
 
+/* 搜索结果正文片段：用于全文搜索时展示命中上下文 */
+.search-result-snippet {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.85em;
+    line-height: 1.55;
+    color: #777;
+    white-space: normal;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* 搜索结果命中关键字高亮 */
+.search-result-mark {
+    background: rgba(111, 159, 199, 0.18);
+    color: var(--blue);
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
 /* 无搜索结果的提示文字 */
 .search-no-result {
     padding: 20px;
@@ -1638,6 +1787,15 @@ body.hide-to-top .buttons .to-top {
 .dark-theme .search-result-tag-hint,
 .dark-theme .search-no-result {
     color: #aaa;
+}
+
+/* 夜间模式搜索片段配色 */
+.dark-theme .search-result-snippet {
+    color: #bbb;
+}
+.dark-theme .search-result-mark {
+    background: rgba(159, 207, 247, 0.18);
+    color: #9fcff7;
 }
 
 /* 设置面板：右上角浮层，带毛玻璃效果，点击设置按钮时显示 */
@@ -1945,7 +2103,7 @@ pre[class*="language-"].line-numbers {
 /* 桌面端：页面右移为目录让出空间 */
 @media screen and (min-width: 800px) {
     /* 有目录时 body 右移，避免内容被目录遮挡 */
-    body.has-trees { margin-right: 15em; /* 目录宽度，应与 .article-list width 一致 */ }
+    body.has-trees { margin-right: calc(15em + 2px); /* 目录宽度，应与 .article-list width 一致 */ }
 
     /* 夜间模式目录背景 */
     .dark-theme .article-list { background-color: rgba(0, 0, 0, .1); }
@@ -1985,14 +2143,12 @@ pre[class*="language-"].line-numbers {
     body.toc-collapsed footer .toggle-list {
         display: block;
         transform: translateX(0);
-        animation: fade-in-bottom 0.5s both;
     }
 
-    /* 目录收起时在悬浮按钮区显示目录切换按钮 */
+    /* 目录收起时在悬浮按钮区显示目录切换按钮（与展开时位置一致，避免按钮跳动） */
     body.toc-collapsed .buttons .toggle-list {
         display: block;
         transform: translateX(0);
-        animation: fade-in-bottom 0.5s both;
     }
 
     /* 桌面端始终显示目录切换按钮 */
@@ -2007,8 +2163,9 @@ pre[class*="language-"].line-numbers {
     .article-list {
         left: 0;
         width: 100%;                /* 移动端目录宽度占满屏幕 */
-        min-height: 40%;            /* 目录最小高度（防止内容太少时太矮） */
-        max-height: 80%;            /* 目录最大高度（防止遮挡太多内容） */
+        min-height: 0;
+        height: 30vh;               /* 移动端目录固定占屏幕下方 25% 高度 */
+        max-height: 30vh;
         background-color: #fff;
         background-color: var(--light-background);
         transform: translateY(100%); /* 默认在屏幕底部外，激活时滑入 */
