@@ -197,6 +197,157 @@ input, textarea, pre, hr, blockquote {
 }
 
 /* =========================================
+   引用块（Quote Box）
+   - 由 scripts/quote-box.js 在渲染期把 <blockquote> 转为 .quote-box
+   - 6 种类型：default / important / note / warning / tip / caution
+   - 顶栏可点击折叠，body 默认最多 16 行高，超出滚动
+   ========================================= */
+
+.quote-box {
+    margin: 1em 0;
+    border-radius: .5em;
+    border-left: 5px solid #999;       /* 左竖线，颜色由各类型变体覆盖 */
+    overflow: hidden;
+    /* 模块整体（含 body）使用半透明深色叠在页面上，通透但比周围更深 */
+    background: rgba(0, 0, 0, .08);
+    transition: background .3s, border-color .3s;
+}
+
+.quote-box .quote-header {
+    display: flex;
+    align-items: center;
+    gap: .55em;
+    padding: .55em .9em;
+    cursor: pointer;
+    user-select: none;
+    transition: background .25s, border-color .3s;
+}
+
+.quote-box .quote-icon {
+    font-size: 1em;
+    line-height: 1;
+}
+
+.quote-box .quote-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: .95em;
+    letter-spacing: .02em;
+}
+
+.quote-box .quote-toggle {
+    background: none;
+    border: 0;
+    padding: .15em .35em;
+    margin: 0;
+    cursor: pointer;
+    color: inherit;
+    font-size: 1em;
+    line-height: 1;
+    border-radius: 4px;
+    transition: background .2s;
+}
+
+.quote-box .quote-toggle:hover {
+    background: rgba(0, 0, 0, .08);
+}
+
+.quote-box .quote-toggle .fa {
+    transition: transform .3s var(--ease-smooth);
+}
+
+.quote-box.is-collapsed .quote-toggle .fa {
+    transform: rotate(-90deg);
+}
+
+.quote-box .quote-body {
+    padding: .85em 1.1em;
+    /* 16 行高度上限：line-height 1.8 × 16 行，再加上下内边距 */
+    max-height: calc(1.8em * 16 + 1.7em);
+    overflow-y: auto;
+    font-size: .92em;            /* 引用部分整体小一号 */
+    line-height: 1.8;
+    color: inherit;              /* 与正文同亮度（浅色 #555 / 夜间 #bbb） */
+    transition: max-height .35s var(--ease-smooth),
+                padding .35s var(--ease-smooth),
+                opacity .25s ease;
+}
+
+.quote-box.is-collapsed .quote-body {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.quote-box .quote-body > :first-child { margin-top: 0; }
+.quote-box .quote-body > :last-child  { margin-bottom: 0; }
+
+/* 滚动条美化（webkit） */
+.quote-box .quote-body::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.quote-box .quote-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+.quote-box .quote-body::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, .15);
+    border-radius: 3px;
+}
+.quote-box .quote-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, .28);
+}
+
+/* --- 6 种类型变体（浅色） ---
+   设计：模块整体使用统一的中性深色背景（在基类 .quote-box 中定义），
+        各类型只通过【左竖线】+【顶栏背景/文字色】区分，不再为 body 染色。
+*/
+
+/* 默认：引用 - 灰 */
+.quote-box.quote-default { border-left-color: #6f6f6f; }
+.quote-box.quote-default .quote-header {
+    background: #c5c5c5;
+    color: #2e2e2e;
+}
+
+/* IMPORTANT：作者注 - 蓝 */
+.quote-box.quote-important { border-left-color: #2c6dc4; }
+.quote-box.quote-important .quote-header {
+    background: #b6cfe9;
+    color: #173f73;
+}
+
+/* NOTE：提醒 - 黄 */
+.quote-box.quote-note { border-left-color: #c98a08; }
+.quote-box.quote-note .quote-header {
+    background: #ecca73;
+    color: #6e4807;
+}
+
+/* WARNING：警告 - 鲜红 */
+.quote-box.quote-warning { border-left-color: #c63b37; }
+.quote-box.quote-warning .quote-header {
+    background: #e5a4a0;
+    color: #7d211e;
+}
+
+/* TIP：提示 - 绿 */
+.quote-box.quote-tip { border-left-color: #3a953a; }
+.quote-box.quote-tip .quote-header {
+    background: #a0cda0;
+    color: #1f5128;
+}
+
+/* CAUTION：注意 - 深红 */
+.quote-box.quote-caution { border-left-color: #931c18; }
+.quote-box.quote-caution .quote-header {
+    background: #c98985;
+    color: #54110f;
+}
+
+/* =========================================
    1 - 夜间模式
    ========================================= */
 
@@ -258,6 +409,77 @@ input, textarea, pre, hr, blockquote {
     color: #ddd;                    /* 夜间引用块文字色，比正文稍亮 */
     border-color: #eb9c26;          /* 夜间引用块左边框颜色，橙黄色 */
     background-color: rgba(255, 255, 255, .05); /* 夜间引用块背景，极低透明度白色 */
+}
+
+/* 夜间模式：Quote Box 系列
+   设计：模块整体（含 body）使用比页面更深的中性背景，仅 header 与左竖线带类型色。
+        body 文字继承全局 .dark-theme 的 #bbb，与正文同亮度。
+*/
+.dark-theme .quote-box {
+    background: rgba(0, 0, 0, .25);   /* 半透明深色，比夜间页面背景更深但通透 */
+}
+.dark-theme .quote-box .quote-toggle:hover {
+    background: rgba(255, 255, 255, .12);
+}
+.dark-theme .quote-box .quote-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, .18);
+}
+.dark-theme .quote-box .quote-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, .32);
+}
+
+/* 默认：引用 - 灰 */
+.dark-theme .quote-box.quote-default {
+    border-left-color: #b8b8b8;
+}
+.dark-theme .quote-box.quote-default .quote-header {
+    background: #3a3a3a;
+    color: #e8e8e8;
+}
+
+/* IMPORTANT：作者注 - 蓝 */
+.dark-theme .quote-box.quote-important {
+    border-left-color: #6fa8e6;
+}
+.dark-theme .quote-box.quote-important .quote-header {
+    background: #2c4a6e;
+    color: #d6e6f8;
+}
+
+/* NOTE：提醒 - 黄 */
+.dark-theme .quote-box.quote-note {
+    border-left-color: #f0b94a;
+}
+.dark-theme .quote-box.quote-note .quote-header {
+    background: #5a4318;
+    color: #fadea0;
+}
+
+/* WARNING：警告 - 红 */
+.dark-theme .quote-box.quote-warning {
+    border-left-color: #e57373;
+}
+.dark-theme .quote-box.quote-warning .quote-header {
+    background: #5e2724;
+    color: #f5c4c2;
+}
+
+/* TIP：提示 - 绿 */
+.dark-theme .quote-box.quote-tip {
+    border-left-color: #7dc77d;
+}
+.dark-theme .quote-box.quote-tip .quote-header {
+    background: #2c4d2c;
+    color: #c4e3c4;
+}
+
+/* CAUTION：注意 - 深红 */
+.dark-theme .quote-box.quote-caution {
+    border-left-color: #c95652;
+}
+.dark-theme .quote-box.quote-caution .quote-header {
+    background: #4d1816;
+    color: #f0bdba;
 }
 
 /* 夜间模式 iframe 和 em 元素统一降低不透明度 */
@@ -635,7 +857,8 @@ main img {
 .home-social a i.fa-steam-icon,
 .home-social a i.fa-github-icon,
 .home-social a i.fa-douban-icon,
-.home-social a i.fa-wechat-icon {
+.home-social a i.fa-wechat-icon,
+.home-social a i.fa-email-icon {
     display: inline-block;
     width: 1.5em;                   /* 图标宽度，影响自定义 SVG 图标的显示大小 */
     height: 1.5em;                  /* 图标高度，影响自定义 SVG 图标的显示大小 */
@@ -653,7 +876,8 @@ main img {
 .home-social a:hover i.fa-steam-icon,
 .home-social a:hover i.fa-github-icon,
 .home-social a:hover i.fa-douban-icon,
-.home-social a:hover i.fa-wechat-icon {
+.home-social a:hover i.fa-wechat-icon,
+.home-social a:hover i.fa-email-icon {
     transform: scale(1.2);         /* 悬停放大倍数，1.2 = 放大 20% */
 }
 
@@ -691,6 +915,13 @@ main img {
 .home-social a i.fa-wechat-icon {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1184 1024'%3E%3Cpath d='M331.42 263.42q0-23.42-14.27-37.73t-37.73-14.27q-24.58 0-43.42 14.56t-18.85 37.44q0 22.27 18.85 36.86t43.42 14.56q23.42 0 37.73-14.02t14.27-37.44zm424.58 289.73q0-16-14.56-28.58t-37.44-12.58q-15.42 0-28.29 12.86t-12.86 28.29q0 16 12.86 28.86t28.29 12.86q22.85 0 37.44-12.58t14.56-29.15zM621.15 263.42q0-23.42-14.02-37.73t-37.44-14.27q-24.58 0-43.42 14.56t-18.85 37.44q0 22.27 18.85 36.86t43.42 14.56q23.42 0 37.44-14.02t14.02-37.44zM984 553.15q0-16-14.85-28.58t-37.15-12.58q-15.42 0-28.29 12.86t-12.86 28.29q0 16 12.86 28.86t28.29 12.86q22.27 0 37.15-12.58t14.85-29.15zM832 326.27q-17.73-2.27-40-2.27-96.58 0-177.73 44t-127.71 119.14-46.56 164.29q0 44.58 13.15 86.85-20 1.73-38.85 1.73-14.85 0-28.58-.86t-31.42-3.71-25.44-4-31.14-6.02-28.58-6.02l-144.58 72.58 41.15-124.58q-165.73-116-165.73-280 0-96.58 55.71-177.73t150.85-127.71 207.71-46.56q100.58 0 190.02 37.73t149.73 104.29 78.02 148.86zm338.27 320.58q0 66.85-39.14 127.71t-106.02 110.56l31.42 103.42-113.73-62.27q-85.73 21.15-124.58 21.15-96.58 0-177.73-40.29t-127.71-109.44-46.56-150.85 46.56-150.85 127.71-109.44 177.73-40.29q92 0 173.15 40.29t130.02 109.73 48.86 150.56z'/%3E%3C/svg%3E");
 }
+
+
+/* Email 图标：内嵌 SVG 数据 URI */
+.home-social a i.fa-email-icon {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201024%201024'%3E%3Cpath%20d%3D'M204.8%20842.6496a108.8%20108.8%200%200%201-108.8-108.8V290.1504c0-60.1088%2048.6912-108.8%20108.8-108.8h614.4c60.1088%200%20108.8%2048.6912%20108.8%20108.8v443.6992A108.8%20108.8%200%200%201%20819.2%20842.6496H204.8z%20m0-64h614.4a44.8%2044.8%200%200%200%2044.8-44.8V290.1504A44.8%2044.8%200%200%200%20819.2%20245.3504H204.8a44.8%2044.8%200%200%200-44.8%2044.8v443.6992c0%2024.7808%2020.0704%2044.8%2044.8%2044.8z'%20fill%3D'%23040303'%2F%3E%3Cpath%20d%3D'M139.5712%20387.1744a32%2032%200%201%201%2028.0576-57.5488l335.9744%20163.9936c5.2736%202.56%2011.52%202.56%2016.7936%200l335.9744-163.9936a32%2032%200%201%201%2028.0576%2057.5488l-335.9232%20163.9424c-23.04%2011.264-49.9712%2011.264-73.0112%200L139.5712%20387.1744z'%20fill%3D'%23040303'%2F%3E%3C%2Fsvg%3E");
+}
+
 
 /* 文章列表条目：每篇文章之间的间距 */
 /* - 文章列表 */
@@ -1902,65 +2133,141 @@ html {
     font-size: 0.85rem;             /* 下拉框字号 */
 }
 
-/* 设置行滑动条（range）样式：扁平轨道 + 渐变背景 */
+/* ---- 设置面板 · 滑动条 ----
+   架构：input background 承载 JS 动态渐变（进度+轨道），
+         WebKit track 设为透明让渐变透出，
+         Firefox 用原生 ::-moz-range-progress 处理进度。 */
+
+/* 1. 滑动条容器：清除默认外观，背景由 JS 动态设置渐变 */
 .settings-row-range input[type="range"] {
     flex: 1;
     -webkit-appearance: none;
     appearance: none;
-    height: 4px;                    /* 滑动条轨道高度，影响轨道粗细 */
+    background: transparent;
+    height: 3px;
     border-radius: 999px;
-    background: linear-gradient(90deg, rgba(111,159,199,0.25), rgba(111,159,199,0.8)); /* 轨道渐变颜色 */
     outline: none;
+    cursor: pointer;
 }
 
-/* 滑动条拖动手柄（WebKit） */
+.settings-row-range input[type="range"]:focus-visible {
+    outline: 2px solid rgba(111, 159, 199, 0.35);
+    outline-offset: 6px;
+}
+
+/* 2. WebKit 轨道：透明，让 input 背景渐变透出作为可见轨道 */
+.settings-row-range input[type="range"]::-webkit-slider-runnable-track {
+    height: 3px;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+}
+
+/* 3. WebKit 手柄 */
 .settings-row-range input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 14px;                    /* 手柄宽度 */
-    height: 14px;                   /* 手柄高度 */
-    border-radius: 50%;
-    background: #fff;               /* 手柄背景色 */
-    border: 2px solid var(--blue);  /* 手柄边框颜色，跟随主题蓝 */
-    box-shadow: 0 0 0 4px rgba(111,159,199,0.25); /* 手柄光晕半径 */
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
-}
-
-/* 滑动条手柄悬停（WebKit）：放大 + 加强光晕 */
-.settings-row-range input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.08);         /* 手柄悬停放大倍数 */
-    box-shadow: 0 0 0 6px rgba(111,159,199,0.3); /* 悬停光晕半径 */
-}
-
-/* 滑动条轨道（Firefox） */
-.settings-row-range input[type="range"]::-moz-range-track {
-    height: 4px;                    /* Firefox 滑动条轨道高度 */
-    border-radius: 999px;
-    background: linear-gradient(90deg, rgba(111,159,199,0.25), rgba(111,159,199,0.8));
-}
-
-/* 滑动条手柄（Firefox） */
-.settings-row-range input[type="range"]::-moz-range-thumb {
-    width: 14px;                    /* Firefox 手柄宽度 */
-    height: 14px;                   /* Firefox 手柄高度 */
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     background: #fff;
-    border: 2px solid var(--blue);
-    box-shadow: 0 0 0 4px rgba(111,159,199,0.25);
+    border: none;
+    margin-top: -5px;           /* 垂直居中：(轨道高 3 − 手柄高 13) / 2 */
+    box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.3),
+                0 0 0 0.5px rgba(0, 0, 0, 0.04);
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Firefox 手柄悬停 */
+/* 悬停：弹性过冲放大 + 浅蓝光晕 */
+.settings-row-range input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.4);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16),
+                0 0 0 4px rgba(111, 159, 199, 0.08);
+}
+
+/* 按下：急速收缩 + 涟漪扩散 */
+.settings-row-range input[type="range"]:active::-webkit-slider-thumb {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 8px rgba(111, 159, 199, 0.08);
+    transition: transform 0.1s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 4. Firefox 轨道 */
+.settings-row-range input[type="range"]::-moz-range-track {
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.045);
+    border: none;
+}
+
+/* 5. Firefox 进度填充 */
+.settings-row-range input[type="range"]::-moz-range-progress {
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(111, 159, 199, 0.55);
+}
+
+/* 6. Firefox 手柄 */
+.settings-row-range input[type="range"]::-moz-range-thumb {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.3),
+                0 0 0 0.5px rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .settings-row-range input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.08);
-    box-shadow: 0 0 0 6px rgba(111,159,199,0.3);
+    transform: scale(1.4);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16),
+                0 0 0 4px rgba(111, 159, 199, 0.08);
 }
 
-/* RTL（从右到左）方向的滑动条：水平翻转 */
+/* 7. 暗色模式 */
+.dark-theme .settings-row-range input[type="range"]::-moz-range-track {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.dark-theme .settings-row-range input[type="range"]::-moz-range-progress {
+    background: rgba(139, 180, 224, 0.5);
+}
+
+.dark-theme .settings-row-range input[type="range"]::-webkit-slider-thumb {
+    background: #444;
+    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.6),
+                0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+
+.dark-theme .settings-row-range input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5),
+                0 0 0 4px rgba(139, 180, 224, 0.1);
+}
+
+.dark-theme .settings-row-range input[type="range"]:active::-webkit-slider-thumb {
+    box-shadow: 0 0 0 8px rgba(139, 180, 224, 0.08);
+}
+
+.dark-theme .settings-row-range input[type="range"]::-moz-range-thumb {
+    background: #444;
+    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.6),
+                0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+
+.dark-theme .settings-row-range input[type="range"]::-moz-range-thumb:hover {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5),
+                0 0 0 4px rgba(139, 180, 224, 0.1);
+}
+
+/* RTL 方向：水平翻转 */
 .settings-row-range-rtl input[type="range"] {
-    transform: scaleX(-1);          /* 水平镜像，用于字号等从大到小方向的滑动条 */
+    transform: scaleX(-1);
 }
 
 /* 夜间模式设置面板样式 */

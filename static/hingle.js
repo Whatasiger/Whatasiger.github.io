@@ -47,7 +47,7 @@ var Paul_Hingle = function (config) {
         fontWeight: getWeightFromLevel(3), // 正文字重第三档
         letterSpacing: 3,      // 字间距第六档（-2起步，第6个=3）
         fontSize: 100,         // 字号第三档（90起步，第3heo个=110）
-        bgOpacity: 50,         // 背景可见度第八档（0起步step5，第8个=35）
+        bgOpacity: 55,         // 背景可见度第八档（0起步step5，第8个=35）
         bgBlur: 8              // 背景模糊度（0~20px），文章页默认8px
     };
 
@@ -82,13 +82,14 @@ var Paul_Hingle = function (config) {
         var baseOpacity = bgValue / 100;
         body.style.setProperty("--bg-opacity", String(baseOpacity));
 
-        // 背景模糊度（文章页应用用户设置，非文章页归零）
-        var bgBlurValue = typeof currentSettings.bgBlur === "number"
-            ? currentSettings.bgBlur
-            : defaultSettings.bgBlur;
-        bgBlurValue = Math.max(0, Math.min(20, bgBlurValue));
-        body.style.setProperty("--bg-blur",
-            body.classList.contains("post-page") ? bgBlurValue + "px" : "0px");
+        // 背景模糊度（仅文章页应用持久化的值，首页由初始化和滑动条独立管理）
+        if (body.classList.contains("post-page")) {
+            var bgBlurValue = typeof currentSettings.bgBlur === "number"
+                ? currentSettings.bgBlur
+                : defaultSettings.bgBlur;
+            bgBlurValue = Math.max(0, Math.min(20, bgBlurValue));
+            body.style.setProperty("--bg-blur", bgBlurValue + "px");
+        }
 
         // 字体设置
         var fontFamily = currentSettings.fontFamily || defaultSettings.fontFamily;
@@ -120,6 +121,22 @@ var Paul_Hingle = function (config) {
         }
     }
 
+    function updateSliderFill(input) {
+        var min = parseFloat(input.min) || 0;
+        var max = parseFloat(input.max) || 100;
+        var val = parseFloat(input.value) || 0;
+        var pct = ((val - min) / (max - min)) * 100;
+        var isDark = body.classList.contains("dark-theme");
+        var fill = isDark ? "rgba(139,180,224,0.5)" : "rgba(111,159,199,0.55)";
+        var track = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.045)";
+        input.style.background = "linear-gradient(90deg, " + fill + " " + pct + "%, " + track + " " + pct + "%)";
+    }
+
+    function updateAllSliderFills() {
+        var sliders = document.querySelectorAll(".settings-row-range input[type='range']");
+        for (var i = 0; i < sliders.length; i++) updateSliderFill(sliders[i]);
+    }
+
     function setupSettingsPanel() {
         var panel = document.getElementById("reader-settings-panel");
         var btn = ks.select(".settings-btn");
@@ -146,9 +163,14 @@ var Paul_Hingle = function (config) {
         if (bgInput) bgInput.value = ((typeof currentSettings.bgOpacity === "number"
             ? currentSettings.bgOpacity
             : defaultSettings.bgOpacity) / 2);
-        if (bgBlurInput) bgBlurInput.value = body.classList.contains("post-page")
+        var isPostPage = body.classList.contains("post-page");
+        var initBlur = isPostPage
             ? (typeof currentSettings.bgBlur === "number" ? currentSettings.bgBlur : defaultSettings.bgBlur)
             : 0;
+        if (bgBlurInput) bgBlurInput.value = initBlur;
+        body.style.setProperty("--bg-blur", initBlur + "px");
+
+        updateAllSliderFills();
 
         // 打开 / 关闭面板
         btn.addEventListener("click", function (e) {
@@ -193,6 +215,7 @@ var Paul_Hingle = function (config) {
                 currentSettings.fontWeight = getWeightFromLevel(lvl);
                 persistSettings();
                 applyReadingSettings();
+                updateSliderFill(this);
             });
         }
 
@@ -201,6 +224,7 @@ var Paul_Hingle = function (config) {
                 currentSettings.letterSpacing = parseInt(this.value, 10) || 0;
                 persistSettings();
                 applyReadingSettings();
+                updateSliderFill(this);
             });
         }
 
@@ -209,6 +233,7 @@ var Paul_Hingle = function (config) {
                 currentSettings.fontSize = parseInt(this.value, 10) || defaultSettings.fontSize;
                 persistSettings();
                 applyReadingSettings();
+                updateSliderFill(this);
             });
         }
 
@@ -221,6 +246,7 @@ var Paul_Hingle = function (config) {
                 currentSettings.bgOpacity = Math.round(v * 2);
                 persistSettings();
                 applyReadingSettings();
+                updateSliderFill(this);
             });
         }
 
@@ -229,11 +255,12 @@ var Paul_Hingle = function (config) {
                 var v = parseInt(this.value, 10);
                 if (isNaN(v) || v < 0) v = 0;
                 if (v > 20) v = 20;
-                currentSettings.bgBlur = v;
-                persistSettings();
-                // 直接设置 CSS 变量，绕过 applyReadingSettings 的页面类型过滤
-                // 实现"除非用户手动调整"的实时预览（任何页面均生效）
                 body.style.setProperty("--bg-blur", v + "px");
+                if (isPostPage) {
+                    currentSettings.bgBlur = v;
+                    persistSettings();
+                }
+                updateSliderFill(this);
             });
         }
 
@@ -251,6 +278,9 @@ var Paul_Hingle = function (config) {
                 persistSettings();
                 applyReadingSettings();
 
+                var resetBlur = isPostPage ? defaultSettings.bgBlur : 0;
+                body.style.setProperty("--bg-blur", resetBlur + "px");
+
                 if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
                 if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
                 if (fontFamilyInput) fontFamilyInput.value = currentSettings.fontFamily;
@@ -258,7 +288,8 @@ var Paul_Hingle = function (config) {
                 if (letterInput) letterInput.value = currentSettings.letterSpacing;
                 if (sizeInput) sizeInput.value = currentSettings.fontSize;
                 if (bgInput) bgInput.value = currentSettings.bgOpacity / 2;
-                if (bgBlurInput) bgBlurInput.value = body.classList.contains("post-page") ? currentSettings.bgBlur : 0;
+                if (bgBlurInput) bgBlurInput.value = resetBlur;
+                updateAllSliderFills();
             });
         }
     }
@@ -312,14 +343,13 @@ var Paul_Hingle = function (config) {
     this.night = function () {
         if(body.classList.contains("dark-theme")){
             body.classList.remove("dark-theme");
-            // 记录当前标签页的状态为：开灯
             sessionStorage.setItem("theme", "light");
         }
         else{
             body.classList.add("dark-theme");
-            // 记录当前标签页的状态为：关灯
             sessionStorage.setItem("theme", "dark");
         }
+        updateAllSliderFills();
     };
 
     // 目录树
@@ -961,6 +991,33 @@ var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABA
 })();
 
 ks.image(CONTENT_IMG_SEL);
+
+// 引用块（Quote Box）折叠/展开交互
+// 由 scripts/quote-box.js 在渲染期把 <blockquote> 改写为 .quote-box 结构，
+// 这里只负责点击表头（或折叠按钮）时切换 .is-collapsed。
+(function () {
+    function bindQuoteBoxes() {
+        var headers = document.querySelectorAll(".quote-box .quote-header");
+        for (var i = 0; i < headers.length; i++) {
+            (function (header) {
+                if (header.getAttribute("data-quote-bound") === "1") return;
+                header.setAttribute("data-quote-bound", "1");
+                header.addEventListener("click", function () {
+                    var box = header.parentNode;
+                    while (box && (!box.classList || !box.classList.contains("quote-box"))) {
+                        box = box.parentNode;
+                    }
+                    if (box) box.classList.toggle("is-collapsed");
+                });
+            })(headers[i]);
+        }
+    }
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bindQuoteBoxes);
+    } else {
+        bindQuoteBoxes();
+    }
+})();
 
 // 请保留版权说明
 if(window.console && window.console.log){

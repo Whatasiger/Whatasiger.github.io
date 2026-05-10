@@ -23,7 +23,11 @@
         dropRadius:   12,     // 扰动半径
         dropStrength: 280,    // 初始扰动能量
         holdInterval: 180,    // 长按时连续激发的频率 (ms)
-        moveMinDist:  4,      // 拖拽触发新扰动的最小距离
+        holdResumeDelay: 150, // 拖拽停止后恢复长按激发延迟 (ms)
+        moveMinDist:  1,      // 拖拽抖动过滤阈值
+        strokeUnitStrength: 80, // 拖拽路径单位长度能量（接近点击强度）
+        maxDropValue: 4000,   // 单格最大扰动，防止能量尖峰
+        fadeOutFrames: 9,     // 停止时淡出帧数
         idleEnergy:   0.15,   // 停止动画的能量阈值，更细腻
     };
 
@@ -40,17 +44,20 @@
 
     var bgCanvas = null;
     var bgCtx    = null;
+    var bgData   = null;
     var bgLoaded = false;
     var bgImg    = null;
 
     var rafId     = null;
     var isRunning = false;
+    var fadeLeft  = 0;
 
     var mouse = {
         down: false,
         x: 0, y: 0,
         lastX: 0, lastY: 0,
         holdTimer: null,
+        holdResumeTimer: null,
     };
 
     /* ── 初始化逻辑 ───────────────────────────────────── */
@@ -86,6 +93,7 @@
         buf0 = new Float32Array(W * H);
         buf1 = new Float32Array(W * H);
         cur  = 0;
+        fadeLeft = 0;
 
         canvas.width  = W;
         canvas.height = H;
@@ -100,6 +108,7 @@
         var match = bgVal.match(/url\(\s*["']?([^"')]+)["']?\s*\)/);
         if (!match || !match[1] || match[1] === "none") {
             bgLoaded = false;
+            bgData = null;
             return;
         }
 
@@ -124,6 +133,7 @@
         var dw = bgImg.naturalWidth  * s;
         var dh = bgImg.naturalHeight * s;
         bgCtx.drawImage(bgImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+        bgData = bgCtx.getImageData(0, 0, W, H).data;
     }
 
     /* ── 核心物理仿真 ────────────────────────────────────── */
@@ -157,10 +167,9 @@
 
     /* ── 灵动渲染引擎 ────────────────────────────────────── */
     function render() {
-        if (!bgLoaded || !bgCanvas) return;
+        if (!bgLoaded || !bgCanvas || !bgData) return;
 
         var hBuf = cur === 0 ? buf0 : buf1;
-        var bgData = bgCtx.getImageData(0, 0, W, H).data;
         var outData = ctx.createImageData(W, H);
         var dst = outData.data;
 
@@ -222,11 +231,23 @@
         render();
 
         if (energy > CFG.idleEnergy || mouse.down) {
+            fadeLeft = 0;
             rafId = requestAnimationFrame(loop);
         } else {
-            isRunning = false;
-            rafId = null;
-            ctx.clearRect(0, 0, W, H);
+            if (fadeLeft <= 0) fadeLeft = CFG.fadeOutFrames;
+            if (fadeLeft > 0) {
+                ctx.save();
+                ctx.globalCompositeOperation = "destination-out";
+                ctx.globalAlpha = 1 / CFG.fadeOutFrames;
+                ctx.fillRect(0, 0, W, H);
+                ctx.restore();
+                fadeLeft--;
+                rafId = requestAnimationFrame(loop);
+            } else {
+                isRunning = false;
+                rafId = null;
+                ctx.clearRect(0, 0, W, H);
+            }
         }
     }
 
@@ -251,9 +272,82 @@
 
                 var dist = Math.sqrt(dx * dx + dy * dy);
                 var fade = Math.pow(1 - dist / r, 2);
-                buf[ny * W + nx] += strength * fade;
+                var idx = ny * W + nx;
+                var v = buf[idx] + strength * fade;
+                if (v > CFG.maxDropValue) v = CFG.maxDropValue;
+                else if (v < -CFG.maxDropValue) v = -CFG.maxDropValue;
+                buf[idx] = v;
             }
         }
+    }
+
+    function addStroke(ax, ay, bx, by, radius, strengthPerUnit) {
+        var dx = bx - ax;
+        var dy = by - ay;
+        var len2 = dx * dx + dy * dy;
+        if (len2 < 0.0001) {
+            addDrop(ax, ay, radius, strengthPerUnit);
+            return;
+        }
+
+        var r = radius;
+        var r2 = r * r;
+        var minX = Math.max(1, Math.floor(Math.min(ax, bx) - r));
+        var maxX = Math.min(W - 2, Math.ceil(Math.max(ax, bx) + r));
+        var minY = Math.max(1, Math.floor(Math.min(ay, by) - r));
+        var maxY = Math.min(H - 2, Math.ceil(Math.max(ay, by) + r));
+        var buf = cur === 0 ? buf0 : buf1;
+
+        for (var ny = minY; ny <= maxY; ny++) {
+            for (var nx = minX; nx <= maxX; nx++) {
+                var px = nx + 0.5;
+                var py = ny + 0.5;
+                var t = ((px - ax) * dx + (py - ay) * dy) / len2;
+                if (t < 0) t = 0;
+                else if (t > 1) t = 1;
+
+                var cx = ax + t * dx;
+                var cy = ay + t * dy;
+                var ox = px - cx;
+                var oy = py - cy;
+                var d2 = ox * ox + oy * oy;
+                if (d2 > r2) continue;
+
+                var d = Math.sqrt(d2);
+                var fade = Math.pow(1 - d / r, 2);
+                var idx = ny * W + nx;
+                var v = buf[idx] + strengthPerUnit * fade;
+                if (v > CFG.maxDropValue) v = CFG.maxDropValue;
+                else if (v < -CFG.maxDropValue) v = -CFG.maxDropValue;
+                buf[idx] = v;
+            }
+        }
+    }
+
+    function clearHoldTimer() {
+        clearInterval(mouse.holdTimer);
+        mouse.holdTimer = null;
+    }
+
+    function scheduleHoldResume() {
+        clearTimeout(mouse.holdResumeTimer);
+        mouse.holdResumeTimer = setTimeout(function() {
+            if (!mouse.down) return;
+            startHoldTimer();
+        }, CFG.holdResumeDelay);
+    }
+
+    function startHoldTimer() {
+        clearHoldTimer();
+        mouse.holdTimer = setInterval(function() {
+            if (!mouse.down) {
+                clearHoldTimer();
+                return;
+            }
+            // 长按时注入较小的能量，保持水面波动
+            addDrop(mouse.x, mouse.y, CFG.dropRadius * 0.8, CFG.dropStrength * 0.4);
+            startLoop();
+        }, CFG.holdInterval);
     }
 
     function isContentTarget(el) {
@@ -282,15 +376,7 @@
 
         addDrop(x, y, CFG.dropRadius, CFG.dropStrength);
         startLoop();
-
-        // 长按逻辑
-        clearInterval(mouse.holdTimer);
-        mouse.holdTimer = setInterval(function() {
-            if (!mouse.down) return clearInterval(mouse.holdTimer);
-            // 长按时注入较小的能量，保持水面波动
-            addDrop(mouse.x, mouse.y, CFG.dropRadius * 0.8, CFG.dropStrength * 0.4);
-            startLoop();
-        }, CFG.holdInterval);
+        startHoldTimer();
     }
 
     function onMouseMove(e) {
@@ -305,19 +391,23 @@
         var dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist >= CFG.moveMinDist) {
-            // 拖拽时注入能量，自然形成尾流
-            addDrop(x, y, CFG.dropRadius * 0.6, CFG.dropStrength * 0.5);
+            clearHoldTimer();
+            // 拖拽时沿路径注入连续能量，避免快速移动出现“点串”
+            addStroke(mouse.lastX, mouse.lastY, x, y, CFG.dropRadius * 0.65, CFG.strokeUnitStrength);
             mouse.lastX = x;
             mouse.lastY = y;
             mouse.x = x;
             mouse.y = y;
             startLoop();
+            scheduleHoldResume();
         }
     }
 
     function onMouseUp() {
         mouse.down = false;
-        clearInterval(mouse.holdTimer);
+        clearHoldTimer();
+        clearTimeout(mouse.holdResumeTimer);
+        mouse.holdResumeTimer = null;
     }
 
     function bindEvents() {
