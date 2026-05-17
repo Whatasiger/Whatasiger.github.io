@@ -25,9 +25,9 @@
         holdInterval: 180,    // 长按时连续激发的频率 (ms)
         holdResumeDelay: 150, // 拖拽停止后恢复长按激发延迟 (ms)
         moveMinDist:  1,      // 拖拽抖动过滤阈值
-        strokeUnitStrength: 80, // 拖拽路径单位长度能量（接近点击强度）
+        strokeUnitStrength: 90, // 拖拽路径单位长度能量（接近点击强度）
         maxDropValue: 4000,   // 单格最大扰动，防止能量尖峰
-        fadeOutFrames: 9,     // 停止时淡出帧数
+        fadeOutFrames: 10,     // 停止时淡出帧数
         idleEnergy:   0.15,   // 停止动画的能量阈值，更细腻
     };
 
@@ -393,7 +393,7 @@
         if (dist >= CFG.moveMinDist) {
             clearHoldTimer();
             // 拖拽时沿路径注入连续能量，避免快速移动出现“点串”
-            addStroke(mouse.lastX, mouse.lastY, x, y, CFG.dropRadius * 0.65, CFG.strokeUnitStrength);
+            addStroke(mouse.lastX, mouse.lastY, x, y, CFG.dropRadius * 0.68, CFG.strokeUnitStrength);
             mouse.lastX = x;
             mouse.lastY = y;
             mouse.x = x;

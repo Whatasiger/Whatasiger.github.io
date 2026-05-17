@@ -20,6 +20,7 @@
     --border: #ddd;              /* 标准边框颜色，用于分隔线、输入框等 */
     --light-border: #eee;        /* 较浅的边框颜色，用于次要分隔 */
     --light-background: #fff;    /* 浅色背景，用于卡片、输入框等元素 */
+    --twikoo-input-bg: rgba(0, 0, 0, 0.07); /* Twikoo 输入区半透明加深层 */
     --radius: .25em;             /* 通用圆角半径，调整此值可改变所有圆角元素的弧度 */
     --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);      /* 弹性缓动曲线，用于有弹跳感的动画 */
     --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* 平滑缓动曲线，用于柔和过渡的动画 */
@@ -360,6 +361,7 @@ input, textarea, pre, hr, blockquote {
     --border: #444;                 /* 夜间模式边框颜色，深灰 */
     --light-border: #333;           /* 夜间模式浅边框颜色，更深的灰色 */
     --light-background: #333;       /* 夜间模式浅色背景（卡片/输入框），深灰 */
+    --twikoo-input-bg: rgba(0, 0, 0, 0.22); /* 夜间 Twikoo 输入区半透明加深层 */
 }
 
 /* 夜间模式 body 滚动条：透明边框 + 半透明白色轨道 */
@@ -1003,7 +1005,7 @@ main img {
     background-size: cover;
     background-position: center;
     transition: transform 1.2s var(--ease-spring),
-                filter 1.2s var(--ease-spring);
+                filter 1.4s var(--ease-spring);
     z-index: 1;
 }
 
@@ -1077,10 +1079,10 @@ main img {
     justify-content: space-between;
 }
 
-/* 卡片悬停：背景图放大并模糊 */
+/* 卡片悬停：背景图放大 */
 .post-item.card-style:hover .post-card-bg {
-    transform: scale(1.35);         /* 背景图放大倍数，影响悬停时的动态感 */
-    filter: blur(8px) brightness(0.6); /* 模糊度与亮度，影响背景图暗化程度 */
+    transform: scale(1.45);         /* 背景图放大倍数，影响悬停时的动态感 */
+    filter: blur(10px) brightness(0.8); /* 模糊度与亮度，影响背景图暗化程度 */
 }
 
 /* 卡片悬停：标题向上移动为摘要腾出空间 */
@@ -1202,6 +1204,97 @@ article img {
 /* 文章正文、相关文章、标签、作者区块的底部间距 */
 .post-content, .page-content, .post-near, .post-tags, .post-author {
     margin-bottom: 3em;             /* 各区块底部间距，影响阅读页各部分的垂直间隔 */
+}
+
+/* 友情链接页面简介块 */
+.friend-intro {
+    margin-bottom: 1.5em;
+}
+
+/* 友情链接卡片列表 */
+.friend-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1em;
+    margin-bottom: 3em;
+    animation: fade-in-top .3s .2s backwards;
+    -webkit-animation: fade-in-top .3s .2s backwards;
+}
+
+/* 单个友链卡片 */
+.friend-card {
+    display: flex;
+    align-items: center;
+    gap: 0.9em;
+    padding: 1em;
+    border-radius: var(--radius);
+    border: 1px solid var(--light-border);
+    background-color: rgba(255, 255, 255, 0.68);
+    text-decoration: none;
+    color: inherit;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.friend-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    border-color: rgba(255, 166, 40, 0.45);
+}
+
+.dark-theme .friend-card {
+    background-color: rgba(27, 27, 27, 0.72);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark-theme .friend-card:hover {
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 166, 40, 0.5);
+}
+
+/* 友链头像 */
+.friend-card-avatar {
+    width: 54px;
+    height: 54px;
+    flex: 0 0 54px;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 1px solid var(--light-border);
+}
+
+.friend-card-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* 友链标题与简介 */
+.friend-card-content {
+    min-width: 0;
+}
+
+.friend-card-title {
+    margin: 0 0 .3em;
+    font-size: 1.03em;
+    line-height: 1.25;
+}
+
+.friend-card-desc {
+    margin: 0;
+    font-size: .9em;
+    opacity: .82;
+    line-height: 1.45;
+    max-height: 2.9em;
+    overflow: hidden;
+}
+
+/* 友情链接为空时的提示 */
+.friend-empty {
+    grid-column: 1 / -1;
+    padding: .9em 1em;
+    border-radius: var(--radius);
+    border: 1px dashed var(--light-border);
+    opacity: .9;
 }
 
 /* 文章正文段落：取消首行缩进 */
@@ -1332,6 +1425,31 @@ article table tr:hover, .post-content table tr:hover {
 .post-comments input, .post-comments textarea {
     -webkit-appearance: none;
     -moz-appearance: none;
+}
+
+/* Twikoo 评论框：可输入区域半透明加深，透出页面背景 */
+.post-comments .tk-submit .el-textarea__inner,
+.post-comments .tk-submit .el-input__inner,
+.post-comments .tk-submit textarea,
+.post-comments .tk-submit input[type="text"],
+.post-comments .tk-submit input[type="email"],
+.post-comments .tk-submit input[type="url"],
+#tcomment .tk-input .el-textarea__inner,
+#tcomment .tk-input .el-input__inner,
+#tcomment .tk-input textarea,
+#tcomment .tk-meta-input .el-input__inner,
+#tcomment .tk-meta-input input,
+#twikoo .tk-input .el-textarea__inner,
+#twikoo .tk-input .el-input__inner,
+#twikoo .tk-input textarea,
+#twikoo .tk-meta-input .el-input__inner,
+#twikoo .tk-meta-input input,
+.twikoo .tk-input .el-textarea__inner,
+.twikoo .tk-input .el-input__inner,
+.twikoo .tk-input textarea,
+.twikoo .tk-meta-input .el-input__inner,
+.twikoo .tk-meta-input input {
+    background-color: var(--twikoo-input-bg) !important;
 }
 
 /* Twikoo 评论正文：用更强覆盖拉开与上下信息区的距离 */
@@ -2748,6 +2866,12 @@ pre[class*="language-"].line-numbers {
         font-size: 0.8em;           /* 手机端摘要字号 */
         margin-bottom: 5px;
         -webkit-line-clamp: 1;      /* 手机端摘要显示行数（仅 1 行） */
+    }
+
+    /* 手机端友情链接使用单列布局 */
+    .friend-list {
+        grid-template-columns: 1fr;
+        gap: 0.8em;
     }
 
     /* 手机端搜索结果面板：铺满宽度，固定在搜索框下方 */
