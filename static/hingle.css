@@ -199,7 +199,7 @@ input, textarea, pre, hr, blockquote {
 
 /* =========================================
    引用块（Quote Box）
-   - 由 scripts/quote-box.js 在渲染期把 <blockquote> 转为 .quote-box
+   - 由 scripts/quote-box.js 在渲染期把带 [!XXX] 的 <blockquote> 转为 .quote-box
    - 6 种类型：default / important / note / warning / tip / caution
    - 顶栏可点击折叠，body 默认最多 16 行高，超出滚动
    ========================================= */
@@ -2589,8 +2589,8 @@ pre[class*="language-"].line-numbers {
         left: 0;
         width: 100%;                /* 移动端目录宽度占满屏幕 */
         min-height: 0;
-        height: 30vh;               /* 移动端目录固定占屏幕下方 25% 高度 */
-        max-height: 30vh;
+        height: 40vh;               /* 移动端目录固定占屏幕下方 40% 高度 */
+        max-height: 40vh;
         background-color: #fff;
         background-color: var(--light-background);
         transform: translateY(100%); /* 默认在屏幕底部外，激活时滑入 */
