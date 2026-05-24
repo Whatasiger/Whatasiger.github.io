@@ -2887,6 +2887,92 @@ pre[class*="language-"].line-numbers {
     .comment-form button { width: 100%; }
 }
 
+/* =========================================
+   脚注样式（marked-footnote 生成的 HTML）
+   ========================================= */
+
+/* 正文内的脚注引用标记：上角小蓝字，无下划线 */
+article sup a[data-footnote-ref] {
+    color: var(--blue);             /* 使用主题蓝色 */
+    font-size: 0.75em;              /* 比正文小一号 */
+    font-weight: 500;
+    line-height: 1;
+    vertical-align: super;
+    border-bottom: none !important; /* 覆盖 article a 的虚线下划线 */
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+article sup a[data-footnote-ref]:hover {
+    color: var(--light-blue);
+}
+
+/* 脚注跳转锚点偏移（从正文跳到底部脚注条目时的顶部留白）*/
+.footnotes li {
+    scroll-margin-top: 60px;
+}
+
+/* 从脚注跳回正文时，引用标号 <a> 的锚点偏移 */
+article sup a[data-footnote-ref] {
+    scroll-margin-top: 70px;
+}
+
+/* 脚注区块整体：字号小一号、颜色灰色 */
+.footnotes {
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid var(--light-border);
+    font-size: 0.875em;             /* 比正文小一号 */
+    color: #888;                    /* 灰色 */
+    line-height: 1.7;
+}
+
+/* 脚注标题（屏幕阅读器专用，视觉隐藏）*/
+.footnotes .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* 脚注列表项间距 */
+.footnotes ol {
+    padding-left: 1.5em;
+    margin: 0;
+}
+
+.footnotes li {
+    margin-bottom: 0.5em;
+}
+
+.footnotes li p {
+    display: inline;
+}
+
+/* 脚注回跳链接（↩），去掉下划线 */
+.footnotes a[data-footnote-backref] {
+    color: var(--blue);
+    border-bottom: none !important;
+    text-decoration: none;
+    margin-left: 0.25em;
+    font-size: 0.9em;
+}
+
+.footnotes a[data-footnote-backref]:hover {
+    color: var(--light-blue);
+}
+
+/* 夜间模式下脚注颜色适配 */
+.dark-theme .footnotes {
+    color: #999;
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
 /* 宽度小于等于 600px：设置面板宽度自适应 */
 @media screen and (max-width: 600px) {
     .settings-panel {

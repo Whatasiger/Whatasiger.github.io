@@ -355,7 +355,7 @@ var Paul_Hingle = function (config) {
     // 目录树
     this.tree = function () {
         const wrap = ks.select(".wrap");
-        const headings = content.querySelectorAll("h1, h2, h3, h4, h5, h6");
+        const headings = content.querySelectorAll("h1:not(.footnotes *), h2:not(.footnotes *), h3:not(.footnotes *), h4:not(.footnotes *), h5:not(.footnotes *), h6:not(.footnotes *)");
 
         if (headings.length === 0) {
             return;
@@ -666,9 +666,25 @@ var Paul_Hingle = function (config) {
 
         if(l){
             ks.each(l, function (t) {
+                // 脚注引用链接和回跳链接不在新标签页打开
+                if (t.hasAttribute("data-footnote-ref") || t.hasAttribute("data-footnote-backref")) return;
                 t.target = "_blank";
             });
         }
+
+        // 脚注链接平滑滚动（不触发默认的跳转刷新）
+        content.addEventListener("click", function (e) {
+            var a = e.target.closest("a[data-footnote-ref], a[data-footnote-backref]");
+            if (!a) return;
+            var href = a.getAttribute("href");
+            if (!href || href.charAt(0) !== "#") return;
+            var target = document.getElementById(href.slice(1));
+            if (!target) return;
+            e.preventDefault();
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+            // 更新 URL hash，但不触发页面跳转
+            history.pushState(null, "", href);
+        });
     };
 
     this.comment_list = function () {
