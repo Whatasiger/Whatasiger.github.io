@@ -1,6 +1,7 @@
+https://whatasiger.xyz/posts/12/
+https://whatasiger.xyz/friend/index.html
 https://whatasiger.xyz/posts/13/
 https://whatasiger.xyz/posts/5/
-https://whatasiger.xyz/posts/12/
 https://whatasiger.xyz/posts/4/
 https://whatasiger.xyz/posts/2/
 https://whatasiger.xyz/posts/6/
@@ -11,7 +12,6 @@ https://whatasiger.xyz/posts/about-website/
 https://whatasiger.xyz/posts/10/
 https://whatasiger.xyz/posts/8/
 https://whatasiger.xyz/posts/7/
-https://whatasiger.xyz/friend/index.html
 https://whatasiger.xyz/about-me/index.html
 https://whatasiger.xyz/404.html
 https://whatasiger.xyz/comments/index.html

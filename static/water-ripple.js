@@ -52,13 +52,8 @@
     var isRunning = false;
     var fadeLeft  = 0;
 
-    var mouse = {
-        down: false,
-        x: 0, y: 0,
-        lastX: 0, lastY: 0,
-        holdTimer: null,
-        holdResumeTimer: null,
-    };
+    var activePointers = {};
+    var activePointerCount = 0;
 
     /* ── 初始化逻辑 ───────────────────────────────────── */
     function init() {
@@ -230,7 +225,7 @@
         var energy = step();
         render();
 
-        if (energy > CFG.idleEnergy || mouse.down) {
+        if (energy > CFG.idleEnergy || activePointerCount > 0) {
             fadeLeft = 0;
             rafId = requestAnimationFrame(loop);
         } else {
@@ -324,33 +319,53 @@
         }
     }
 
-    function clearHoldTimer() {
-        clearInterval(mouse.holdTimer);
-        mouse.holdTimer = null;
+    function getPointerKey(e) {
+        return e.pointerId !== undefined ? "p:" + e.pointerId : "mouse";
     }
 
-    function scheduleHoldResume() {
-        clearTimeout(mouse.holdResumeTimer);
-        mouse.holdResumeTimer = setTimeout(function() {
-            if (!mouse.down) return;
-            startHoldTimer();
+    function getCanvasPoint(e) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+            x: (e.clientX - rect.left) * CFG.scale,
+            y: (e.clientY - rect.top)  * CFG.scale,
+        };
+    }
+
+    function clearHoldTimer(pointer) {
+        clearInterval(pointer.holdTimer);
+        pointer.holdTimer = null;
+    }
+
+    function clearPointerTimers(pointer) {
+        clearHoldTimer(pointer);
+        clearTimeout(pointer.holdResumeTimer);
+        pointer.holdResumeTimer = null;
+    }
+
+    function scheduleHoldResume(pointer) {
+        clearTimeout(pointer.holdResumeTimer);
+        pointer.holdResumeTimer = setTimeout(function() {
+            if (!activePointers[pointer.id]) return;
+            startHoldTimer(pointer);
         }, CFG.holdResumeDelay);
     }
 
-    function startHoldTimer() {
-        clearHoldTimer();
-        mouse.holdTimer = setInterval(function() {
-            if (!mouse.down) {
-                clearHoldTimer();
+    function startHoldTimer(pointer) {
+        clearHoldTimer(pointer);
+        pointer.holdTimer = setInterval(function() {
+            if (!activePointers[pointer.id]) {
+                clearPointerTimers(pointer);
                 return;
             }
+            addDrop(pointer.x, pointer.y, CFG.dropRadius * 0.8, CFG.dropStrength * 0.4);
+            var mouse = { x: -999999, y: -999999 };
             // 长按时注入较小的能量，保持水面波动
             addDrop(mouse.x, mouse.y, CFG.dropRadius * 0.8, CFG.dropStrength * 0.4);
             startLoop();
         }, CFG.holdInterval);
     }
 
-    function isContentTarget(el) {
+    function isContentTargetLegacy(el) {
         if (!el || el === canvas) return false;
         // 排除头像、卡片、社交栏等核心内容区域
         return !!el.closest(
@@ -361,72 +376,120 @@
         );
     }
 
-    function onMouseDown(e) {
-        if ((e.button !== undefined && e.button !== 0) || isContentTarget(e.target)) return;
-
-        var rect = canvas.getBoundingClientRect();
-        var x = (e.clientX - rect.left) * CFG.scale;
-        var y = (e.clientY - rect.top)  * CFG.scale;
-
-        mouse.down  = true;
-        mouse.x     = x;
-        mouse.y     = y;
-        mouse.lastX = x;
-        mouse.lastY = y;
-
-        addDrop(x, y, CFG.dropRadius, CFG.dropStrength);
-        startLoop();
-        startHoldTimer();
+    function isContentTarget(el) {
+        if (!el || el === canvas) return false;
+        return !!el.closest(
+            "header, footer, .settings-panel, " +
+            ".home-social, .home-profile-link, " +
+            ".post-item, .page-navigator, " +
+            "nav, a, button, input, select, textarea, label, img"
+        );
     }
 
-    function onMouseMove(e) {
-        if (!mouse.down) return;
+    function onInputDown(e) {
+        if ((e.button !== undefined && e.button !== 0) || isContentTarget(e.target)) return;
 
-        var rect = canvas.getBoundingClientRect();
-        var x = (e.clientX - rect.left) * CFG.scale;
-        var y = (e.clientY - rect.top)  * CFG.scale;
+        var key = getPointerKey(e);
+        var point = getCanvasPoint(e);
+        var pointer = {
+            id: key,
+            x: point.x,
+            y: point.y,
+            lastX: point.x,
+            lastY: point.y,
+            holdTimer: null,
+            holdResumeTimer: null,
+        };
 
-        var dx = x - mouse.lastX;
-        var dy = y - mouse.lastY;
+        if (activePointers[key]) endInput(key);
+        activePointers[key] = pointer;
+        activePointerCount++;
+
+        addDrop(point.x, point.y, CFG.dropRadius, CFG.dropStrength);
+        startLoop();
+        startHoldTimer(pointer);
+    }
+
+    function onInputMove(e) {
+        var key = getPointerKey(e);
+        var pointer = activePointers[key];
+        if (!pointer) return;
+
+        var point = getCanvasPoint(e);
+        var dx = point.x - pointer.lastX;
+        var dy = point.y - pointer.lastY;
         var dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist >= CFG.moveMinDist) {
-            clearHoldTimer();
+            clearHoldTimer(pointer);
+            addStroke(pointer.lastX, pointer.lastY, point.x, point.y, CFG.dropRadius * 0.68, CFG.strokeUnitStrength);
+            var mouse = { lastX: -999999, lastY: -999999 };
+            var x = -999999;
+            var y = -999999;
             // 拖拽时沿路径注入连续能量，避免快速移动出现“点串”
             addStroke(mouse.lastX, mouse.lastY, x, y, CFG.dropRadius * 0.68, CFG.strokeUnitStrength);
-            mouse.lastX = x;
-            mouse.lastY = y;
-            mouse.x = x;
-            mouse.y = y;
+            pointer.lastX = point.x;
+            pointer.lastY = point.y;
+            pointer.x = point.x;
+            pointer.y = point.y;
             startLoop();
-            scheduleHoldResume();
+            scheduleHoldResume(pointer);
         }
     }
 
-    function onMouseUp() {
-        mouse.down = false;
-        clearHoldTimer();
-        clearTimeout(mouse.holdResumeTimer);
-        mouse.holdResumeTimer = null;
+    function endInput(key) {
+        var pointer = activePointers[key];
+        if (!pointer) return;
+
+        clearPointerTimers(pointer);
+        delete activePointers[key];
+        activePointerCount = Math.max(0, activePointerCount - 1);
+    }
+
+    function endAllInputs() {
+        for (var key in activePointers) {
+            if (Object.prototype.hasOwnProperty.call(activePointers, key)) endInput(key);
+        }
     }
 
     function bindEvents() {
-        document.addEventListener("mousedown",  onMouseDown);
-        document.addEventListener("mousemove",  onMouseMove);
-        document.addEventListener("mouseup",    onMouseUp);
-        document.addEventListener("mouseleave", onMouseUp);
+        if (window.PointerEvent) {
+            document.addEventListener("pointerdown",   onInputDown,  { passive: true });
+            document.addEventListener("pointermove",   onInputMove,  { passive: true });
+            document.addEventListener("pointerup",     function(e) { endInput(getPointerKey(e)); }, { passive: true });
+            document.addEventListener("pointercancel", function(e) { endInput(getPointerKey(e)); }, { passive: true });
+        } else {
+            document.addEventListener("mousedown",  onInputDown);
+            document.addEventListener("mousemove",  onInputMove);
+            document.addEventListener("mouseup",    function(e) { endInput(getPointerKey(e)); });
+            document.addEventListener("mouseleave", endAllInputs);
 
-        document.addEventListener("touchstart", function(e) {
-            var t = e.touches[0];
-            onMouseDown({ clientX: t.clientX, clientY: t.clientY, target: t.target });
-        }, { passive: true });
+            document.addEventListener("touchstart", function(e) {
+                forEachTouch(e.changedTouches, function(t) {
+                    onInputDown({ pointerId: "t:" + t.identifier, clientX: t.clientX, clientY: t.clientY, target: t.target });
+                });
+            }, { passive: true });
 
-        document.addEventListener("touchmove", function(e) {
-            var t = e.touches[0];
-            onMouseMove({ clientX: t.clientX, clientY: t.clientY });
-        }, { passive: true });
+            document.addEventListener("touchmove", function(e) {
+                forEachTouch(e.changedTouches, function(t) {
+                    onInputMove({ pointerId: "t:" + t.identifier, clientX: t.clientX, clientY: t.clientY });
+                });
+            }, { passive: true });
 
-        document.addEventListener("touchend", onMouseUp);
+            document.addEventListener("touchend", function(e) {
+                forEachTouch(e.changedTouches, function(t) {
+                    endInput("p:t:" + t.identifier);
+                });
+            }, { passive: true });
+
+            document.addEventListener("touchcancel", function(e) {
+                forEachTouch(e.changedTouches, function(t) {
+                    endInput("p:t:" + t.identifier);
+                });
+            }, { passive: true });
+        }
+
+        window.addEventListener("blur", endAllInputs);
     }
 
     /* ── 工具函数 ────────────────────────────────────────── */
@@ -436,6 +499,12 @@
             clearTimeout(timer);
             timer = setTimeout(fn, ms);
         };
+    }
+
+    function forEachTouch(touches, fn) {
+        for (var i = 0; i < touches.length; i++) {
+            fn(touches[i]);
+        }
     }
 
     // 观察背景或主题变化
