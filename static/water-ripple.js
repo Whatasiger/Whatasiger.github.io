@@ -323,6 +323,10 @@
         return e.pointerId !== undefined ? "p:" + e.pointerId : "mouse";
     }
 
+    function isTouchPointer(e) {
+        return e.pointerType === "touch";
+    }
+
     function getCanvasPoint(e) {
         var rect = canvas.getBoundingClientRect();
         return {
@@ -452,10 +456,38 @@
         }
     }
 
+    function onPointerDown(e) {
+        if (isTouchPointer(e)) return;
+        onInputDown(e);
+    }
+
+    function onPointerMove(e) {
+        if (isTouchPointer(e)) return;
+        onInputMove(e);
+    }
+
+    function onTouchStart(e) {
+        forEachTouch(e.changedTouches, function(t) {
+            onInputDown({ pointerId: "t:" + t.identifier, clientX: t.clientX, clientY: t.clientY, target: t.target });
+        });
+    }
+
+    function onTouchMove(e) {
+        forEachTouch(e.changedTouches, function(t) {
+            onInputMove({ pointerId: "t:" + t.identifier, clientX: t.clientX, clientY: t.clientY });
+        });
+    }
+
+    function onTouchEnd(e) {
+        forEachTouch(e.changedTouches, function(t) {
+            endInput("p:t:" + t.identifier);
+        });
+    }
+
     function bindEvents() {
         if (window.PointerEvent) {
-            document.addEventListener("pointerdown",   onInputDown,  { passive: true });
-            document.addEventListener("pointermove",   onInputMove,  { passive: true });
+            document.addEventListener("pointerdown",   onPointerDown,  { passive: true });
+            document.addEventListener("pointermove",   onPointerMove,  { passive: true });
             document.addEventListener("pointerup",     function(e) { endInput(getPointerKey(e)); }, { passive: true });
             document.addEventListener("pointercancel", function(e) { endInput(getPointerKey(e)); }, { passive: true });
         } else {
@@ -463,32 +495,12 @@
             document.addEventListener("mousemove",  onInputMove);
             document.addEventListener("mouseup",    function(e) { endInput(getPointerKey(e)); });
             document.addEventListener("mouseleave", endAllInputs);
-
-            document.addEventListener("touchstart", function(e) {
-                forEachTouch(e.changedTouches, function(t) {
-                    onInputDown({ pointerId: "t:" + t.identifier, clientX: t.clientX, clientY: t.clientY, target: t.target });
-                });
-            }, { passive: true });
-
-            document.addEventListener("touchmove", function(e) {
-                forEachTouch(e.changedTouches, function(t) {
-                    onInputMove({ pointerId: "t:" + t.identifier, clientX: t.clientX, clientY: t.clientY });
-                });
-            }, { passive: true });
-
-            document.addEventListener("touchend", function(e) {
-                forEachTouch(e.changedTouches, function(t) {
-                    endInput("p:t:" + t.identifier);
-                });
-            }, { passive: true });
-
-            document.addEventListener("touchcancel", function(e) {
-                forEachTouch(e.changedTouches, function(t) {
-                    endInput("p:t:" + t.identifier);
-                });
-            }, { passive: true });
         }
 
+        document.addEventListener("touchstart",  onTouchStart, { passive: true });
+        document.addEventListener("touchmove",   onTouchMove,  { passive: true });
+        document.addEventListener("touchend",    onTouchEnd,   { passive: true });
+        document.addEventListener("touchcancel", onTouchEnd,   { passive: true });
         window.addEventListener("blur", endAllInputs);
     }
 
