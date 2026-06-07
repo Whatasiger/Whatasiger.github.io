@@ -40,6 +40,9 @@ var Paul_Hingle = function (config) {
         return closest;
     }
 
+    var SOURCE_HAN_FONT_STACK = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
+    var SYSTEM_FONT_STACK = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
+
     var defaultSettings = {
         showToTop: false,      // 默认隐藏「回到顶部」
         hideBackground: false, // 是否隐藏背景图片
@@ -94,9 +97,9 @@ var Paul_Hingle = function (config) {
         // 字体设置
         var fontFamily = currentSettings.fontFamily || defaultSettings.fontFamily;
         if (fontFamily === "noto-sans-sc") {
-            body.style.fontFamily = '"Noto Sans SC", "Microsoft YaHei", sans-serif';
+            body.style.fontFamily = SOURCE_HAN_FONT_STACK;
         } else {
-            body.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
+            body.style.fontFamily = SYSTEM_FONT_STACK;
         }
 
         // 回到顶部按钮：通过类控制 + JS 逻辑双保险

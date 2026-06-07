@@ -54,15 +54,17 @@
     <style>body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
     
 
-    <!-- 思源黑体（Noto Sans SC）：使用国内稳定镜像 + 非阻塞加载 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
+    <!-- 思源黑体（Noto Sans SC）：国内镜像优先 + 本机字体名回退 -->
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="preload" as="style" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
           media="print" onload="this.media='all'; this.onload=null;">
     <noscript>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
+        <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
     </noscript>
 
     <!-- 结构化数据：让搜索引擎更准确地理解文章 -->
@@ -82,13 +84,11 @@
             var SETTINGS_KEY = "whatasiger_reader_settings";
             var savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
             var fontChoice = (savedSettings && savedSettings.fontFamily) ? savedSettings.fontFamily : "noto-sans-sc";
-            if (fontChoice === "noto-sans-sc") {
-                document.body.style.fontFamily = '"Noto Sans SC", "Microsoft YaHei", sans-serif';
-            } else {
-                document.body.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
-            }
+            var sourceHanFontStack = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
+            var systemFontStack = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
+            document.body.style.fontFamily = fontChoice === "noto-sans-sc" ? sourceHanFontStack : systemFontStack;
         } catch (e) {
-            document.body.style.fontFamily = '"Noto Sans SC", "Microsoft YaHei", sans-serif';
+            document.body.style.fontFamily = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
         }
 
         // 0.1 背景可见度：与设置面板共用唯一数据源 whatasiger_reader_settings.bgOpacity
@@ -264,6 +264,7 @@
         <a href="/comments">留言板</a>
     
 </nav>
+
     <main>
     <div class="wrap min">
         <section class="page-title">
