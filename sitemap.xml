@@ -11,6 +11,15 @@
   </url>
   
   <url>
+    <loc>https://whatasiger.xyz/posts/5/</loc>
+    
+    <lastmod>2026-06-10</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://whatasiger.xyz/friend/index.html</loc>
     
     <lastmod>2026-06-10</lastmod>
@@ -21,15 +30,6 @@
   
   <url>
     <loc>https://whatasiger.xyz/about-website/index.html</loc>
-    
-    <lastmod>2026-06-07</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://whatasiger.xyz/posts/5/</loc>
     
     <lastmod>2026-06-07</lastmod>
     
