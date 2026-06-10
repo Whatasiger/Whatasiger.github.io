@@ -162,6 +162,13 @@
   </url>
   
   <url>
+    <loc>https://whatasiger.xyz/tags/%E8%AF%84%E6%9E%90/</loc>
+    <lastmod>2026-06-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://whatasiger.xyz/tags/%E5%B0%8F%E8%AF%B4/</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -170,13 +177,6 @@
   
   <url>
     <loc>https://whatasiger.xyz/tags/%E7%89%B9%E6%AE%8A/</loc>
-    <lastmod>2026-06-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://whatasiger.xyz/tags/%E8%AF%84%E6%9E%90/</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
