@@ -1096,6 +1096,116 @@ main img {
     transform: translateY(0);
 }
 
+/* 「CARRiER WAVE.」特殊卡片：无封面，深色夜空 + 一条缓慢流动的载波 */
+.post-item.cw-card {
+    display: block;
+    height: 220px;
+    color: #E4E4E0;
+    text-decoration: none;
+    background:
+        radial-gradient(60% 90% at 12% 0%, rgba(174, 191, 214, .16), transparent 70%),
+        radial-gradient(50% 80% at 92% 100%, rgba(185, 164, 201, .14), transparent 70%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 4px),
+        #14161B;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .06);
+}
+.post-item.cw-card:hover {
+    box-shadow: 0 15px 40px rgba(0, 0, 0, .5), inset 0 0 0 1px rgba(185, 164, 201, .22);
+}
+.cw-card-wave-box {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 60px;
+    margin-top: -30px;
+    overflow: hidden;
+    pointer-events: none;
+}
+.cw-card-wave {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 200%;
+    max-width: none;
+    height: 100%;
+    overflow: visible;
+    animation: cw-card-drift 14s linear infinite;
+    pointer-events: none;
+}
+.cw-card-strand {
+    fill: none;
+    stroke: rgba(228, 228, 224, .38);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    transform-origin: center;
+    transition: stroke .8s ease, transform 1.2s var(--ease-spring);
+}
+.cw-card-strand.is-ghost {
+    stroke: rgba(174, 191, 214, .16);
+    transform: translateY(5px) scaleY(.7);
+}
+.post-item.cw-card:hover .cw-card-strand { stroke: rgba(201, 182, 214, .7); transform: scaleY(2.2); }
+.post-item.cw-card:hover .cw-card-strand.is-ghost { stroke: rgba(174, 191, 214, .3); transform: translateY(8px) scaleY(1.6); }
+@keyframes cw-card-drift { to { transform: translateX(-50%); } }
+
+.cw-card-body {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 46px;
+    pointer-events: none;
+}
+.post-item.card-style .cw-card-title {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-family: "Cormorant Garamond", serif;
+    font-weight: 300;
+    font-size: 2.6em;
+    line-height: 1;
+    letter-spacing: .04em;
+    color: #EDEDE9;
+    transition: letter-spacing 1.2s var(--ease-spring), transform 1.2s var(--ease-spring);
+}
+.post-item.cw-card:hover .cw-card-title { letter-spacing: .1em; transform: translateY(-4px); }
+.cw-card-sub {
+    margin: 0;
+    font-size: .78em;
+    letter-spacing: .5em;
+    padding-left: .5em;
+    color: rgba(228, 228, 224, .55);
+    text-indent: 0;
+}
+.cw-card-sub i {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    margin: 0 1.1em 0 .6em;
+    border-radius: 50%;
+    background: currentColor;
+    vertical-align: middle;
+}
+@media (max-width: 768px) {
+    .post-item.cw-card { height: 170px; }
+    .post-item.card-style .cw-card-title { font-size: 1.9em; }
+    .cw-card-body { gap: 34px; }
+    .cw-card-sub { letter-spacing: .36em; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .cw-card-wave { animation: none; }
+}
+
+/* 一镜到底：与 /carrier_wave/ 首屏的同名元素配对形变（仅在跳往该页时生效） */
+.post-item.cw-card { view-transition-name: cw-stage; }
+.cw-card-wave-box { view-transition-name: cw-hero-wave; }
+.post-item.card-style .cw-card-title { view-transition-name: cw-hero-title; }
+.cw-card-sub { view-transition-name: cw-hero-sub; }
+
 /* 文章列表分页导航 */
 /* - 换页 */
 .page-navigator {

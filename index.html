@@ -63,6 +63,24 @@
     <link rel="stylesheet"
           href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
           media="print" onload="this.media='all'; this.onload=null;">
+    
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Cormorant+Garamond:wght@300&display=swap">
+    <!-- 跨页面过渡只用于「首页 → CARRiER WAVE.」，其余跳转一律跳过 -->
+    <style>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
+    <script>
+        (function () {
+            var target = '/carrier_wave/';
+            window.addEventListener('pageswap', function (e) {
+                if (!e.viewTransition) return;
+                var to = e.activation && e.activation.entry && e.activation.entry.url;
+                if (!to || new URL(to).pathname !== target) e.viewTransition.skipTransition();
+            });
+            window.addEventListener('pagereveal', function (e) {
+                if (e.viewTransition) e.viewTransition.skipTransition();
+            });
+        })();
+    </script>
+    
     <noscript>
         <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
     </noscript>
@@ -353,6 +371,20 @@
             </div>
         </section>
         <section class="home-posts">
+    
+        <a class="post-item card-style cw-card" href="/carrier_wave/">
+            <div class="cw-card-wave-box" aria-hidden="true">
+                <svg class="cw-card-wave" viewBox="0 0 1600 100" preserveAspectRatio="none">
+                    <path class="cw-card-strand is-ghost" d="M0 50 Q10 38 20 50 T40 50 Q50 38 60 50 T80 50 Q90 38 100 50 T120 50 Q130 38 140 50 T160 50 Q170 38 180 50 T200 50 Q210 38 220 50 T240 50 Q250 38 260 50 T280 50 Q290 38 300 50 T320 50 Q330 38 340 50 T360 50 Q370 38 380 50 T400 50 Q410 38 420 50 T440 50 Q450 38 460 50 T480 50 Q490 38 500 50 T520 50 Q530 38 540 50 T560 50 Q570 38 580 50 T600 50 Q610 38 620 50 T640 50 Q650 38 660 50 T680 50 Q690 38 700 50 T720 50 Q730 38 740 50 T760 50 Q770 38 780 50 T800 50 Q810 38 820 50 T840 50 Q850 38 860 50 T880 50 Q890 38 900 50 T920 50 Q930 38 940 50 T960 50 Q970 38 980 50 T1000 50 Q1010 38 1020 50 T1040 50 Q1050 38 1060 50 T1080 50 Q1090 38 1100 50 T1120 50 Q1130 38 1140 50 T1160 50 Q1170 38 1180 50 T1200 50 Q1210 38 1220 50 T1240 50 Q1250 38 1260 50 T1280 50 Q1290 38 1300 50 T1320 50 Q1330 38 1340 50 T1360 50 Q1370 38 1380 50 T1400 50 Q1410 38 1420 50 T1440 50 Q1450 38 1460 50 T1480 50 Q1490 38 1500 50 T1520 50 Q1530 38 1540 50 T1560 50 Q1570 38 1580 50 T1600 50"/>
+                    <path class="cw-card-strand" d="M0 50 Q10 38 20 50 T40 50 Q50 38 60 50 T80 50 Q90 38 100 50 T120 50 Q130 38 140 50 T160 50 Q170 38 180 50 T200 50 Q210 38 220 50 T240 50 Q250 38 260 50 T280 50 Q290 38 300 50 T320 50 Q330 38 340 50 T360 50 Q370 38 380 50 T400 50 Q410 38 420 50 T440 50 Q450 38 460 50 T480 50 Q490 38 500 50 T520 50 Q530 38 540 50 T560 50 Q570 38 580 50 T600 50 Q610 38 620 50 T640 50 Q650 38 660 50 T680 50 Q690 38 700 50 T720 50 Q730 38 740 50 T760 50 Q770 38 780 50 T800 50 Q810 38 820 50 T840 50 Q850 38 860 50 T880 50 Q890 38 900 50 T920 50 Q930 38 940 50 T960 50 Q970 38 980 50 T1000 50 Q1010 38 1020 50 T1040 50 Q1050 38 1060 50 T1080 50 Q1090 38 1100 50 T1120 50 Q1130 38 1140 50 T1160 50 Q1170 38 1180 50 T1200 50 Q1210 38 1220 50 T1240 50 Q1250 38 1260 50 T1280 50 Q1290 38 1300 50 T1320 50 Q1330 38 1340 50 T1360 50 Q1370 38 1380 50 T1400 50 Q1410 38 1420 50 T1440 50 Q1450 38 1460 50 T1480 50 Q1490 38 1500 50 T1520 50 Q1530 38 1540 50 T1560 50 Q1570 38 1580 50 T1600 50"/>
+                </svg>
+            </div>
+            <div class="cw-card-body">
+                <h2 class="cw-card-title">CARRiER WAVE.</h2>
+                <p class="cw-card-sub">载波<i></i>十八篇短篇辑</p>
+            </div>
+        </a>
+    
     
         
         <div class="post-item card-style" onclick="window.location.href='/posts/8/'">

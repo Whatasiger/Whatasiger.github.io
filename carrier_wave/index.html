@@ -1,0 +1,427 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>CARRiER WAVE. 载波 - Whatasiger</title>
+    <meta name="description" content="载波 · 十八篇短篇辑。被留下的成为信号，被遗漏的进入 limbo。">
+    <meta name="author" content="Whatasiger">
+    <meta name="theme-color" content="#16181D">
+    <link rel="canonical" href="https://whatasiger.xyz/carrier_wave/">
+    <link rel="icon" href="/static/img/icon.png" sizes="192x192">
+
+    <meta property="og:site_name" content="Whatasiger">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://whatasiger.xyz/carrier_wave/">
+    <meta property="og:title" content="CARRiER WAVE. 载波 - Whatasiger">
+    <meta property="og:description" content="载波 · 十八篇短篇辑。被留下的成为信号，被遗漏的进入 limbo。">
+
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Noto+Serif+SC:wght@300;400;500&display=swap">
+
+    <script>
+        (function () {
+            var root = document.documentElement;
+            root.classList.add('cw-js');
+            // 从博客首页卡片进入目录页：首屏元素不做入场，由跨页面过渡从卡片形变而来
+            var home = '/';
+            var act = window.navigation && navigation.activation;
+            var from = act && act.from && new URL(act.from.url);
+            if ('onpagereveal' in window && from && (from.pathname === home || from.pathname === home + 'index.html')
+                && location.pathname === '/carrier_wave/'
+                && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                root.classList.add('cw-from-home');
+                window.addEventListener('pagereveal', function (e) {
+                    if (!e.viewTransition) { root.classList.remove('cw-from-home'); return; }
+                    e.viewTransition.finished.finally(function () { root.classList.remove('cw-from-home'); });
+                });
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mupm7tr9">
+    <script src="/static/carrier-wave/cw.js?v=mupm7tr9" defer></script>
+<meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
+</head>
+
+
+<body class="cw cw-index">
+    <div class="cw-stage" aria-hidden="true"></div>
+    <canvas class="cw-wave" aria-hidden="true"></canvas>
+
+    <nav class="cw-corner">
+        <a class="cw-home" href="/"><span class="cw-arrow" aria-hidden="true">←</span>Whatasiger</a>
+    </nav>
+    <div class="cw-tuner" aria-hidden="true">
+        <span class="cw-tuner-no"></span>
+        <span class="cw-tuner-title"></span>
+    </div>
+
+    <main>
+        <section class="cw-hero">
+            <h1 class="cw-title cw-rise" style="--d:0">CARR<a class="cw-i" href="/carrier_wave/limbo/" aria-label="limbo.">i</a>ER WAVE.</h1>
+            <div class="cw-axis" data-cw-axis></div>
+            <p class="cw-sub cw-rise" style="--d:2">
+                <span>载波</span><i class="cw-dot" aria-hidden="true"></i><span>十八篇短篇辑</span>
+            </p>
+            <a class="cw-cue cw-rise" style="--d:4" href="#tracks" aria-label="曲目"><span></span></a>
+        </section>
+
+        <section id="tracks" class="cw-list" aria-label="曲目">
+            <ol class="cw-tracks">
+            
+                <li class="cw-track is-lost" style="--tint:#CFC6B8;--gap-a:23%;--gap-b:25%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="1"
+                        data-tint="#CFC6B8"
+                        data-no="01"
+                        data-title="SIN."
+                        data-state="lost">
+                        <span class="cw-no">01</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-sin">SIN.</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track is-lead" style="--tint:#C9A9AE;--gap-a:60%;--gap-b:65%">
+                    <a class="cw-track-link"
+                        href="/carrier_wave/pathos/"
+                        data-cw-track
+                        data-seed="2"
+                        data-tint="#C9A9AE"
+                        data-no="02"
+                        data-title="PATHOS."
+                        data-state="signal">
+                        <span class="cw-no">02</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-pathos">PATHOS.</span>
+                        </span>
+                        <span class="cw-meta">
+                            3,097 字
+                        </span>
+                    </a>
+                </li>
+            
+                <li class="cw-track" style="--tint:#A8C3C1;--gap-a:29%;--gap-b:32%">
+                    <a class="cw-track-link"
+                        href="/carrier_wave/mamihlapinatapei-1/"
+                        data-cw-track
+                        data-seed="3"
+                        data-tint="#A8C3C1"
+                        data-no="03"
+                        data-title="maMihlApinaTapEi. 1st"
+                        data-state="signal">
+                        <span class="cw-no">03</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-mamihlapinatapei-1">maMihlApinaTapEi.</span><span class="cw-part">1st</span>
+                        </span>
+                        <span class="cw-meta">
+                            1,252 字
+                        </span>
+                    </a>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#CFC6B8;--gap-a:66%;--gap-b:72%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="4"
+                        data-tint="#CFC6B8"
+                        data-no="04"
+                        data-title="Anecdoche."
+                        data-state="lost">
+                        <span class="cw-no">04</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-anecdoche">Anecdoche.</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#B9C7AE;--gap-a:35%;--gap-b:39%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="5"
+                        data-tint="#B9C7AE"
+                        data-no="05"
+                        data-title="Eden."
+                        data-state="lost">
+                        <span class="cw-no">05</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-eden">Eden.</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#AEBFD6;--gap-a:72%;--gap-b:74%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="6"
+                        data-tint="#AEBFD6"
+                        data-no="06"
+                        data-title="AIRS. Ⅰ"
+                        data-state="lost">
+                        <span class="cw-no">06</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-airs-1">AIRS.</span><span class="cw-part">Ⅰ</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#A8C3C1;--gap-a:41%;--gap-b:46%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="7"
+                        data-tint="#A8C3C1"
+                        data-no="07"
+                        data-title="maMihlApinaTapEi. 2nd"
+                        data-state="lost">
+                        <span class="cw-no">07</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-mamihlapinatapei-2">maMihlApinaTapEi.</span><span class="cw-part">2nd</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track" style="--tint:#BDB6CF;--gap-a:78%;--gap-b:81%">
+                    <a class="cw-track-link"
+                        href="/carrier_wave/eric/"
+                        data-cw-track
+                        data-seed="8"
+                        data-tint="#BDB6CF"
+                        data-no="08"
+                        data-title="Eric."
+                        data-state="signal">
+                        <span class="cw-no">08</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-eric">Eric.</span>
+                        </span>
+                        <span class="cw-meta">
+                            1,041 字
+                        </span>
+                    </a>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#AEBFD6;--gap-a:47%;--gap-b:53%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="9"
+                        data-tint="#AEBFD6"
+                        data-no="09"
+                        data-title="AIRS. Ⅱ"
+                        data-state="lost">
+                        <span class="cw-no">09</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-airs-2">AIRS.</span><span class="cw-part">Ⅱ</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#D3BFA9;--gap-a:16%;--gap-b:20%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="10"
+                        data-tint="#D3BFA9"
+                        data-no="10"
+                        data-title="Remy."
+                        data-state="lost">
+                        <span class="cw-no">10</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-remy">Remy.</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#A8C3C1;--gap-a:53%;--gap-b:55%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="11"
+                        data-tint="#A8C3C1"
+                        data-no="11"
+                        data-title="maMihlApinaTapEi. 3rd"
+                        data-state="lost">
+                        <span class="cw-no">11</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-mamihlapinatapei-3">maMihlApinaTapEi.</span><span class="cw-part">3rd</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track" style="--tint:#B4B9C4;--gap-a:22%;--gap-b:27%">
+                    <a class="cw-track-link"
+                        href="/carrier_wave/mora/"
+                        data-cw-track
+                        data-seed="12"
+                        data-tint="#B4B9C4"
+                        data-no="12"
+                        data-title="Mora."
+                        data-state="signal">
+                        <span class="cw-no">12</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-mora">Mora.</span>
+                        </span>
+                        <span class="cw-meta">
+                            1,472 字
+                        </span>
+                    </a>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#CFC6B8;--gap-a:59%;--gap-b:62%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="13"
+                        data-tint="#CFC6B8"
+                        data-no="13"
+                        data-title="Sonder."
+                        data-state="lost">
+                        <span class="cw-no">13</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-sonder">Sonder.</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#A8C3C1;--gap-a:28%;--gap-b:34%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="14"
+                        data-tint="#A8C3C1"
+                        data-no="14"
+                        data-title="maMihlApinaTapEi. 4th"
+                        data-state="lost">
+                        <span class="cw-no">14</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-mamihlapinatapei-4">maMihlApinaTapEi.</span><span class="cw-part">4th</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#CFC6B8;--gap-a:65%;--gap-b:69%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="15"
+                        data-tint="#CFC6B8"
+                        data-no="15"
+                        data-title="Énouement."
+                        data-state="lost">
+                        <span class="cw-no">15</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-enouement">Énouement.</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#AEBFD6;--gap-a:34%;--gap-b:36%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="16"
+                        data-tint="#AEBFD6"
+                        data-no="16"
+                        data-title="AIRS. Ⅲ"
+                        data-state="lost">
+                        <span class="cw-no">16</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-airs-3">AIRS.</span><span class="cw-part">Ⅲ</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+                <li class="cw-track is-limbo" style="--tint:#C4C4C6;--gap-a:71%;--gap-b:76%">
+                    <a class="cw-track-link"
+                        href="/carrier_wave/limbo/"
+                        data-cw-track
+                        data-seed="17"
+                        data-tint="#C4C4C6"
+                        data-no="17"
+                        data-title="limbo."
+                        data-state="signal">
+                        <span class="cw-no">17</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-limbo">limbo.</span>
+                        </span>
+                        <span class="cw-meta">
+                            525 字
+                        </span>
+                    </a>
+                </li>
+            
+                <li class="cw-track is-lost" style="--tint:#B7C4D4;--gap-a:40%;--gap-b:43%">
+                    <span class="cw-track-link"
+                        aria-disabled="true"
+                        data-cw-track
+                        data-seed="18"
+                        data-tint="#B7C4D4"
+                        data-no="18"
+                        data-title="CARRiER WAVE."
+                        data-state="lost">
+                        <span class="cw-no">18</span>
+                        <span class="cw-name">
+                            <span class="cw-name-text" style="view-transition-name:cw-t-carrier-wave">CARRiER WAVE.</span>
+                        </span>
+                        <span class="cw-meta">
+                            未接收
+                        </span>
+                    </span>
+                </li>
+            
+            </ol>
+        </section>
+
+        <footer class="cw-foot">
+            <p class="cw-epigraph">被留下的成为信号，被遗漏的进入 limbo。</p>
+            <p class="cw-sign">Whatasiger</p>
+        </footer>
+    </main>
+</body>
+</html>
+
