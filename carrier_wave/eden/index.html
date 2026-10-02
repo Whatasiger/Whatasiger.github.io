@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Eden. - CARRiER WAVE. - Whatasiger</title>
+    <meta name="description" content="CARRiER WAVE. 载波 · 05 / 18">
+    <meta name="author" content="Whatasiger">
+    <meta name="theme-color" content="#16181D">
+    <link rel="canonical" href="https://whatasiger.xyz/carrier_wave/eden/">
+    <link rel="icon" href="/static/img/icon.png" sizes="192x192">
+
+    <meta property="og:site_name" content="Whatasiger">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://whatasiger.xyz/carrier_wave/eden/">
+    <meta property="og:title" content="Eden. - CARRiER WAVE. - Whatasiger">
+    <meta property="og:description" content="CARRiER WAVE. 载波 · 05 / 18">
+
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Noto+Serif+SC:wght@300;400;500&display=swap">
+
+    <script>
+        (function () {
+            var root = document.documentElement;
+            root.classList.add('cw-js');
+            // 从博客首页卡片进入目录页：首屏元素不做入场，由跨页面过渡从卡片形变而来
+            var home = '/';
+            var act = window.navigation && navigation.activation;
+            var from = act && act.from && new URL(act.from.url);
+            if ('onpagereveal' in window && from && (from.pathname === home || from.pathname === home + 'index.html')
+                && location.pathname === '/carrier_wave/'
+                && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                root.classList.add('cw-from-home');
+                window.addEventListener('pagereveal', function (e) {
+                    if (!e.viewTransition) { root.classList.remove('cw-from-home'); return; }
+                    e.viewTransition.finished.finally(function () { root.classList.remove('cw-from-home'); });
+                });
+            }
+
+            // 首屏 ↔ i ↔ limbo：标题里的 i 一镜到底，只在这几页之间互相跳转时才给它过渡名
+            var album = '/carrier_wave/';
+            var hidden = album + 'i/';
+            var limbo = album + 'limbo/';
+            function norm(u) {
+                try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+            }
+            function viaI(a, b) {
+                return (a === hidden && (b === album || b === limbo)) || (b === hidden && (a === album || a === limbo));
+            }
+            var here = norm(location.href);
+            window.addEventListener('pagereveal', function (e) {
+                var act = window.navigation && navigation.activation;
+                var from = act && act.from && act.from.url;
+                root.classList.toggle('cw-via-i', !!(e.viewTransition && from && viaI(norm(from), here)));
+            });
+            window.addEventListener('pageswap', function (e) {
+                var to = e.activation && e.activation.entry && e.activation.entry.url;
+                root.classList.toggle('cw-via-i', !!(e.viewTransition && to && viaI(here, norm(to))));
+            });
+
+            // 目录页 → 博客首页：反向一镜到底，整屏收回成首页卡片；首屏已滚出视口时不做
+            if (here === album) {
+                window.addEventListener('pageswap', function (e) {
+                    if (!e.viewTransition) return;
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    if (!to || norm(to) !== home) return;
+                    var hero = document.querySelector('.cw-hero');
+                    if (!hero || hero.getBoundingClientRect().bottom <= 0) { e.viewTransition.skipTransition(); return; }
+                    root.classList.add('cw-to-home');
+                });
+                // 从往返缓存恢复时清掉，免得过渡名残留到其他跳转
+                window.addEventListener('pagereveal', function () { root.classList.remove('cw-to-home'); });
+
+                // 目录页 ↔ 阅读页：回到目录时停在离开时的位置，篇名的反向过渡才有落点
+                var RETURN_KEY = 'cw-return';
+                function isReader(p) { return !!p && p !== album && p.indexOf(album) === 0; }
+                function findTrack(p) {
+                    var links = document.querySelectorAll('.cw-track-link[href]');
+                    for (var i = 0; i < links.length; i++) if (norm(links[i].getAttribute('href')) === p) return links[i];
+                    return null;
+                }
+                // 离开时记下所点篇目在视口中的高度
+                window.addEventListener('pageswap', function (e) {
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    var p = to && norm(to);
+                    if (!isReader(p)) return;
+                    var link = findTrack(p);
+                    try { sessionStorage.setItem(RETURN_KEY, JSON.stringify({ top: link ? link.getBoundingClientRect().top : null })); } catch (err) {}
+                });
+                // 回来时（全新加载；往返缓存本就原样恢复）在首帧前把刚读完的那篇滚回同一高度
+                // 经上一篇/下一篇换过篇目时，落点是最后读的那篇
+                var firstReveal = true;
+                window.addEventListener('pagereveal', function (e) {
+                    if (!firstReveal) return;
+                    firstReveal = false;
+                    var act = window.navigation && navigation.activation;
+                    var from = act && act.from && norm(act.from.url);
+                    if (!isReader(from)) return;
+                    var link = findTrack(from);
+                    if (!link) return;
+                    var saved = null;
+                    try { saved = JSON.parse(sessionStorage.getItem(RETURN_KEY)); } catch (err) {}
+                    var top = saved && typeof saved.top === 'number' ? saved.top : innerHeight * .4;
+                    top = Math.min(Math.max(top, 90), innerHeight - 90);
+                    root.classList.add('cw-returning');
+                    window.scrollTo({ top: window.scrollY + link.getBoundingClientRect().top - top, behavior: 'instant' });
+                    // 视口内的曲目直接就位，不再逐行浮现，否则篇名的落点是透明的
+                    [].forEach.call(document.querySelectorAll('.cw-track'), function (li) {
+                        var r = li.getBoundingClientRect();
+                        if (r.bottom > 0 && r.top < innerHeight) li.classList.add('is-in');
+                    });
+                    var done = function () { root.classList.remove('cw-returning'); };
+                    if (e.viewTransition) e.viewTransition.finished.finally(done);
+                    else requestAnimationFrame(done);
+                });
+                // 上一页就是首页时，「← Whatasiger」等同后退：首页从往返缓存原样恢复，过渡才不卡
+                document.addEventListener('click', function (e) {
+                    var a = e.target.closest && e.target.closest('a.cw-home');
+                    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                    var nav = window.navigation;
+                    if (!nav || !nav.canGoBack) return;
+                    var prev = nav.entries()[nav.currentEntry.index - 1];
+                    if (!prev || norm(prev.url) !== home) return;
+                    e.preventDefault();
+                    nav.back();
+                });
+            }
+        })();
+    </script>
+    
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mur79b2u">
+    <script src="/static/carrier-wave/cw.js?v=mur79b2u" defer></script>
+<meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
+</head>
+
+
+<body class="cw cw-reader" style="--tint:#B9C7AE">
+    <canvas class="cw-wave cw-wave-bar" aria-hidden="true" data-tint="#B9C7AE" data-wave="" data-seed="5"></canvas>
+
+    <nav class="cw-corner">
+        <a class="cw-home" href="/carrier_wave/" data-cw-back><span class="cw-arrow" aria-hidden="true">←</span>CARRiER WAVE.</a>
+        <span class="cw-count">05 <i>/</i> 18</span>
+    </nav>
+
+    <main class="cw-read">
+        <header class="cw-read-head">
+            <p class="cw-read-no cw-rise" style="--d:0">05</p>
+            <h1 class="cw-read-title">
+                <span class="cw-name-text" style="view-transition-name:cw-t-eden">Eden.</span>
+            </h1>
+            <p class="cw-read-meta cw-rise" style="--d:2">2,165 字</p>
+        </header>
+
+        <article class="cw-prose cw-rise" style="--d:3">
+            <p>Eden 伫立在丁字路口旁，斑马线的一端，闭着眼睛。</p>
+<p>这是今天第一次过这个路口，天色尚早，太阳刚从远处金黄的麦浪中升起。</p>
+<p>十二，十一，十……</p>
+<p>不知什么时候开始，Eden 习惯了在等这盏红绿灯时，心里默念着绿灯亮起的倒计时。</p>
+<p>风吹拂在大地上，卷起一层层麦浪，刻画出细密的涟漪。</p>
+<p>七，六，五……</p>
+<p>Eden 仍然闭着眼睛，同时把被风吹到眼前的发丝重新拨回耳后。</p>
+<p>随即把手放回身前，与另一只手一同握住一个红色塑料桶的提手。桶里是空的。</p>
+<p>三，二，一……</p>
+<p>睁眼，绿灯恰好亮起，Eden 走过斑马线。塑料桶在腿前轻轻地摆动着。</p>
+<p>一口水井赫然安置在路边，由石块堆砌而成，深不见底。</p>
+<p>Eden 把桶系在井绳上，双手交替着放落，直到幽深的井底传来沉闷的水声。</p>
+<p>Eden 轻轻拨了下，感到明显的阻力，于是双手拍了拍衣服后，握住井绳，开始用力地拉起来。力道很稳，身体没有丝毫的抖动，得益于掌心上厚厚的茧子，早已不会感到疼痛。</p>
+<p>满满一桶水随着绳子被提上来。Eden 抱住水桶，稍微踉跄了两步。</p>
+<p>走到路口，Eden 将桶放在身旁，再一次默默地等待。</p>
+<p>微风起了，麦浪翻腾，引得不知名的虫儿跟着叫。</p>
+<p>柏油路面经过了这么多年依旧干净如初，雨水一冲刷，在太阳底下便会深邃得发亮。马路沿着三个方向笔直地延伸向远方。</p>
+<p>远方是城市的边界，依稀有高楼。</p>
+<p>红绿灯在这个路口孜孜不倦地运行着，昼夜不歇。Eden 亦如此，必定会等到绿灯亮起才过马路。这仿佛是两者的契约。Eden 等待着绿灯时，脸上的神情总是素淡得如睡着了一般。</p>
+<p>过了马路，不远处就是一间小木屋。还没等 Eden 进门，一只白猫就窜了出来，直竖起尾巴，一声又一声地喵喵叫着。</p>
+<p>Eden 刚把水桶放在门边，白猫就扑上了胸口，顺势蜷缩进臂弯。Eden 轻轻揉着白猫的头，惹得它发出一阵舒服的呼噜。</p>
+<p>白猫名叫 Sunny。第一次见到它时，Eden 就为它起了这个名字。</p>
+<p>像往常一样玩耍片刻后，Eden 把 Sunny 放下，它也就知趣地高举着尾巴回到屋里去了。</p>
+<p>日头升到最高处，又缓缓滑落。</p>
+<p>Eden 拎着水桶，边朝房屋侧面走去边敲着桶壁，发出沉闷而有穿透力的低音。</p>
+<p>几只绵羊从羊圈里露出了头，争先恐后地凑到食槽边，挤成了白茫茫的一团，还有一只滚落到了食槽里面，它只好狼狈地甩甩头。</p>
+<p>Eden 挥挥手，示意稍安勿躁，羊群就安静了些许。</p>
+<p>Eden 把麦穗碾碎成渣，再用水泡软，这样就成了羊们的晚餐。铺在食槽，绵羊们纷纷吃起来，时而满足地咩咩叫着。</p>
+<p>望着这番图景，Eden 开始点数。一只羊、两只羊、三只羊……似乎少了一只，又数了一遍，仍旧少了一只。</p>
+<p>Eden 没有惊讶的样子，只是用胳膊擦了擦脸上的汗，随即向屋子后面的麦丛里走去。</p>
+<p>拨开几束麦叶后，就看见了那只要找的绵羊，它正窝在一个用身子挤出来的浅坑里。Eden拍了拍它，它也就不声不响地站了起来。</p>
+<p>Eden 带着它回到羊圈，它直接绕过了食槽，躲在羊圈角落，趴了下来。它比其他羊的体格都偏大一些，但毛色却比较黯淡。趴在角落时，让人觉得像一座静默的塑像。</p>
+<p>Eden 望了望羊圈深处，驻足了一会儿，也就转身离开了。</p>
+<p>晚饭过后，Eden 打开天窗，站上木屋的房顶，朝着西边坐下来。晴天也蹦了上来，Eden 就让它趴在双腿上，然后一下一下地给它顺毛。</p>
+<p>落日携着半个天空的云彩，触碰到了地平线。麦穗反射出一片金光，一望无际，在天边能看出一丝地平线的弧度。</p>
+<p>微风拂过 Eden 的面颊，吹动缕缕发丝，脸在夕阳下泛着红。</p>
+<p>Eden 微微笑了起来，身体一放松就躺在了房顶上，顺势把晴天抱了起来，蹭蹭它的头。晴天也用舌头舔了舔Eden 的脸，惹得笑出了声。</p>
+<p>天色渐渐暗了。</p>
+<hr>
+<p>第二天，Eden 伫立在丁字路口旁，斑马线的一端，闭着眼睛。</p>
+<p>这是今天第一次过这个路口，天色尚早，太阳刚从远处金黄的麦浪中升起。</p>
+<p>三，二，一……</p>
+<p>Eden 睁开眼。</p>
+<p>起初，还以为只是光线的问题。Eden 下意识地抬手遮住额头，眯起眼睛，又睁开。</p>
+<p>灯面一片死寂的黑，像被人从内部掏空，只剩下一层冷硬的壳。</p>
+<p>Eden 从未遇到过这样的情况。那盏总是准时亮起、从不出错的灯，现在犹如一颗无神的眼珠。</p>
+<p>红绿灯熄灭了。</p>
+<p>初升的太阳把灯杆的影子拉得很长，斜斜地压在脚边。</p>
+<p>Eden 站在原地，没有立刻动。不知过了多久，才试探着碰了碰那根铁杆，触到粗糙的锈迹。</p>
+<p>灯沉默着，如同一尊被遗弃的神像。</p>
+<p>Eden 的手指在锈迹上停留了一瞬，下一刻，突然触电似地把手收回。</p>
+<p>风在动，麦浪翻腾作响，远处的虫鸣断断续续。晴天趴在窗边打着哈欠，羊群懒散地蜷成一团。</p>
+<p>Eden 的指尖开始反复揉搓水桶的提手，动作越来越急，松开又握紧，掌心渐渐渗出细密的汗。</p>
+<p>Eden 开始东张西望。马路沿着三个方向笔直延伸，空无一物，远方的城市轮廓模糊而遥远。</p>
+<p>熄灭的红绿灯依然死死盯着 Eden。</p>
+<p>终于，Eden 深吸了一口气，脚步迟疑地向前挪动。踏上斑马线的那一刻，身体明显绷紧了，步子比以往更快，带着一点不自然的急促，脚尖轻轻踮起，仿佛脚下的白线变得滚烫。</p>
+<p>Eden 几乎是小跑着穿过了马路。</p>
+<p>打完水后，匆匆折返。水桶在手中晃动得厉害，水面不断溅出，沿着走过的路滴落下来，留下断断续续的湿痕。</p>
+<p>这次喂完羊群后，Eden 没有爬上房顶，而是缩回自己的床。</p>
+<p>Sunny 跳上床，蜷缩在 Eden 的身边。于是 Eden 就把一只手搭在它身上。</p>
+<p>天空依然在灿烂的火烧云中落下帷幕，一如既往。</p>
+<hr>
+<p>Eden 把一周量的食物和水装进袋子，背起一包行李走出门时，已经是三天后了。</p>
+<p>Eden 闲时也不和 Sunny 玩了，而是蹲在红绿灯旁边，观察着灯上一丝一毫的变化。但红绿灯在这三天里，没有过任何要亮起的迹象，只有锈迹在渐渐剥落。</p>
+<p>在把羊群的口粮一次性做得充足之后，Eden 开始准备行李。轻便的床垫、厚实的毛毯、绳子和短刀、手杖与火石。</p>
+<p>Eden 的目标是远方的城市。</p>
+<p>羊群看见背起行囊的 Eden，好像意识到了什么，有些纷杂混乱起来。</p>
+<p>Sunny 跑上来，绕着 Eden 的腿蹭来蹭去，不停地喵喵叫唤着。</p>
+<p>Eden 蹲下，揉了揉 Sunny 的脸。Sunny 顺势爬到手臂上，再越过肩膀，试图钻进行李里面，却狼狈地跌了下来。</p>
+<p>Eden 笑了一下，随后思考良久。随后拿来了一个小的斜挎柳条篓，垫着一堆旧衣服，把 Sunny 抱进去，然后，将篓子挎上肩。</p>
+<p>在出发前的最后一刻，Eden 的脚步已经踏上了马路，此时身后却传来一个不熟悉的叫声。那是有些虚弱、颤抖的咩叫。</p>
+<p>其他羊纷纷为它让出了位置，它走了出来，一瘸一拐地，对着 Eden 发出一声长鸣。</p>
+<p>是那只羊，体格偏大的，总是趴在角落的，Eden 不会不认得。</p>
+<p>Eden 看着它一步一步地走到自己面前，摸了摸它的头，什么也没说。</p>
+<p>于是，Eden 与 Sunny，以及一只羊，踏上了路途。</p>
+
+        </article>
+
+        <div class="cw-end" aria-hidden="true">
+            <svg viewBox="0 0 48 12" width="48" height="12"><path d="M0 6 Q6 0 12 6 T24 6 T36 6 T48 6" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+        </div>
+
+        <nav class="cw-pager">
+            
+            <a class="cw-pager-link is-prev" href="/carrier_wave/anecdoche/" data-cw-prev style="--tint:#CFC6B8">
+                <span class="cw-pager-label"><span class="cw-arrow" aria-hidden="true">←</span>04</span>
+                <span class="cw-pager-title">Anecdoche.</span>
+            </a>
+            
+
+            <a class="cw-pager-back" href="/carrier_wave/">曲目</a>
+
+            
+            <a class="cw-pager-link is-next" href="/carrier_wave/airs-1/" data-cw-next style="--tint:#AEBFD6">
+                <span class="cw-pager-label">06<span class="cw-arrow" aria-hidden="true">→</span></span>
+                <span class="cw-pager-title">AIRS. <span class="cw-part">Ⅰ</span></span>
+            </a>
+            
+        </nav>
+    </main>
+</body>
+</html>
+

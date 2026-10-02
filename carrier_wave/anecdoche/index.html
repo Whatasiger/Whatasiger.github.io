@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Anecdoche. - CARRiER WAVE. - Whatasiger</title>
+    <meta name="description" content="CARRiER WAVE. 载波 · 04 / 18">
+    <meta name="author" content="Whatasiger">
+    <meta name="theme-color" content="#16181D">
+    <link rel="canonical" href="https://whatasiger.xyz/carrier_wave/anecdoche/">
+    <link rel="icon" href="/static/img/icon.png" sizes="192x192">
+
+    <meta property="og:site_name" content="Whatasiger">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://whatasiger.xyz/carrier_wave/anecdoche/">
+    <meta property="og:title" content="Anecdoche. - CARRiER WAVE. - Whatasiger">
+    <meta property="og:description" content="CARRiER WAVE. 载波 · 04 / 18">
+
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Noto+Serif+SC:wght@300;400;500&display=swap">
+
+    <script>
+        (function () {
+            var root = document.documentElement;
+            root.classList.add('cw-js');
+            // 从博客首页卡片进入目录页：首屏元素不做入场，由跨页面过渡从卡片形变而来
+            var home = '/';
+            var act = window.navigation && navigation.activation;
+            var from = act && act.from && new URL(act.from.url);
+            if ('onpagereveal' in window && from && (from.pathname === home || from.pathname === home + 'index.html')
+                && location.pathname === '/carrier_wave/'
+                && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                root.classList.add('cw-from-home');
+                window.addEventListener('pagereveal', function (e) {
+                    if (!e.viewTransition) { root.classList.remove('cw-from-home'); return; }
+                    e.viewTransition.finished.finally(function () { root.classList.remove('cw-from-home'); });
+                });
+            }
+
+            // 首屏 ↔ i ↔ limbo：标题里的 i 一镜到底，只在这几页之间互相跳转时才给它过渡名
+            var album = '/carrier_wave/';
+            var hidden = album + 'i/';
+            var limbo = album + 'limbo/';
+            function norm(u) {
+                try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+            }
+            function viaI(a, b) {
+                return (a === hidden && (b === album || b === limbo)) || (b === hidden && (a === album || a === limbo));
+            }
+            var here = norm(location.href);
+            window.addEventListener('pagereveal', function (e) {
+                var act = window.navigation && navigation.activation;
+                var from = act && act.from && act.from.url;
+                root.classList.toggle('cw-via-i', !!(e.viewTransition && from && viaI(norm(from), here)));
+            });
+            window.addEventListener('pageswap', function (e) {
+                var to = e.activation && e.activation.entry && e.activation.entry.url;
+                root.classList.toggle('cw-via-i', !!(e.viewTransition && to && viaI(here, norm(to))));
+            });
+
+            // 目录页 → 博客首页：反向一镜到底，整屏收回成首页卡片；首屏已滚出视口时不做
+            if (here === album) {
+                window.addEventListener('pageswap', function (e) {
+                    if (!e.viewTransition) return;
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    if (!to || norm(to) !== home) return;
+                    var hero = document.querySelector('.cw-hero');
+                    if (!hero || hero.getBoundingClientRect().bottom <= 0) { e.viewTransition.skipTransition(); return; }
+                    root.classList.add('cw-to-home');
+                });
+                // 从往返缓存恢复时清掉，免得过渡名残留到其他跳转
+                window.addEventListener('pagereveal', function () { root.classList.remove('cw-to-home'); });
+
+                // 目录页 ↔ 阅读页：回到目录时停在离开时的位置，篇名的反向过渡才有落点
+                var RETURN_KEY = 'cw-return';
+                function isReader(p) { return !!p && p !== album && p.indexOf(album) === 0; }
+                function findTrack(p) {
+                    var links = document.querySelectorAll('.cw-track-link[href]');
+                    for (var i = 0; i < links.length; i++) if (norm(links[i].getAttribute('href')) === p) return links[i];
+                    return null;
+                }
+                // 离开时记下所点篇目在视口中的高度
+                window.addEventListener('pageswap', function (e) {
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    var p = to && norm(to);
+                    if (!isReader(p)) return;
+                    var link = findTrack(p);
+                    try { sessionStorage.setItem(RETURN_KEY, JSON.stringify({ top: link ? link.getBoundingClientRect().top : null })); } catch (err) {}
+                });
+                // 回来时（全新加载；往返缓存本就原样恢复）在首帧前把刚读完的那篇滚回同一高度
+                // 经上一篇/下一篇换过篇目时，落点是最后读的那篇
+                var firstReveal = true;
+                window.addEventListener('pagereveal', function (e) {
+                    if (!firstReveal) return;
+                    firstReveal = false;
+                    var act = window.navigation && navigation.activation;
+                    var from = act && act.from && norm(act.from.url);
+                    if (!isReader(from)) return;
+                    var link = findTrack(from);
+                    if (!link) return;
+                    var saved = null;
+                    try { saved = JSON.parse(sessionStorage.getItem(RETURN_KEY)); } catch (err) {}
+                    var top = saved && typeof saved.top === 'number' ? saved.top : innerHeight * .4;
+                    top = Math.min(Math.max(top, 90), innerHeight - 90);
+                    root.classList.add('cw-returning');
+                    window.scrollTo({ top: window.scrollY + link.getBoundingClientRect().top - top, behavior: 'instant' });
+                    // 视口内的曲目直接就位，不再逐行浮现，否则篇名的落点是透明的
+                    [].forEach.call(document.querySelectorAll('.cw-track'), function (li) {
+                        var r = li.getBoundingClientRect();
+                        if (r.bottom > 0 && r.top < innerHeight) li.classList.add('is-in');
+                    });
+                    var done = function () { root.classList.remove('cw-returning'); };
+                    if (e.viewTransition) e.viewTransition.finished.finally(done);
+                    else requestAnimationFrame(done);
+                });
+                // 上一页就是首页时，「← Whatasiger」等同后退：首页从往返缓存原样恢复，过渡才不卡
+                document.addEventListener('click', function (e) {
+                    var a = e.target.closest && e.target.closest('a.cw-home');
+                    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                    var nav = window.navigation;
+                    if (!nav || !nav.canGoBack) return;
+                    var prev = nav.entries()[nav.currentEntry.index - 1];
+                    if (!prev || norm(prev.url) !== home) return;
+                    e.preventDefault();
+                    nav.back();
+                });
+            }
+        })();
+    </script>
+    
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mur79b2u">
+    <script src="/static/carrier-wave/cw.js?v=mur79b2u" defer></script>
+<meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
+</head>
+
+
+<body class="cw cw-reader" style="--tint:#CFC6B8">
+    <canvas class="cw-wave cw-wave-bar" aria-hidden="true" data-tint="#CFC6B8" data-wave="" data-seed="4"></canvas>
+
+    <nav class="cw-corner">
+        <a class="cw-home" href="/carrier_wave/" data-cw-back><span class="cw-arrow" aria-hidden="true">←</span>CARRiER WAVE.</a>
+        <span class="cw-count">04 <i>/</i> 18</span>
+    </nav>
+
+    <main class="cw-read">
+        <header class="cw-read-head">
+            <p class="cw-read-no cw-rise" style="--d:0">04</p>
+            <h1 class="cw-read-title">
+                <span class="cw-name-text" style="view-transition-name:cw-t-anecdoche">Anecdoche.</span>
+            </h1>
+            <p class="cw-read-meta cw-rise" style="--d:2">1,216 字</p>
+        </header>
+
+        <article class="cw-prose cw-rise" style="--d:3">
+            <p>九个字母，两个引号，好多横线，数不清。对于这个阶段的大家来讲难度比较大。好想今天晚上回家啊。我也想啊。你自己好好地去掂量掂量。I got 8. So sad. 8是一个很好的数字，因为。那还剩下几分钟时间，把试卷拿出来。桌上有头发丝，两根头发。薅了一下掉下来了。我靠我4分没了我靠。都死局的东西我说白了有什么好玩的？太无聊了，我果然没有 ADHD 天赋，ADHD 天赋是什么？大概是那种能轻松写出意识流文字的能力。人一天要掉100根头发，忘了在哪听说的了。哎哟笑死了。称之为我的现象，是被假定的有机交流电灯的，一盏青色照明。非常害怕 2027 年，因为 2+0+2+7＝11，希特勒如果再长九个乳头，就会是这个数字。我他妈在写什么。人生在最后的时刻如果只是抱着这样的问题死去，或许有些太悲哀了吧。顶级价格意味体验到人类科技的最前沿，他们只信仰厂商投入最高算力堆叠出的顶尖旗舰。我们通过语言、记忆与创作将自己传递给他人，却永远只能传递其中的一部分。噔噔噔。噔噔噔。把代理软件伪装成一张虚拟网卡，让电脑的大部分网络流量先经过它。已在倒数计时中，星体浮游像蓝瞳孔。world.execute(me)。难说。好，你们那个答题卡拿到了吗？不知道从什么时候起，童年时某个时常喜欢做的行为，不知不觉在十一二岁的某一刻就成了最后一次干了。卷王还想，继续做卷王。而考场已经，不知去向。站立着瘫痪，在领奖台上。肢解节制的梦，胸口已暮色苍茫。现在年轻人的消费观念是不一样的是不是？我说怎么这么难，我操这个能选出来真的绷不住。笔，涂卡笔。如果我在这堆文字中悄悄塞一段百合黄文，应该也不会有人注意到吧。我们在讨论，黄油面包，呃。半山腰上的人，他还好吗。为什么看起来，总有悲伤眼睛。呃英语本发错了，收一下，每人五本。神了，太好听了。但如果是真的，人的头发每过两年就要全掉一遍吗。一缕细风，树叶轻摇。图画的是一个静态的图，那么动起来是什么样子的？洗发水的味道还在手腕上。吸吸。忽然间你身上的那朵火花刺痛我脸颊。天之苍苍，其正色邪？其远而无所至极邪？然后翻到后面。单轨道还是双轨道？！（怒吼）夏日不冻港的上空，阳光也驱走了黑暗，所以让我们一起踏着光的脚步前行，好吗。拨弄着头发，意识到头发越来越长，有种小小的欢欣。凝望着历代星空，像一场无法对话的梦。这是一座绿草茵茵的山坡，只在坡顶有一棵大树。吵闹，我只觉得吵闹。你的开头构造已经比语言层面的完成度更成熟。准备返航吧，朋友们，我从我的童年醒来。这不是不是，而是而是。我们已经结束了。行为艺术。将空洞的天体相连变作星座，将镜头中的光芒与时间的距离细细编织。你不要跟我说这个。人工智能中文三大顶会这一块。整体还是隔离呀？打开关上的窗，巴士在摇晃。分手过后一个月到现在，手上的湿疹再也没复发过。窗外的蓝色穿过耳朵刺向我大脑。我的妄想失去控制沉入水底。让我想想……失败了。Q君的存在从宇宙的尺度上是一个极小概率事件，但他本人对此并不感到幸运。一个硬物撞击的声音，清脆的，什么东西？非常拙劣的模仿。板烧鸡腿堡，中薯条。有很多话想对你说，可又一时语塞。司百得 400mg 实际上已经是一个相当明确的单次布洛芬剂量。StarSrvGroupBody. 有没有人告诉我真相，时间就是最巨大的谎。看上去力道给我捶背刚刚好。对不起。对不起。让懂的人懂，让不懂的人不懂。写不下去的时候，只要甩锅后现代就好了。交错的电波，火热的友情，各种各样的事件，以及和解……同我们一起，为成为普通人而努力吧。</p>
+
+        </article>
+
+        <div class="cw-end" aria-hidden="true">
+            <svg viewBox="0 0 48 12" width="48" height="12"><path d="M0 6 Q6 0 12 6 T24 6 T36 6 T48 6" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+        </div>
+
+        <nav class="cw-pager">
+            
+            <a class="cw-pager-link is-prev" href="/carrier_wave/mamihlapinatapei-1/" data-cw-prev style="--tint:#A8C3C1">
+                <span class="cw-pager-label"><span class="cw-arrow" aria-hidden="true">←</span>03</span>
+                <span class="cw-pager-title">maMihlApinaTapEi. <span class="cw-part">1st</span></span>
+            </a>
+            
+
+            <a class="cw-pager-back" href="/carrier_wave/">曲目</a>
+
+            
+            <a class="cw-pager-link is-next" href="/carrier_wave/eden/" data-cw-next style="--tint:#B9C7AE">
+                <span class="cw-pager-label">05<span class="cw-arrow" aria-hidden="true">→</span></span>
+                <span class="cw-pager-title">Eden.</span>
+            </a>
+            
+        </nav>
+    </main>
+</body>
+</html>
+

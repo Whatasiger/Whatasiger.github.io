@@ -46,6 +46,7 @@ var Paul_Hingle = function (config) {
     var defaultSettings = {
         showToTop: false,      // 默认隐藏「回到顶部」
         hideBackground: false, // 是否隐藏背景图片
+        hideTodo: false,       // 是否关闭首页 TODO 侧边栏
         fontFamily: "noto-sans-sc", // 字体：noto-sans-sc（思源黑体）或 system-default（系统默认）
         fontWeight: getWeightFromLevel(3), // 正文字重第三档
         letterSpacing: 3,      // 字间距第六档（-2起步，第6个=3）
@@ -116,6 +117,13 @@ var Paul_Hingle = function (config) {
             body.classList.remove("no-bg-image");
         }
 
+        // 首页 TODO 侧边栏显示 / 隐藏
+        if (currentSettings.hideTodo) {
+            body.classList.add("hide-todo");
+        } else {
+            body.classList.remove("hide-todo");
+        }
+
         // 文章阅读排版（仅在阅读页生效）
         if (body.classList.contains("post-page")) {
             body.style.setProperty("--reader-font-weight", String(currentSettings.fontWeight));
@@ -148,6 +156,7 @@ var Paul_Hingle = function (config) {
 
         var showTopInput = document.getElementById("setting-show-top");
         var hideBgInput = document.getElementById("setting-hide-bg");
+        var hideTodoInput = document.getElementById("setting-hide-todo");
         var fontFamilyInput = document.getElementById("setting-font-family");
         var weightInput = document.getElementById("setting-font-weight");
         var letterInput = document.getElementById("setting-letter-spacing");
@@ -159,6 +168,7 @@ var Paul_Hingle = function (config) {
         // 初始化表单值
         if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
         if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
+        if (hideTodoInput) hideTodoInput.checked = !!currentSettings.hideTodo;
         if (fontFamilyInput) fontFamilyInput.value = currentSettings.fontFamily || defaultSettings.fontFamily;
         if (weightInput) weightInput.value = getLevelFromWeight(currentSettings.fontWeight);
         if (letterInput) letterInput.value = currentSettings.letterSpacing;
@@ -199,6 +209,14 @@ var Paul_Hingle = function (config) {
         if (hideBgInput) {
             hideBgInput.addEventListener("change", function () {
                 currentSettings.hideBackground = !!this.checked;
+                persistSettings();
+                applyReadingSettings();
+            });
+        }
+
+        if (hideTodoInput) {
+            hideTodoInput.addEventListener("change", function () {
+                currentSettings.hideTodo = !!this.checked;
                 persistSettings();
                 applyReadingSettings();
             });
@@ -271,6 +289,7 @@ var Paul_Hingle = function (config) {
             resetBtn.addEventListener("click", function () {
                 currentSettings.showToTop = defaultSettings.showToTop;
                 currentSettings.hideBackground = defaultSettings.hideBackground;
+                currentSettings.hideTodo = defaultSettings.hideTodo;
                 currentSettings.fontFamily = defaultSettings.fontFamily;
                 currentSettings.fontWeight = defaultSettings.fontWeight;
                 currentSettings.letterSpacing = defaultSettings.letterSpacing;
@@ -286,6 +305,7 @@ var Paul_Hingle = function (config) {
 
                 if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
                 if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
+                if (hideTodoInput) hideTodoInput.checked = !!currentSettings.hideTodo;
                 if (fontFamilyInput) fontFamilyInput.value = currentSettings.fontFamily;
                 if (weightInput) weightInput.value = getLevelFromWeight(currentSettings.fontWeight);
                 if (letterInput) letterInput.value = currentSettings.letterSpacing;

@@ -88,6 +88,7 @@
             var sourceHanFontStack = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
             var systemFontStack = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
             document.body.style.fontFamily = fontChoice === "noto-sans-sc" ? sourceHanFontStack : systemFontStack;
+            if (savedSettings && savedSettings.hideTodo) document.body.classList.add("hide-todo");
         } catch (e) {
             document.body.style.fontFamily = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
         }
@@ -181,7 +182,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - GA 1.3</a>
+    <a href="/" class="header-logo">Whatasiger - GA 2.0</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -217,6 +218,10 @@
                 <label class="settings-row">
                     <span>隐藏背景图片</span>
                     <input type="checkbox" id="setting-hide-bg">
+                </label>
+                <label class="settings-row">
+                    <span>关闭首页 TODO 显示</span>
+                    <input type="checkbox" id="setting-hide-todo">
                 </label>
                 <label class="settings-row">
                     <span>字体</span>
@@ -521,6 +526,11 @@
 <li>重新设计了设置界面的滑动条样式。</li>
 <li>重新设计了 Markdown 引用 &#x2F; 标注 相关的样式，支持收起。</li>
 <li>改进首页背景水波纹动画。</li>
+</ul>
+<hr>
+<h4 id="GA-2-0（2026-10-03）"><a href="#GA-2-0（2026-10-03）" class="headerlink" title="GA 2.0（2026-10-03）"></a><strong>GA 2.0</strong>（2026-10-03）</h4><ul>
+<li>全新界面：短篇辑「CARRiER WAVE.」。</li>
+<li>全新功能：包含 Bangumi 和网易云音乐的「TO DO」列表。</li>
 </ul>
 
         </article>

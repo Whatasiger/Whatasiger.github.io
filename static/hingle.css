@@ -3177,3 +3177,234 @@ article sup a[data-footnote-ref] {
         opacity: 0.45;                             /* 收起时的透明度 */
     }
 }
+
+/* =========================================
+   TO DO 侧边栏（首页左侧抽屉：Bangumi 在看 + 网易云周榜）
+   ========================================= */
+
+/* 抽屉宽度与开合动画参数：标签与抽屉共用，保证同步移动 */
+:root {
+    --todo-width: min(300px, 85vw);
+    --todo-ease: cubic-bezier(0.22, 1, 0.36, 1);   /* 快出慢停，收尾柔和 */
+    --todo-duration: .55s;
+}
+
+/* 左侧边缘的竖排展开标签：只动 transform / opacity，交给 GPU 合成 */
+.todo-toggle {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    z-index: 9001;                  /* 低于页眉 (99999) 与设置面板 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .6em;
+    padding: 1.1em .6em;
+    font: inherit;
+    font-size: .95em;
+    font-weight: 700;
+    letter-spacing: .2em;
+    color: #fff;
+    cursor: pointer;
+    background-color: var(--blue);
+    border: none;
+    border-radius: 0 10px 10px 0;
+    box-shadow: 2px 4px 16px rgba(0, 0, 0, 0.18);
+    translate: 0 -50%;              /* 垂直居中单独用 translate，不与 transform 动画冲突 */
+    transform: translateX(0);
+    will-change: transform;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--todo-duration) var(--todo-ease),
+                scale .2s var(--todo-ease),
+                background-color .3s;
+    animation: todo-peek 1.4s var(--todo-ease) 1s 2;
+}
+.todo-toggle span { writing-mode: vertical-rl; }
+.todo-toggle i {
+    font-size: 1.1em;
+    transition: transform var(--todo-duration) var(--todo-ease);
+}
+.todo-toggle:not(.active):hover { transform: translateX(4px); background-color: var(--light-blue); }
+.todo-toggle:active { scale: .94; }
+.todo-toggle.active { transform: translateX(var(--todo-width)); animation: none; }
+.todo-toggle.active i { transform: rotate(-90deg); }
+
+/* 呼吸光晕：固定 box-shadow 的伪元素，只做 opacity / scale 动画 */
+.todo-toggle::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 0 6px rgba(111, 159, 199, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    animation: todo-glow 2.8s ease-in-out infinite;
+}
+.todo-toggle.active::after { animation: none; }
+@keyframes todo-glow {
+    0%   { opacity: 0;  scale: .96; }
+    40%  { opacity: 1;  scale: 1; }
+    100% { opacity: 0;  scale: 1.06; }
+}
+/* 载入后向右探出两次，提示可展开 */
+@keyframes todo-peek {
+    0%, 100% { transform: translateX(0); }
+    35%      { transform: translateX(10px); }
+    60%      { transform: translateX(-2px); }
+}
+
+/* 抽屉本体：默认移出视口左侧 */
+.todo-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 9000;
+    width: var(--todo-width);
+    padding: 4.6em 1.1em 1.5em;     /* 顶部留出导航栏高度 */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.97);  /* 近乎不透明，省去移动中开销很大的 backdrop-filter */
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 0 45px rgba(0, 0, 0, 0.18);
+    transform: translateX(-100%);
+    visibility: hidden;
+    will-change: transform;
+    transition: transform var(--todo-duration) var(--todo-ease), visibility 0s var(--todo-duration);
+}
+.todo-sidebar.active {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform var(--todo-duration) var(--todo-ease), visibility 0s;
+}
+
+/* 内容依次淡入滑出，增加层次感 */
+.todo-sidebar .todo-head,
+.todo-sidebar .todo-block {
+    opacity: 0;
+    transform: translateX(-16px);
+    transition: opacity .25s ease, transform .25s ease;
+}
+.todo-sidebar.active .todo-head,
+.todo-sidebar.active .todo-block {
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity .45s ease, transform .55s var(--todo-ease);
+}
+.todo-sidebar.active .todo-head { transition-delay: .08s; }
+.todo-sidebar.active .todo-block:nth-of-type(1) { transition-delay: .14s; }
+.todo-sidebar.active .todo-block:nth-of-type(2) { transition-delay: .22s; }
+
+.todo-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .6em;
+}
+.todo-head h2 { margin: 0; font-size: 1.2em; letter-spacing: .1em; color: var(--blue); }
+.todo-close {
+    padding: .3em .5em;
+    font-size: 1em;
+    color: inherit;
+    cursor: pointer;
+    background: none;
+    border: none;
+    opacity: .6;
+}
+.todo-close:hover { opacity: 1; color: var(--blue); }
+
+.todo-block + .todo-block { margin-top: 1.4em; }
+.todo-block h3 {
+    margin: 0 0 .6em;
+    padding-left: .6em;
+    font-size: .95em;
+    border-left: 3px solid var(--blue);
+}
+.todo-block h3 a { color: inherit; text-decoration: none; }
+.todo-block h3 a:hover { color: var(--blue); }
+
+.todo-list { margin: 0; padding: 0; list-style: none; }
+.todo-list li { margin: 0; padding: 0; }
+.todo-list li + li { margin-top: .35em; }
+.todo-list a {
+    display: flex;
+    align-items: center;
+    gap: .65em;
+    padding: .35em .4em;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background-color .2s;
+}
+.todo-list a:hover { background-color: rgba(111, 159, 199, 0.12); }
+.todo-list img {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: var(--light-border);
+}
+.todo-bgm img { height: 54px; }
+.todo-text { display: flex; flex-direction: column; min-width: 0; }
+.todo-title {
+    overflow: hidden;
+    font-size: .88em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.todo-meta {
+    overflow: hidden;
+    font-size: .75em;
+    font-weight: 400;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: .7;
+}
+.todo-badge {
+    display: inline-block;
+    margin-right: .5em;
+    padding: 0 .45em;
+    font-size: .9em;
+    line-height: 1.5;
+    color: var(--blue);
+    border: 1px solid var(--blue);
+    border-radius: 3px;
+}
+.todo-rank {
+    flex: none;
+    width: 1.4em;
+    font-size: .85em;
+    text-align: center;
+    opacity: .6;
+}
+.todo-music li:nth-child(-n+3) .todo-rank { color: var(--blue); opacity: 1; font-weight: 700; }
+.todo-empty { padding: .4em; font-size: .85em; opacity: .6; }
+.todo-note { margin: .6em 0 0; font-size: .72em; text-align: right; opacity: .5; }
+
+/* 设置面板「关闭首页 TODO 显示」 */
+body.hide-todo .todo-toggle,
+body.hide-todo .todo-sidebar { display: none; }
+
+/* 夜间模式 */
+.dark-theme .todo-toggle { color: #eee; }
+.dark-theme .todo-badge { opacity: 1; }
+.dark-theme .todo-sidebar {
+    color: #ddd;
+    background: rgba(24, 24, 24, 0.96);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 45px rgba(0, 0, 0, 0.65);
+}
+
+/* 手机端：标签更小，抽屉近乎全宽 */
+@media screen and (max-width: 599px) {
+    .todo-toggle { padding: .9em .45em; font-size: .8em; }
+    .todo-sidebar { padding-top: 4.2em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .todo-toggle, .todo-toggle::after, .todo-toggle i,
+    .todo-sidebar, .todo-sidebar.active,
+    .todo-sidebar .todo-head, .todo-sidebar .todo-block { transition: none !important; animation: none !important; }
+}
