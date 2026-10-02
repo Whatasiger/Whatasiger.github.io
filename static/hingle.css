@@ -1175,7 +1175,9 @@ main img {
 .post-item.cw-card:hover .cw-card-title { letter-spacing: .1em; transform: translateY(-4px); }
 .cw-card-sub {
     margin: 0;
-    font-size: .78em;
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "STSong", serif;
+    font-weight: 300;
+    font-size: .86em;
     letter-spacing: .5em;
     padding-left: .5em;
     color: rgba(228, 228, 224, .55);
@@ -1205,6 +1207,50 @@ main img {
 .cw-card-wave-box { view-transition-name: cw-hero-wave; }
 .post-item.card-style .cw-card-title { view-transition-name: cw-hero-title; }
 .cw-card-sub { view-transition-name: cw-hero-sub; }
+
+/* 反向：从 /carrier_wave/ 回到首页，整屏收回成卡片（cw-back 只在这次过渡期间挂在 html 上） */
+/* 文章卡片的逐张浮出由过渡代替，不再重播 */
+html.cw-came-back .home-posts .post-item,
+html.cw-came-back .page-navigator { animation: none; -webkit-animation: none; }
+/* 收拢不用回弹：缩过头再弹回会像顿了一下 */
+html.cw-back::view-transition-group(*) {
+    animation-duration: .9s;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+/* 整屏背景收拢成卡片：新卡片全程垫底，旧背景在后段才淡去 */
+html.cw-back::view-transition-group(cw-stage) { animation-duration: 1.05s; }
+html.cw-back::view-transition-old(cw-stage),
+html.cw-back::view-transition-new(cw-stage),
+html.cw-back::view-transition-old(cw-hero-wave),
+html.cw-back::view-transition-new(cw-hero-wave) {
+    height: 100%;
+    object-fit: fill;
+    mix-blend-mode: normal;
+}
+html.cw-back::view-transition-new(cw-stage) { animation: none; }
+html.cw-back::view-transition-old(cw-stage) { animation: cw-back-fade-out .5s cubic-bezier(.22, 1, .36, 1) .35s both; }
+/* 标题与副题从首屏缩回卡片 */
+html.cw-back::view-transition-group(cw-hero-title) { animation-duration: 1.1s; }
+html.cw-back::view-transition-group(cw-hero-sub) { animation-duration: 1.15s; animation-delay: .04s; }
+html.cw-back::view-transition-old(cw-hero-title),
+html.cw-back::view-transition-old(cw-hero-sub) { animation: cw-back-fade-out .5s cubic-bezier(.22, 1, .36, 1) both; }
+html.cw-back::view-transition-new(cw-hero-title),
+html.cw-back::view-transition-new(cw-hero-sub) { animation: cw-back-fade-in .6s cubic-bezier(.22, 1, .36, 1) .1s both; }
+/* 画布上的真实载波先退场，卡片里的载波在收拢后段接手 */
+html.cw-back::view-transition-group(cw-carrier) { animation: none; }
+html.cw-back::view-transition-old(cw-carrier) { animation: cw-back-fade-out .45s ease-in-out both; }
+html.cw-back::view-transition-old(cw-hero-wave) { animation: none; opacity: 0; }
+html.cw-back::view-transition-new(cw-hero-wave) { animation: cw-back-fade-in .7s ease-in-out .3s both; }
+/* 目录页其余内容先淡出；首页其余卡片从虚化、后退中回到原位 */
+html.cw-back::view-transition-old(root) { animation: cw-back-fade-out .35s cubic-bezier(.22, 1, .36, 1) both; }
+html.cw-back::view-transition-new(root) {
+    animation: cw-back-home-in .7s cubic-bezier(.22, 1, .36, 1) .3s both;
+    transform-origin: 50% 30%;
+}
+@keyframes cw-back-fade-out { to { opacity: 0; } }
+@keyframes cw-back-fade-in { from { opacity: 0; } }
+/* 新页面快照是实时的，整屏 blur 每帧都要重算，只用透明度和缩放 */
+@keyframes cw-back-home-in { from { opacity: 0; transform: scale(.96); } }
 
 /* 文章列表分页导航 */
 /* - 换页 */

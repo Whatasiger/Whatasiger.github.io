@@ -59,17 +59,86 @@
                 var to = e.activation && e.activation.entry && e.activation.entry.url;
                 root.classList.toggle('cw-via-i', !!(e.viewTransition && to && viaI(here, norm(to))));
             });
+
+            // 目录页 → 博客首页：反向一镜到底，整屏收回成首页卡片；首屏已滚出视口时不做
+            if (here === album) {
+                window.addEventListener('pageswap', function (e) {
+                    if (!e.viewTransition) return;
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    if (!to || norm(to) !== home) return;
+                    var hero = document.querySelector('.cw-hero');
+                    if (!hero || hero.getBoundingClientRect().bottom <= 0) { e.viewTransition.skipTransition(); return; }
+                    root.classList.add('cw-to-home');
+                });
+                // 从往返缓存恢复时清掉，免得过渡名残留到其他跳转
+                window.addEventListener('pagereveal', function () { root.classList.remove('cw-to-home'); });
+
+                // 目录页 ↔ 阅读页：回到目录时停在离开时的位置，篇名的反向过渡才有落点
+                var RETURN_KEY = 'cw-return';
+                function isReader(p) { return !!p && p !== album && p.indexOf(album) === 0; }
+                function findTrack(p) {
+                    var links = document.querySelectorAll('.cw-track-link[href]');
+                    for (var i = 0; i < links.length; i++) if (norm(links[i].getAttribute('href')) === p) return links[i];
+                    return null;
+                }
+                // 离开时记下所点篇目在视口中的高度
+                window.addEventListener('pageswap', function (e) {
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    var p = to && norm(to);
+                    if (!isReader(p)) return;
+                    var link = findTrack(p);
+                    try { sessionStorage.setItem(RETURN_KEY, JSON.stringify({ top: link ? link.getBoundingClientRect().top : null })); } catch (err) {}
+                });
+                // 回来时（全新加载；往返缓存本就原样恢复）在首帧前把刚读完的那篇滚回同一高度
+                // 经上一篇/下一篇换过篇目时，落点是最后读的那篇
+                var firstReveal = true;
+                window.addEventListener('pagereveal', function (e) {
+                    if (!firstReveal) return;
+                    firstReveal = false;
+                    var act = window.navigation && navigation.activation;
+                    var from = act && act.from && norm(act.from.url);
+                    if (!isReader(from)) return;
+                    var link = findTrack(from);
+                    if (!link) return;
+                    var saved = null;
+                    try { saved = JSON.parse(sessionStorage.getItem(RETURN_KEY)); } catch (err) {}
+                    var top = saved && typeof saved.top === 'number' ? saved.top : innerHeight * .4;
+                    top = Math.min(Math.max(top, 90), innerHeight - 90);
+                    root.classList.add('cw-returning');
+                    window.scrollTo({ top: window.scrollY + link.getBoundingClientRect().top - top, behavior: 'instant' });
+                    // 视口内的曲目直接就位，不再逐行浮现，否则篇名的落点是透明的
+                    [].forEach.call(document.querySelectorAll('.cw-track'), function (li) {
+                        var r = li.getBoundingClientRect();
+                        if (r.bottom > 0 && r.top < innerHeight) li.classList.add('is-in');
+                    });
+                    var done = function () { root.classList.remove('cw-returning'); };
+                    if (e.viewTransition) e.viewTransition.finished.finally(done);
+                    else requestAnimationFrame(done);
+                });
+                // 上一页就是首页时，「← Whatasiger」等同后退：首页从往返缓存原样恢复，过渡才不卡
+                document.addEventListener('click', function (e) {
+                    var a = e.target.closest && e.target.closest('a.cw-home');
+                    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                    var nav = window.navigation;
+                    if (!nav || !nav.canGoBack) return;
+                    var prev = nav.entries()[nav.currentEntry.index - 1];
+                    if (!prev || norm(prev.url) !== home) return;
+                    e.preventDefault();
+                    nav.back();
+                });
+            }
         })();
     </script>
-    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=muqdgcz7">
-    <script src="/static/carrier-wave/cw.js?v=muqdgcz7" defer></script>
+    
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=muqlwjmx">
+    <script src="/static/carrier-wave/cw.js?v=muqlwjmx" defer></script>
 <meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
 <link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
 </head>
 
 
 <body class="cw cw-reader" style="--tint:#C4C4C6">
-    <canvas class="cw-wave cw-wave-bar" aria-hidden="true" data-tint="#C4C4C6" data-seed="17"></canvas>
+    <canvas class="cw-wave cw-wave-bar" aria-hidden="true" data-tint="#C4C4C6" data-wave="#000000" data-seed="17"></canvas>
 
     <nav class="cw-corner">
         <a class="cw-home" href="/carrier_wave/" data-cw-back><span class="cw-arrow" aria-hidden="true">←</span>CARRiER WAVE.</a>
@@ -113,7 +182,12 @@
 
             <a class="cw-pager-back" href="/carrier_wave/">曲目</a>
 
-            <span class="cw-pager-link is-empty"></span>
+            
+            <a class="cw-pager-link is-next" href="/carrier_wave/carrier-wave/" data-cw-next style="--tint:#B7C4D4">
+                <span class="cw-pager-label">18<span class="cw-arrow" aria-hidden="true">→</span></span>
+                <span class="cw-pager-title">CARRiER WAVE.</span>
+            </a>
+            
         </nav>
     </main>
 </body>

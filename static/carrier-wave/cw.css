@@ -243,7 +243,7 @@ main { position: relative; z-index: 1; }
 
 .cw-sub {
     margin: clamp(34px, 5vw, 56px) 0 0;
-    font-size: 13px;
+    font-size: 14px;
     letter-spacing: .5em;
     padding-left: .5em;
     color: var(--ink-soft);
@@ -754,6 +754,17 @@ html.cw-from-home::view-transition-new(root) {
 @keyframes cw-vt-home-out {
     to { opacity: 0; transform: scale(.94); filter: blur(8px); }
 }
+
+/* 从阅读页回到目录：视口内曲目直接就位（须在「行入场」规则之后） */
+.cw-returning .cw-track.is-in { transition: none; }
+
+/* ---------- 一镜到底：回到博客首页（过渡动画写在首页的 hingle.css） ---------- */
+
+.cw-to-home .cw-stage { view-transition-name: cw-stage; }
+.cw-to-home .cw-axis { view-transition-name: cw-hero-wave; }
+.cw-to-home .cw-title { view-transition-name: cw-hero-title; }
+.cw-to-home .cw-sub { view-transition-name: cw-hero-sub; }
+.cw-to-home .cw-wave { view-transition-name: cw-carrier; }
 
 /* ---------- 窄屏 ---------- */
 

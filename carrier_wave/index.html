@@ -59,10 +59,82 @@
                 var to = e.activation && e.activation.entry && e.activation.entry.url;
                 root.classList.toggle('cw-via-i', !!(e.viewTransition && to && viaI(here, norm(to))));
             });
+
+            // 目录页 → 博客首页：反向一镜到底，整屏收回成首页卡片；首屏已滚出视口时不做
+            if (here === album) {
+                window.addEventListener('pageswap', function (e) {
+                    if (!e.viewTransition) return;
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    if (!to || norm(to) !== home) return;
+                    var hero = document.querySelector('.cw-hero');
+                    if (!hero || hero.getBoundingClientRect().bottom <= 0) { e.viewTransition.skipTransition(); return; }
+                    root.classList.add('cw-to-home');
+                });
+                // 从往返缓存恢复时清掉，免得过渡名残留到其他跳转
+                window.addEventListener('pagereveal', function () { root.classList.remove('cw-to-home'); });
+
+                // 目录页 ↔ 阅读页：回到目录时停在离开时的位置，篇名的反向过渡才有落点
+                var RETURN_KEY = 'cw-return';
+                function isReader(p) { return !!p && p !== album && p.indexOf(album) === 0; }
+                function findTrack(p) {
+                    var links = document.querySelectorAll('.cw-track-link[href]');
+                    for (var i = 0; i < links.length; i++) if (norm(links[i].getAttribute('href')) === p) return links[i];
+                    return null;
+                }
+                // 离开时记下所点篇目在视口中的高度
+                window.addEventListener('pageswap', function (e) {
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    var p = to && norm(to);
+                    if (!isReader(p)) return;
+                    var link = findTrack(p);
+                    try { sessionStorage.setItem(RETURN_KEY, JSON.stringify({ top: link ? link.getBoundingClientRect().top : null })); } catch (err) {}
+                });
+                // 回来时（全新加载；往返缓存本就原样恢复）在首帧前把刚读完的那篇滚回同一高度
+                // 经上一篇/下一篇换过篇目时，落点是最后读的那篇
+                var firstReveal = true;
+                window.addEventListener('pagereveal', function (e) {
+                    if (!firstReveal) return;
+                    firstReveal = false;
+                    var act = window.navigation && navigation.activation;
+                    var from = act && act.from && norm(act.from.url);
+                    if (!isReader(from)) return;
+                    var link = findTrack(from);
+                    if (!link) return;
+                    var saved = null;
+                    try { saved = JSON.parse(sessionStorage.getItem(RETURN_KEY)); } catch (err) {}
+                    var top = saved && typeof saved.top === 'number' ? saved.top : innerHeight * .4;
+                    top = Math.min(Math.max(top, 90), innerHeight - 90);
+                    root.classList.add('cw-returning');
+                    window.scrollTo({ top: window.scrollY + link.getBoundingClientRect().top - top, behavior: 'instant' });
+                    // 视口内的曲目直接就位，不再逐行浮现，否则篇名的落点是透明的
+                    [].forEach.call(document.querySelectorAll('.cw-track'), function (li) {
+                        var r = li.getBoundingClientRect();
+                        if (r.bottom > 0 && r.top < innerHeight) li.classList.add('is-in');
+                    });
+                    var done = function () { root.classList.remove('cw-returning'); };
+                    if (e.viewTransition) e.viewTransition.finished.finally(done);
+                    else requestAnimationFrame(done);
+                });
+                // 上一页就是首页时，「← Whatasiger」等同后退：首页从往返缓存原样恢复，过渡才不卡
+                document.addEventListener('click', function (e) {
+                    var a = e.target.closest && e.target.closest('a.cw-home');
+                    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                    var nav = window.navigation;
+                    if (!nav || !nav.canGoBack) return;
+                    var prev = nav.entries()[nav.currentEntry.index - 1];
+                    if (!prev || norm(prev.url) !== home) return;
+                    e.preventDefault();
+                    nav.back();
+                });
+            }
         })();
     </script>
-    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=muqdgcz7">
-    <script src="/static/carrier-wave/cw.js?v=muqdgcz7" defer></script>
+    
+    <!-- 目录页：曲目列表解析完才渲染首帧，从阅读页返回时才能在首帧前滚到原位 -->
+    <link rel="expect" href="#cw-foot" blocking="render">
+    
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=muqlwjmx">
+    <script src="/static/carrier-wave/cw.js?v=muqlwjmx" defer></script>
 <meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
 <link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
 </head>
@@ -99,6 +171,8 @@
                         data-cw-track
                         data-seed="1"
                         data-tint="#CFC6B8"
+                        data-wave=""
+                        
                         data-no="01"
                         data-title="SIN."
                         data-state="lost">
@@ -118,6 +192,8 @@
                         data-cw-track
                         data-seed="2"
                         data-tint="#C9A9AE"
+                        data-wave="#E2626B"
+                        
                         data-no="02"
                         data-title="PATHOS."
                         data-state="signal">
@@ -137,6 +213,8 @@
                         data-cw-track
                         data-seed="3"
                         data-tint="#A8C3C1"
+                        data-wave="#8FA7BF"
+                        
                         data-no="03"
                         data-title="maMihlApinaTapEi. 1st"
                         data-state="signal">
@@ -156,6 +234,8 @@
                         data-cw-track
                         data-seed="4"
                         data-tint="#CFC6B8"
+                        data-wave=""
+                        
                         data-no="04"
                         data-title="Anecdoche."
                         data-state="lost">
@@ -175,6 +255,8 @@
                         data-cw-track
                         data-seed="5"
                         data-tint="#B9C7AE"
+                        data-wave=""
+                        
                         data-no="05"
                         data-title="Eden."
                         data-state="lost">
@@ -188,42 +270,46 @@
                     </span>
                 </li>
             
-                <li class="cw-track is-lost" style="--tint:#AEBFD6;--gap-a:72%;--gap-b:74%">
-                    <span class="cw-track-link"
-                        aria-disabled="true"
+                <li class="cw-track" style="--tint:#AEBFD6;--gap-a:72%;--gap-b:74%">
+                    <a class="cw-track-link"
+                        href="/carrier_wave/airs-1/"
                         data-cw-track
                         data-seed="6"
                         data-tint="#AEBFD6"
+                        data-wave="#BFB48C"
+                        
                         data-no="06"
                         data-title="AIRS. Ⅰ"
-                        data-state="lost">
+                        data-state="signal">
                         <span class="cw-no">06</span>
                         <span class="cw-name">
                             <span class="cw-name-text" style="view-transition-name:cw-t-airs-1">AIRS.</span><span class="cw-part">Ⅰ</span>
                         </span>
                         <span class="cw-meta">
-                            未接收
+                            3,097 字
                         </span>
-                    </span>
+                    </a>
                 </li>
             
-                <li class="cw-track is-lost" style="--tint:#A8C3C1;--gap-a:41%;--gap-b:46%">
-                    <span class="cw-track-link"
-                        aria-disabled="true"
+                <li class="cw-track" style="--tint:#A8C3C1;--gap-a:41%;--gap-b:46%">
+                    <a class="cw-track-link"
+                        href="/carrier_wave/mamihlapinatapei-2/"
                         data-cw-track
                         data-seed="7"
                         data-tint="#A8C3C1"
+                        data-wave="#8FA7BF"
+                        
                         data-no="07"
                         data-title="maMihlApinaTapEi. 2nd"
-                        data-state="lost">
+                        data-state="signal">
                         <span class="cw-no">07</span>
                         <span class="cw-name">
                             <span class="cw-name-text" style="view-transition-name:cw-t-mamihlapinatapei-2">maMihlApinaTapEi.</span><span class="cw-part">2nd</span>
                         </span>
                         <span class="cw-meta">
-                            未接收
+                            1,252 字
                         </span>
-                    </span>
+                    </a>
                 </li>
             
                 <li class="cw-track" style="--tint:#BDB6CF;--gap-a:78%;--gap-b:81%">
@@ -232,6 +318,8 @@
                         data-cw-track
                         data-seed="8"
                         data-tint="#BDB6CF"
+                        data-wave=""
+                        
                         data-no="08"
                         data-title="Eric."
                         data-state="signal">
@@ -251,6 +339,8 @@
                         data-cw-track
                         data-seed="9"
                         data-tint="#AEBFD6"
+                        data-wave="#BFB48C"
+                        
                         data-no="09"
                         data-title="AIRS. Ⅱ"
                         data-state="lost">
@@ -270,6 +360,8 @@
                         data-cw-track
                         data-seed="10"
                         data-tint="#D3BFA9"
+                        data-wave=""
+                        
                         data-no="10"
                         data-title="Remy."
                         data-state="lost">
@@ -289,6 +381,8 @@
                         data-cw-track
                         data-seed="11"
                         data-tint="#A8C3C1"
+                        data-wave="#8FA7BF"
+                        
                         data-no="11"
                         data-title="maMihlApinaTapEi. 3rd"
                         data-state="lost">
@@ -308,6 +402,8 @@
                         data-cw-track
                         data-seed="12"
                         data-tint="#B4B9C4"
+                        data-wave=""
+                        
                         data-no="12"
                         data-title="Mora."
                         data-state="signal">
@@ -327,6 +423,8 @@
                         data-cw-track
                         data-seed="13"
                         data-tint="#CFC6B8"
+                        data-wave=""
+                        
                         data-no="13"
                         data-title="Sonder."
                         data-state="lost">
@@ -346,6 +444,8 @@
                         data-cw-track
                         data-seed="14"
                         data-tint="#A8C3C1"
+                        data-wave="#8FA7BF"
+                        
                         data-no="14"
                         data-title="maMihlApinaTapEi. 4th"
                         data-state="lost">
@@ -365,6 +465,8 @@
                         data-cw-track
                         data-seed="15"
                         data-tint="#CFC6B8"
+                        data-wave=""
+                        
                         data-no="15"
                         data-title="Énouement."
                         data-state="lost">
@@ -384,6 +486,8 @@
                         data-cw-track
                         data-seed="16"
                         data-tint="#AEBFD6"
+                        data-wave="#BFB48C"
+                        
                         data-no="16"
                         data-title="AIRS. Ⅲ"
                         data-state="lost">
@@ -403,6 +507,8 @@
                         data-cw-track
                         data-seed="17"
                         data-tint="#C4C4C6"
+                        data-wave="#000000"
+                        
                         data-no="17"
                         data-title="limbo."
                         data-state="signal">
@@ -416,29 +522,31 @@
                     </a>
                 </li>
             
-                <li class="cw-track is-lost" style="--tint:#B7C4D4;--gap-a:40%;--gap-b:43%">
-                    <span class="cw-track-link"
-                        aria-disabled="true"
+                <li class="cw-track" style="--tint:#B7C4D4;--gap-a:40%;--gap-b:43%">
+                    <a class="cw-track-link"
+                        href="/carrier_wave/carrier-wave/"
                         data-cw-track
                         data-seed="18"
                         data-tint="#B7C4D4"
+                        data-wave=""
+                        data-flat
                         data-no="18"
                         data-title="CARRiER WAVE."
-                        data-state="lost">
+                        data-state="signal">
                         <span class="cw-no">18</span>
                         <span class="cw-name">
                             <span class="cw-name-text" style="view-transition-name:cw-t-carrier-wave">CARRiER WAVE.</span>
                         </span>
                         <span class="cw-meta">
-                            未接收
+                            1,252 字
                         </span>
-                    </span>
+                    </a>
                 </li>
             
             </ol>
         </section>
 
-        <footer class="cw-foot">
+        <footer class="cw-foot" id="cw-foot">
             <p class="cw-epigraph">被留下的成为信号，被遗漏的进入 limbo。</p>
             <p class="cw-sign">Whatasiger</p>
         </footer>

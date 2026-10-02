@@ -71,6 +71,10 @@
         this.color = [new Spring(INK[0], 90, 19), new Spring(INK[1], 90, 19), new Spring(INK[2], 90, 19)];
         this.alpha = new Spring(opts.alpha || .5, 90, 19);
         this.signal = mix(c, INK, .32);
+        // 指定了载波色：亮色直接作信号色；暗色（如 limbo. 的黑）整条载波用它，进度点只照亮附近一段
+        var w = opts.wave ? hexToRgb(opts.wave) : null;
+        this.dark = w && (w[0] * .2126 + w[1] * .7152 + w[2] * .0722) < 50 ? w : null;
+        if (w && !this.dark) this.signal = w;
 
         this.pointer = { x: -9999, y: -9999, inside: false };
         this.baseY = 0;
@@ -87,17 +91,20 @@
         this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    Carrier.prototype.tune = function (tint, seed) {
-        var c = mix(hexToRgb(tint), INK, .3);
+    Carrier.prototype.tune = function (tint, seed, wave, flat) {
+        var c = wave ? hexToRgb(wave) : mix(hexToRgb(tint), INK, .3);
         for (var i = 0; i < 3; i++) this.color[i].target = c[i];
         this.alpha.target = .78;
-        this.mod.target = 1;
+        // flat：载波被拉直，不复存在
+        this.amp.target = flat ? 0 : 1;
+        this.mod.target = flat ? 0 : 1;
         this.envLen.target = 260 + hash(seed) * 320;
     };
 
     Carrier.prototype.release = function () {
         for (var i = 0; i < 3; i++) this.color[i].target = INK[i];
         this.alpha.target = this.opts.alpha || .5;
+        this.amp.target = 1;
         this.mod.target = 0;
         this.loss.target = 0;
     };
@@ -196,12 +203,14 @@
 
     Carrier.prototype.drawBar = function (t, rgb, alpha) {
         var px = clamp(this.progress.x, 0, 1) * this.w;
-        var faint = this.edgeGradient(FAINT, .55);
-        var sig = this.edgeGradient(this.signal, .9);
+        var dark = this.dark;
+        var faint = this.edgeGradient(dark || FAINT, .55);
+        var sig = this.edgeGradient(dark || this.signal, .9);
         this.mod.target = 1;
         this.strokeStrand(t, { offset: 0, scale: 1, gain: 0, phase: 0, modulated: false, width: 1, style: faint, from: px, to: this.w });
         if (px > 1) {
             this.strokeStrand(t, { offset: 0, scale: 1, gain: .55, phase: 0, modulated: true, width: 1.1, style: sig, from: 0, to: px });
+            if (dark) this.drawGlow(t, px);
             var k = TAU / this.opts.wavelength;
             var y = this.baseY + this.amp.x * this.opts.amplitude * Math.sin(k * px - t * this.opts.speed);
             var ctx = this.ctx;
@@ -210,6 +219,23 @@
             ctx.fillStyle = 'rgba(' + (this.signal[0] | 0) + ',' + (this.signal[1] | 0) + ',' + (this.signal[2] | 0) + ',.95)';
             ctx.fill();
         }
+    };
+
+    // 进度点照亮前后一小段：同一条载波用信号色重描，向两侧渐隐
+    Carrier.prototype.drawGlow = function (t, px) {
+        var ctx = this.ctx;
+        var r = this.w < 640 ? 44 : 64;
+        var c = 'rgba(' + (this.signal[0] | 0) + ',' + (this.signal[1] | 0) + ',' + (this.signal[2] | 0) + ',';
+        var g = ctx.createLinearGradient(px - r, 0, px + r, 0);
+        g.addColorStop(0, c + '0)');
+        g.addColorStop(.5, c + '.9)');
+        g.addColorStop(1, c + '0)');
+        ctx.save();
+        ctx.shadowColor = c + '.55)';
+        ctx.shadowBlur = 8;
+        this.strokeStrand(t, { offset: 0, scale: 1, gain: .55, phase: 0, modulated: true, width: 1.1, style: g, from: Math.max(0, px - r), to: px });
+        this.strokeStrand(t, { offset: 0, scale: 1, gain: 0, phase: 0, modulated: false, width: 1, style: g, from: px, to: Math.min(this.w, px + r) });
+        ctx.restore();
     };
 
     /* ---------- 动画循环 ---------- */
@@ -348,7 +374,7 @@
             var lost = el.getAttribute('data-state') === 'lost';
             var tint = el.getAttribute('data-tint');
             carrier.loss.target = 0;
-            carrier.tune(tint, +el.getAttribute('data-seed'));
+            carrier.tune(tint, +el.getAttribute('data-seed'), el.getAttribute('data-wave'), el.hasAttribute('data-flat'));
 
             if (tuner) {
                 tunerNo.textContent = el.getAttribute('data-no');
@@ -409,6 +435,7 @@
             var carrier = new Carrier(canvas, {
                 mode: 'bar',
                 tint: canvas.getAttribute('data-tint'),
+                wave: canvas.getAttribute('data-wave'),
                 wavelength: narrow ? 30 : 38,
                 amplitude: 2.6,
                 speed: 2.2,
@@ -417,6 +444,7 @@
                 envLen: 180 + hash(+canvas.getAttribute('data-seed')) * 200
             });
             carrier.scale = 1;
+            if (canvas.hasAttribute('data-flat')) carrier.amp.target = 0;
 
             var layout = function () {
                 carrier.resize();

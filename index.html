@@ -65,18 +65,69 @@
           media="print" onload="this.media='all'; this.onload=null;">
     
     <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Cormorant+Garamond:wght@300&display=swap">
-    <!-- 跨页面过渡只用于「首页 → CARRiER WAVE.」，其余跳转一律跳过 -->
+    <!-- 卡片副题「载波·短篇辑」与目录页同用思源宋体；只取这几个字，字体文件很小 -->
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@300&text=%E8%BD%BD%E6%B3%A2%E7%9F%AD%E7%AF%87%E8%BE%91&display=swap">
+    <!-- 跨页面过渡只用于「首页 ↔ CARRiER WAVE.」，其余跳转一律跳过 -->
     <style>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
     <script>
         (function () {
+            var root = document.documentElement;
             var target = '/carrier_wave/';
+            function norm(u) {
+                try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+            }
             window.addEventListener('pageswap', function (e) {
                 if (!e.viewTransition) return;
                 var to = e.activation && e.activation.entry && e.activation.entry.url;
-                if (!to || new URL(to).pathname !== target) e.viewTransition.skipTransition();
+                if (!to || norm(to) !== target) e.viewTransition.skipTransition();
             });
+            // 从目录页回来：整屏收回成卡片；卡片不在视口内（如恢复了滚动位置）就不做
+            // 只在从往返缓存恢复时做：全新加载要等首页渲染，旧画面会先冻住，首帧布局也未定型，形变起止对不上
+            var revealed = false;
             window.addEventListener('pagereveal', function (e) {
-                if (e.viewTransition) e.viewTransition.skipTransition();
+                var restored = revealed;
+                revealed = true;
+                root.classList.remove('cw-back');
+                if (!e.viewTransition) return;
+                if (!restored) { e.viewTransition.skipTransition(); return; }
+                var act = window.navigation && navigation.activation;
+                var from = act && act.from && act.from.url;
+                var card = document.querySelector('.post-item.cw-card');
+                var r = card && card.getBoundingClientRect();
+                if (!from || norm(from) !== target || !r || r.bottom <= 0 || r.top >= innerHeight) {
+                    e.viewTransition.skipTransition();
+                    return;
+                }
+                // cw-came-back 不随过渡结束移除：卡片的入场动画一旦恢复就会重播，造成落定后再闪一下
+                root.classList.add('cw-back', 'cw-came-back');
+                e.viewTransition.finished.finally(function () { root.classList.remove('cw-back'); });
+            });
+
+            // 预取目录页及其阻塞渲染的字体样式表：跨页面过渡要求新页面在约 4 秒内完成首帧，否则浏览器静默放弃
+            // 首页加载完后空闲时预取；首页还没加载完时，指针移上、按下或聚焦卡片就提前预取
+            // 字体地址须与 _partial/carrier-wave-head.ejs 中的保持一致，否则预取的缓存用不上
+            var warmed = false;
+            function warm() {
+                if (warmed) return;
+                warmed = true;
+                [target, 'https://fonts.loli.net/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Noto+Serif+SC:wght@300;400;500&display=swap']
+                    .forEach(function (href) {
+                        var l = document.createElement('link');
+                        l.rel = 'prefetch';
+                        l.href = href;
+                        document.head.appendChild(l);
+                    });
+            }
+            document.addEventListener('DOMContentLoaded', function () {
+                var card = document.querySelector('.post-item.cw-card');
+                if (!card) return;
+                ['pointerenter', 'pointerdown', 'touchstart', 'focus'].forEach(function (t) {
+                    card.addEventListener(t, warm, { once: true, passive: true });
+                });
+                window.addEventListener('load', function () {
+                    if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 3000 });
+                    else setTimeout(warm, 1000);
+                });
             });
         })();
     </script>
