@@ -794,6 +794,48 @@ html.cw-from-home::view-transition-new(root) {
 }
 
 
-/* 标题里的 i：通往 limbo 的暗示 */
-.cw-i { display: inline-block; color: inherit; transition: color .6s var(--ease-out), transform .8s var(--spring-bouncy), text-shadow .6s var(--ease-out); }
-.cw-i:hover, .cw-i:focus-visible { color: #B9A4C9; transform: translateY(-3px); text-shadow: 0 0 18px rgba(185,164,201,.45); }
+/* 标题里的 i：通往隐藏篇目 i.，再从 i. 通往 limbo */
+.cw-i, .cw-glyph-i { display: inline-block; color: inherit; transition: color .6s var(--ease-out), transform .8s var(--spring-bouncy), text-shadow .6s var(--ease-out); }
+.cw-i:hover, .cw-i:focus-visible,
+a.cw-glyph-i:hover, a.cw-glyph-i:focus-visible { color: #B9A4C9; transform: translateY(-3px); text-shadow: 0 0 18px rgba(185,164,201,.45); }
+.cw-glyph-l, .cw-glyph-r, .cw-glyph-dot { display: inline-block; }
+
+/* ---------- 一镜到底：首屏 ↔ i. ↔ limbo. ---------- */
+
+.cw-via-i .cw-i,
+.cw-via-i .cw-glyph-i { view-transition-name: cw-i; }
+.cw-via-i .cw-read-title .cw-name-text { view-transition-name: none !important; }
+.cw-via-i .cw-glyph-dot { view-transition-name: cw-i-dot; }
+.cw-via-i .cw-glyph-l { view-transition-name: cw-i-l; }
+.cw-via-i .cw-glyph-r { view-transition-name: cw-i-r; }
+
+/* 回到首屏时标题直接处于终态，i 的落点不会随字距收拢而漂移 */
+.cw-via-i.cw-js .cw-hero .cw-title.cw-rise { opacity: 1; transform: none; filter: none; transition: none; }
+.cw-via-i.cw-js .cw-index .cw-title { letter-spacing: .01em; }
+
+/* 先让场景退去，i 独自穿行，抵达后其余内容才浮现 */
+html.cw-via-i::view-transition-old(root) { animation: cw-vt-out .45s var(--ease-out) both; }
+html.cw-via-i::view-transition-new(root) { animation: cw-vt-in .8s var(--ease-out) .55s both; }
+html.cw-via-i::view-transition-group(cw-i) {
+    animation-duration: 1.2s;
+    animation-timing-function: var(--spring);
+}
+
+/* i 落定后，l 与 mbo. 从它身后向两侧浮现；i. 的句点同理 */
+html.cw-via-i::view-transition-group(cw-i-l),
+html.cw-via-i::view-transition-group(cw-i-r),
+html.cw-via-i::view-transition-group(cw-i-dot) { animation: none; }
+html.cw-via-i::view-transition-new(cw-i-l) { animation: cw-vt-bloom-l 1s var(--spring) .7s both; }
+html.cw-via-i::view-transition-new(cw-i-r) { animation: cw-vt-bloom-r 1s var(--spring) .78s both; }
+html.cw-via-i::view-transition-new(cw-i-dot) { animation: cw-vt-bloom-r .9s var(--spring) .75s both; }
+/* 反向时收回到 i 身后 */
+html.cw-via-i::view-transition-old(cw-i-l) { animation: cw-vt-bloom-l .5s var(--ease-out) reverse both; }
+html.cw-via-i::view-transition-old(cw-i-r),
+html.cw-via-i::view-transition-old(cw-i-dot) { animation: cw-vt-bloom-r .5s var(--ease-out) reverse both; }
+
+@keyframes cw-vt-bloom-l {
+    from { opacity: 0; transform: translateX(28px); filter: blur(6px); }
+}
+@keyframes cw-vt-bloom-r {
+    from { opacity: 0; transform: translateX(-28px); filter: blur(6px); }
+}

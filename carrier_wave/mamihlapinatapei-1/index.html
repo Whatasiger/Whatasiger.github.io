@@ -38,10 +38,31 @@
                     e.viewTransition.finished.finally(function () { root.classList.remove('cw-from-home'); });
                 });
             }
+
+            // 首屏 ↔ i ↔ limbo：标题里的 i 一镜到底，只在这几页之间互相跳转时才给它过渡名
+            var album = '/carrier_wave/';
+            var hidden = album + 'i/';
+            var limbo = album + 'limbo/';
+            function norm(u) {
+                try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+            }
+            function viaI(a, b) {
+                return (a === hidden && (b === album || b === limbo)) || (b === hidden && (a === album || a === limbo));
+            }
+            var here = norm(location.href);
+            window.addEventListener('pagereveal', function (e) {
+                var act = window.navigation && navigation.activation;
+                var from = act && act.from && act.from.url;
+                root.classList.toggle('cw-via-i', !!(e.viewTransition && from && viaI(norm(from), here)));
+            });
+            window.addEventListener('pageswap', function (e) {
+                var to = e.activation && e.activation.entry && e.activation.entry.url;
+                root.classList.toggle('cw-via-i', !!(e.viewTransition && to && viaI(here, norm(to))));
+            });
         })();
     </script>
-    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=muppfzx5">
-    <script src="/static/carrier-wave/cw.js?v=muppfzx5" defer></script>
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=muqdgcz7">
+    <script src="/static/carrier-wave/cw.js?v=muqdgcz7" defer></script>
 <meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
 <link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
 </head>
