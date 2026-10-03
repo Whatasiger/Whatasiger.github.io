@@ -46,6 +46,9 @@ html {
     scroll-behavior: smooth;
     scrollbar-width: thin;
     scrollbar-color: var(--hair) transparent;
+    /* 始终预留滚动条位置：新页首帧可能在正文解析完之前就渲染，那时页面还不够长、没有滚动条，
+       视口比旧页宽，Chrome 会以 "Viewport size changed" 放弃整个跨页面过渡 */
+    scrollbar-gutter: stable;
 }
 
 body.cw {

@@ -1,8 +1,9 @@
 // 首页「TO DO」侧边栏：展开/收起 + Bangumi 实时刷新（失败时保留构建时数据）
 (function () {
     var sidebar = document.getElementById("todo-sidebar");
-    var toggle = document.querySelector(".todo-toggle");
-    if (!sidebar || !toggle) return;
+    var drawer = sidebar && sidebar.parentNode;
+    var toggle = drawer && drawer.querySelector(".todo-toggle");
+    if (!toggle) return;
 
     var closeBtn = sidebar.querySelector(".todo-close");
     var bgmList = sidebar.querySelector(".todo-bgm");
@@ -16,8 +17,8 @@
     var animTimer = null;
 
     function setOpen(open) {
-        sidebar.classList.toggle("active", open);
-        toggle.classList.toggle("active", open);
+        if (open === drawer.classList.contains("active")) return;
+        drawer.classList.toggle("active", open);
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
         try { sessionStorage.setItem(STATE_KEY, open ? "1" : "0"); } catch (e) {}
         animating = true;
@@ -37,23 +38,82 @@
     }
 
     // 开合动画期间不替换列表，避免重排导致掉帧
-    sidebar.addEventListener("transitionend", function (e) {
-        if (e.target !== sidebar || e.propertyName !== "transform") return;
+    drawer.addEventListener("transitionend", function (e) {
+        if (e.target !== drawer || e.propertyName !== "transform") return;
         finishAnimation();
     });
 
+    // 标签可上下拖动：位置存为视口高度比例，限制在页眉以下、视口以内
+    var POS_KEY = "todo_toggle_pos";
+    var DRAG_THRESHOLD = 5; // 移动超过这个距离才算拖动，否则视为点击
+    var togglePos = 1 / 3;
+    var drag = null;
+    var suppressClick = false;
+
+    try {
+        var savedPos = parseFloat(localStorage.getItem(POS_KEY));
+        if (savedPos >= 0 && savedPos <= 1) togglePos = savedPos;
+    } catch (e) {}
+
+    function placeToggle() {
+        var vh = window.innerHeight;
+        var half = toggle.offsetHeight / 2;
+        var header = document.querySelector("header");
+        var min = (header ? header.getBoundingClientRect().bottom : 0) + half + 8;
+        var max = vh - half - 8;
+        var y = Math.min(Math.max(togglePos * vh, min), Math.max(min, max));
+        toggle.style.top = y + "px";
+    }
+
+    toggle.addEventListener("pointerdown", function (e) {
+        if (e.button !== 0) return;
+        drag = { id: e.pointerId, startY: e.clientY, startPos: togglePos, moved: false };
+    });
+
+    toggle.addEventListener("pointermove", function (e) {
+        if (!drag || e.pointerId !== drag.id) return;
+        var dy = e.clientY - drag.startY;
+        if (!drag.moved) {
+            if (Math.abs(dy) < DRAG_THRESHOLD) return;
+            drag.moved = true;
+            toggle.setPointerCapture(e.pointerId);
+            toggle.classList.add("dragging");
+        }
+        togglePos = drag.startPos + dy / window.innerHeight;
+        placeToggle();
+        // 夹紧后回写实际位置，避免拖出边界后再拖回时“空走”
+        togglePos = parseFloat(toggle.style.top) / window.innerHeight;
+    });
+
+    function endDrag(e) {
+        if (!drag || e.pointerId !== drag.id) return;
+        if (drag.moved) {
+            suppressClick = true;
+            setTimeout(function () { suppressClick = false; }, 0); // 松手处不在标签上时不会触发 click，别吞掉下一次点击
+            toggle.classList.remove("dragging");
+            try { localStorage.setItem(POS_KEY, String(togglePos)); } catch (err) {}
+        }
+        drag = null;
+    }
+    toggle.addEventListener("pointerup", endDrag);
+    toggle.addEventListener("pointercancel", endDrag);
+
+    window.addEventListener("resize", placeToggle);
+    placeToggle();
+
     toggle.addEventListener("click", function () {
-        setOpen(!sidebar.classList.contains("active"));
+        if (suppressClick) { suppressClick = false; return; }
+        setOpen(!drawer.classList.contains("active"));
     });
     closeBtn.addEventListener("click", function () { setOpen(false); });
 
     document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape" && sidebar.classList.contains("active")) setOpen(false);
+        if (e.key === "Escape" && drawer.classList.contains("active")) setOpen(false);
     });
 
     document.addEventListener("click", function (e) {
-        if (!sidebar.classList.contains("active")) return;
-        if (sidebar.contains(e.target) || toggle.contains(e.target)) return;
+        if (!drawer.classList.contains("active")) return;
+        if (drawer.contains(e.target)) return;
         setOpen(false);
     });
 
@@ -64,38 +124,45 @@
         return node;
     }
 
+    function renderItem(c) {
+        var subject = c.subject || {};
+        var images = subject.images || {};
+        var li = el("li");
+        var a = el("a");
+        a.href = "https://bgm.tv/subject/" + c.subject_id;
+        a.target = "_blank";
+        a.rel = "noopener";
+
+        var img = el("img");
+        img.src = images.small || images.grid || "";
+        img.alt = "";
+        img.loading = "lazy";
+        img.referrerPolicy = "no-referrer";
+
+        var text = el("span", "todo-text");
+        text.appendChild(el("span", "todo-title", subject.name_cn || subject.name || ""));
+        if (c.subject_type === 2) {
+            text.appendChild(el("span", "todo-meta", (c.ep_status || 0) + " / " + (subject.eps || "?")));
+        }
+
+        a.appendChild(img);
+        a.appendChild(text);
+        li.appendChild(a);
+        return li;
+    }
+
+    // 按类型分组：「在看」在上、「在玩」在下，空组不显示
     function renderBangumi(items) {
         var frag = document.createDocumentFragment();
-        items.forEach(function (c) {
-            var subject = c.subject || {};
-            var images = subject.images || {};
-            var li = el("li");
-            var a = el("a");
-            a.href = "https://bgm.tv/subject/" + c.subject_id;
-            a.target = "_blank";
-            a.rel = "noopener";
-
-            var img = el("img");
-            img.src = images.small || images.grid || "";
-            img.alt = "";
-            img.loading = "lazy";
-            img.referrerPolicy = "no-referrer";
-
-            var text = el("span", "todo-text");
-            text.appendChild(el("span", "todo-title", subject.name_cn || subject.name || ""));
-            var meta = el("span", "todo-meta");
-            meta.appendChild(el("span", "todo-badge", BGM_LABEL[c.subject_type] || "进行中"));
-            if (c.subject_type === 2) {
-                meta.appendChild(document.createTextNode((c.ep_status || 0) + " / " + (subject.eps || "?")));
-            }
-            text.appendChild(meta);
-
-            a.appendChild(img);
-            a.appendChild(text);
-            li.appendChild(a);
-            frag.appendChild(li);
+        BGM_TYPES.forEach(function (type) {
+            var group = items.filter(function (c) { return c.subject_type === type; });
+            if (!group.length) return;
+            frag.appendChild(el("p", "todo-sub", BGM_LABEL[type]));
+            var ul = el("ul", "todo-list");
+            group.forEach(function (c) { ul.appendChild(renderItem(c)); });
+            frag.appendChild(ul);
         });
-        if (!items.length) frag.appendChild(el("li", "todo-empty", "暂无数据"));
+        if (!frag.childNodes.length) frag.appendChild(el("p", "todo-empty", "暂无数据"));
         bgmList.innerHTML = "";
         bgmList.appendChild(frag);
     }

@@ -25,35 +25,58 @@
         (function () {
             var root = document.documentElement;
             root.classList.add('cw-js');
-            // 从博客首页卡片进入目录页：首屏元素不做入场，由跨页面过渡从卡片形变而来
             var home = '/';
-            var act = window.navigation && navigation.activation;
-            var from = act && act.from && new URL(act.from.url);
-            if ('onpagereveal' in window && from && (from.pathname === home || from.pathname === home + 'index.html')
-                && location.pathname === '/carrier_wave/'
-                && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                root.classList.add('cw-from-home');
-                window.addEventListener('pagereveal', function (e) {
-                    if (!e.viewTransition) { root.classList.remove('cw-from-home'); return; }
-                    e.viewTransition.finished.finally(function () { root.classList.remove('cw-from-home'); });
-                });
-            }
-
-            // 首屏 ↔ i ↔ limbo：标题里的 i 一镜到底，只在这几页之间互相跳转时才给它过渡名
             var album = '/carrier_wave/';
             var hidden = album + 'i/';
             var limbo = album + 'limbo/';
             function norm(u) {
                 try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
             }
+            var here = norm(location.href);
+
+            // 来源页：优先用 navigation.activation；它偶尔拿不到时，退回到离开页在 pageswap 里写下的记录
+            // 记录须指向本页且在几秒之内，免得旧记录误判；揭幕后即清掉
+            var HOP_KEY = 'cw-vt-hop';
+            function hop() {
+                try {
+                    var h = JSON.parse(sessionStorage.getItem(HOP_KEY));
+                    return h && h.to === here && Date.now() - h.t < 6000 ? h.from : '';
+                } catch (err) { return ''; }
+            }
+            function cameFrom(test) {
+                var act = window.navigation && navigation.activation;
+                var from = act && act.from && act.from.url;
+                return (!!from && test(norm(from))) || test(hop());
+            }
+            window.addEventListener('pageswap', function (e) {
+                var to = e.activation && e.activation.entry && e.activation.entry.url;
+                try { sessionStorage.setItem(HOP_KEY, JSON.stringify({ from: here, to: to ? norm(to) : '', t: Date.now() })); } catch (err) {}
+            });
+
+            // 从博客首页卡片进入目录页：首屏元素不做入场，由跨页面过渡从卡片形变而来
+            // 全新加载时在首帧前就挂上（冻结首屏入场）；往返缓存恢复时 head 脚本不会重跑，靠 pagereveal 再判断一次
+            function isHome(p) { return p === home; }
+            if ('onpagereveal' in window && here === album && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                var firstLoad = true;
+                if (cameFrom(isHome)) root.classList.add('cw-from-home');
+                window.addEventListener('pagereveal', function (e) {
+                    var fresh = firstLoad;
+                    firstLoad = false;
+                    var hero = document.querySelector('.cw-hero');
+                    // 恢复时首屏可能已滚出视口，形变会落到看不见的地方，这时只做整页淡入淡出
+                    var heroIn = fresh || (hero && hero.getBoundingClientRect().bottom > 0);
+                    var on = !!(e.viewTransition && heroIn && cameFrom(isHome));
+                    root.classList.toggle('cw-from-home', on);
+                    if (on) e.viewTransition.finished.finally(function () { root.classList.remove('cw-from-home'); });
+                });
+            }
+
+            // 首屏 ↔ i ↔ limbo：标题里的 i 一镜到底，只在这几页之间互相跳转时才给它过渡名
             function viaI(a, b) {
                 return (a === hidden && (b === album || b === limbo)) || (b === hidden && (a === album || a === limbo));
             }
-            var here = norm(location.href);
             window.addEventListener('pagereveal', function (e) {
-                var act = window.navigation && navigation.activation;
-                var from = act && act.from && act.from.url;
-                root.classList.toggle('cw-via-i', !!(e.viewTransition && from && viaI(norm(from), here)));
+                root.classList.toggle('cw-via-i', !!(e.viewTransition && cameFrom(function (p) { return viaI(p, here); })));
             });
             window.addEventListener('pageswap', function (e) {
                 var to = e.activation && e.activation.entry && e.activation.entry.url;
@@ -127,11 +150,271 @@
                     nav.back();
                 });
             }
+
+            // 来源记录只用于这一次揭幕：等本轮 pagereveal 监听（含诊断）都读过再清
+            window.addEventListener('pagereveal', function () {
+                setTimeout(function () {
+                    try { sessionStorage.removeItem(HOP_KEY); } catch (err) {}
+                }, 0);
+            });
         })();
     </script>
     
-    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mur79b2u">
-    <script src="/static/carrier-wave/cw.js?v=mur79b2u" defer></script>
+<script>
+    (function () {
+        if (!('onpagereveal' in window) || !Element.prototype.animate) return;
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        var root = document.documentElement;
+        var KEY = 'cw-vt-fb';
+        var NAME = /^cw-(i|i-l|i-r|i-dot|t-.+)$/;
+        var SELECTOR = '.cw-i, .cw-glyph-i, .cw-glyph-l, .cw-glyph-r, .cw-glyph-dot, .cw-name-text';
+        // 只在新页出现的字形：从 i 身后向两侧浮现（与 cw.css 中 cw-vt-bloom-* 一致）
+        var BLOOM = {
+            'cw-i-l': { x: 28, delay: 700, duration: 1000 },
+            'cw-i-r': { x: -28, delay: 780, duration: 1000 },
+            'cw-i-dot': { x: -28, delay: 750, duration: 900 }
+        };
+
+        function norm(u) {
+            try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+        }
+        var here = norm(location.href);
+
+        function named() {
+            var map = {};
+            var els = document.querySelectorAll(SELECTOR);
+            for (var k = 0; k < els.length; k++) {
+                var n = getComputedStyle(els[k]).viewTransitionName;
+                if (n && NAME.test(n)) map[n] = els[k];
+            }
+            return map;
+        }
+
+        window.addEventListener('pageswap', function (e) {
+            try { sessionStorage.removeItem(KEY); } catch (err) {}
+            if (!e.viewTransition) return;
+            var to = e.activation && e.activation.entry && e.activation.entry.url;
+            if (!to) return;
+            var map = named();
+            var rects = {};
+            var any = false;
+            for (var n in map) {
+                var r = map[n].getBoundingClientRect();
+                if (!r.width || !r.height || r.bottom <= 0 || r.top >= innerHeight) continue;
+                rects[n] = { x: r.left, y: r.top, h: r.height };
+                any = true;
+            }
+            if (!any) return;
+            try {
+                sessionStorage.setItem(KEY, JSON.stringify({
+                    to: norm(to), t: Date.now(), w: innerWidth, h: innerHeight, rects: rects
+                }));
+            } catch (err) {}
+        });
+
+        window.addEventListener('pagereveal', function (e) {
+            var rec = null;
+            try { rec = JSON.parse(sessionStorage.getItem(KEY)); sessionStorage.removeItem(KEY); } catch (err) {}
+            if (!rec || rec.to !== here || Date.now() - rec.t > 6000) return;
+
+            var mismatch = rec.w !== innerWidth || rec.h !== innerHeight;
+            if (e.viewTransition && !mismatch) {
+                // 视口一致仍可能因别的原因被放弃，那时再补
+                e.viewTransition.ready.catch(function () { play(rec); });
+                return;
+            }
+            if (e.viewTransition) e.viewTransition.skipTransition();
+            play(rec);
+        });
+
+        function play(rec) {
+            var cs = getComputedStyle(root);
+            var spring = cs.getPropertyValue('--spring').trim() || 'ease-out';
+            var easeOut = cs.getPropertyValue('--ease-out').trim() || 'ease-out';
+
+            // i 一镜到底：挂上类名才有对应过渡名，首屏标题也会直接处于终态
+            var viaI = 'cw-i' in rec.rects;
+            if (viaI) root.classList.add('cw-via-i');
+
+            var map = named();
+            var keep = [];
+            var colors = [];
+            var end = 0;
+            for (var n in map) {
+                var el = map[n];
+                var old = rec.rects[n];
+                if (old) {
+                    var r = el.getBoundingClientRect();
+                    if (!r.height) continue;
+                    var s = old.h / r.height;
+                    var from = 'translate(' + (old.x - r.left) + 'px,' + (old.y - r.top) + 'px) scale(' + s + ')';
+                    el.animate([
+                        { transformOrigin: '0 0', transform: from },
+                        { transformOrigin: '0 0', transform: 'none' }
+                    ], { duration: 1200, easing: spring });
+                    colors.push(getComputedStyle(el).color);
+                    keep.push(el);
+                    end = Math.max(end, 1200);
+                } else if (BLOOM[n]) {
+                    var b = BLOOM[n];
+                    el.animate([
+                        { opacity: 0, transform: 'translateX(' + b.x + 'px)', filter: 'blur(6px)' },
+                        { opacity: 1, transform: 'none', filter: 'none' }
+                    ], { duration: b.duration, delay: b.delay, easing: spring, fill: 'backwards' });
+                    colors.push(getComputedStyle(el).color);
+                    keep.push(el);
+                    end = Math.max(end, b.delay + b.duration);
+                }
+            }
+            if (!keep.length) {
+                if (viaI) root.classList.remove('cw-via-i');
+                return;
+            }
+
+            // 其余内容：先隐去，待文字落定后浮现（同原生过渡里 root 的延迟淡入）
+            var fadeIn = [{ opacity: 0, filter: 'blur(4px)' }, { opacity: 1, filter: 'none' }];
+            var fadeOpts = { duration: 800, delay: 550, easing: easeOut, fill: 'backwards' };
+            function holds(node) {
+                for (var k = 0; k < keep.length; k++) if (node === keep[k] || node.contains(keep[k])) return true;
+                return false;
+            }
+            (function walk(parent) {
+                var kids = parent.children;
+                for (var k = 0; k < kids.length; k++) {
+                    var c = kids[k];
+                    if (keep.indexOf(c) !== -1) continue;
+                    if (!holds(c)) { c.animate(fadeIn, fadeOpts); continue; }
+                    // 含有被保留文字的容器：它自己的文字（如 CARR / ER WAVE.）用颜色淡入，被保留的文字已单独锁定颜色
+                    var color = getComputedStyle(c).color;
+                    c.animate([{ color: 'transparent' }, { color: color }], fadeOpts);
+                    walk(c);
+                }
+            })(document.body);
+            end = Math.max(end, 550 + 800);
+            // 被保留的文字在整个过程中锁定颜色，不随所在容器的颜色淡入（颜色须在容器动画开始前取）
+            keep.forEach(function (el, k) {
+                el.animate([{ color: colors[k] }, { color: colors[k] }], { duration: end });
+            });
+
+            if (viaI) setTimeout(function () { root.classList.remove('cw-via-i'); }, end + 50);
+        }
+    })();
+</script>
+
+    
+<script>
+    (function () {
+        var on = false;
+        try { on = localStorage.getItem('cw-vt-debug') === '1'; } catch (err) {}
+        if (!on) return;
+
+        var LOG_KEY = 'cw-vt-log';
+        var MAX = 60;
+        function read() {
+            try { return JSON.parse(sessionStorage.getItem(LOG_KEY)) || []; } catch (err) { return []; }
+        }
+        function write(list) {
+            try { sessionStorage.setItem(LOG_KEY, JSON.stringify(list.slice(-MAX))); } catch (err) {}
+        }
+        function push(entry) {
+            var list = read();
+            entry.i = list.length ? list[list.length - 1].i + 1 : 1;
+            list.push(entry);
+            write(list);
+            console.info('[cw-vt]', entry);
+            return entry.i;
+        }
+        function patch(i, fields) {
+            var list = read();
+            for (var k = list.length - 1; k >= 0; k--) {
+                if (list[k].i !== i) continue;
+                for (var f in fields) list[k][f] = fields[f];
+                write(list);
+                console.info('[cw-vt] #' + i, fields);
+                return;
+            }
+        }
+        function path(u) {
+            try { return new URL(u, location.href).pathname; } catch (err) { return String(u); }
+        }
+        // 当前带过渡名的元素，及其是否在视口内
+        function names() {
+            var out = [];
+            var all = document.querySelectorAll('*');
+            for (var k = 0; k < all.length; k++) {
+                var n = getComputedStyle(all[k]).viewTransitionName;
+                if (!n || n === 'none') continue;
+                var r = all[k].getBoundingClientRect();
+                out.push(n + (r.bottom > 0 && r.top < innerHeight && r.width && r.height ? '' : '(视口外)'));
+            }
+            return out.join(' ');
+        }
+        function vp() {
+            var d = document.documentElement;
+            var v = window.visualViewport;
+            return innerWidth + 'x' + innerHeight + ' client ' + d.clientWidth + 'x' + d.clientHeight +
+                (v ? ' vv ' + Math.round(v.width) + 'x' + Math.round(v.height) + ' z' + v.scale : '') +
+                ' dpr ' + devicePixelRatio + ' sh ' + d.scrollHeight;
+        }
+        function track(i, vt) {
+            if (!vt) return;
+            var t0 = performance.now();
+            vt.ready.then(function () {
+                patch(i, { ready: 'ok' });
+            }, function (err) {
+                patch(i, { ready: (err && err.name) + ': ' + (err && err.message) });
+            });
+            vt.finished.then(function () {
+                patch(i, { finished: Math.round(performance.now() - t0) + 'ms' });
+            });
+        }
+
+        window.addEventListener('pageswap', function (e) {
+            var to = e.activation && e.activation.entry && e.activation.entry.url;
+            var i = push({
+                ev: 'pageswap',
+                page: location.pathname,
+                to: to ? path(to) : null,
+                type: e.activation && e.activation.navigationType,
+                vt: !!e.viewTransition,
+                vp: vp(),
+                cls: document.documentElement.className,
+                names: e.viewTransition ? names() : ''
+            });
+            track(i, e.viewTransition);
+        });
+        window.addEventListener('pagereveal', function (e) {
+            var act = window.navigation && navigation.activation;
+            var hop = null;
+            try { hop = sessionStorage.getItem('cw-vt-hop'); } catch (err) {}
+            var i = push({
+                ev: 'pagereveal',
+                page: location.pathname,
+                from: act && act.from ? path(act.from.url) : null,
+                type: act && act.navigationType,
+                vt: !!e.viewTransition,
+                hop: hop,
+                sinceNav: Math.round(performance.now()) + 'ms',
+                vp: vp(),
+                cls: document.documentElement.className,
+                names: e.viewTransition ? names() : ''
+            });
+            track(i, e.viewTransition);
+        });
+
+        window.cwVtLog = function () {
+            var list = read();
+            console.table(list);
+            return JSON.stringify(list, null, 1);
+        };
+        window.cwVtClear = function () { write([]); };
+    })();
+</script>
+
+    
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mus2f1gc">
+    <script src="/static/carrier-wave/cw.js?v=mus2f1gc" defer></script>
 <meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
 <link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
 </head>
@@ -149,7 +432,7 @@
         <header class="cw-read-head">
             <p class="cw-read-no cw-rise" style="--d:0">17</p>
             <h1 class="cw-read-title">
-                <span class="cw-name-text" style="view-transition-name:cw-t-limbo"><span class="cw-glyph-l">l</span><span class="cw-glyph-i">i</span><span class="cw-glyph-r">mbo.</span></span>
+                <span class="cw-name-text" style="view-transition-name:cw-t-limbo"><span class="cw-glyph-l">l</span><a class="cw-glyph-i" href="/carrier_wave/i/" aria-label="i.">i</a><span class="cw-glyph-r">mbo.</span></span>
             </h1>
             <p class="cw-read-meta cw-rise" style="--d:2">525 字</p>
         </header>

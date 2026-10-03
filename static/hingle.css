@@ -3182,19 +3182,46 @@ article sup a[data-footnote-ref] {
    TO DO 侧边栏（首页左侧抽屉：Bangumi 在看 + 网易云周榜）
    ========================================= */
 
-/* 抽屉宽度与开合动画参数：标签与抽屉共用，保证同步移动 */
+/* 抽屉宽度与开合动画参数 */
 :root {
     --todo-width: min(300px, 85vw);
     --todo-ease: cubic-bezier(0.22, 1, 0.36, 1);   /* 快出慢停，收尾柔和 */
     --todo-duration: .55s;
 }
 
-/* 左侧边缘的竖排展开标签：只动 transform / opacity，交给 GPU 合成 */
-.todo-toggle {
+/* 外层容器：抽屉 + 标签，开合时只位移它这一个元素，标签始终粘在抽屉右缘。
+   transform 只由 .active 切换驱动；探出、悬停等小动作走独立的 translate 属性，
+   避免动画/悬停打断开合过渡（造成错位或瞬移） */
+.todo-drawer {
     position: fixed;
-    top: 50%;
+    top: 0;
+    bottom: 0;
     left: 0;
     z-index: 9001;                  /* 低于页眉 (99999) 与设置面板 */
+    width: var(--todo-width);
+    pointer-events: none;           /* 收起时不挡住页面左缘 */
+    transform: translateX(-100%);
+    will-change: transform;
+    transition: transform var(--todo-duration) var(--todo-ease),
+                translate .3s var(--todo-ease);
+    animation: todo-peek 1.4s var(--todo-ease) 1s 2;
+}
+.todo-drawer.active { transform: translateX(0); animation: none; translate: 0; }
+@media (hover: hover) {
+    .todo-drawer:not(.active):has(.todo-toggle:hover) { translate: 4px 0; }
+}
+/* 载入后向右探出两次，提示可展开 */
+@keyframes todo-peek {
+    0%, 100% { translate: 0; }
+    35%      { translate: 10px 0; }
+    60%      { translate: -2px 0; }
+}
+
+/* 竖排展开标签：贴在容器右缘，自身不做位移动画；默认在上三分之一处，可上下拖动（top 由脚本写入） */
+.todo-toggle {
+    position: absolute;
+    top: 33.333%;
+    left: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -3206,28 +3233,31 @@ article sup a[data-footnote-ref] {
     letter-spacing: .2em;
     color: #fff;
     cursor: pointer;
+    pointer-events: auto;
     background-color: var(--blue);
     border: none;
     border-radius: 0 10px 10px 0;
     box-shadow: 2px 4px 16px rgba(0, 0, 0, 0.18);
-    translate: 0 -50%;              /* 垂直居中单独用 translate，不与 transform 动画冲突 */
-    transform: translateX(0);
-    will-change: transform;
+    translate: 0 -50%;
+    transform-origin: left center;  /* 按下缩放时左缘不离开抽屉 */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;    /* 长按不弹菜单 / 不选中文字 */
     -webkit-tap-highlight-color: transparent;
-    transition: transform var(--todo-duration) var(--todo-ease),
-                scale .2s var(--todo-ease),
-                background-color .3s;
-    animation: todo-peek 1.4s var(--todo-ease) 1s 2;
+    touch-action: none;             /* 触屏上同样可拖动，不触发页面滚动 */
+    transition: scale .2s var(--todo-ease), background-color .3s;
 }
+.todo-toggle.dragging { cursor: grabbing; scale: 1; }
 .todo-toggle span { writing-mode: vertical-rl; }
 .todo-toggle i {
     font-size: 1.1em;
     transition: transform var(--todo-duration) var(--todo-ease);
 }
-.todo-toggle:not(.active):hover { transform: translateX(4px); background-color: var(--light-blue); }
+@media (hover: hover) {
+    .todo-drawer:not(.active) .todo-toggle:hover { background-color: var(--light-blue); }
+}
 .todo-toggle:active { scale: .94; }
-.todo-toggle.active { transform: translateX(var(--todo-width)); animation: none; }
-.todo-toggle.active i { transform: rotate(-90deg); }
+.todo-drawer.active .todo-toggle i { transform: rotate(-90deg); }
 
 /* 呼吸光晕：固定 box-shadow 的伪元素，只做 opacity / scale 动画 */
 .todo-toggle::after {
@@ -3240,43 +3270,31 @@ article sup a[data-footnote-ref] {
     pointer-events: none;
     animation: todo-glow 2.8s ease-in-out infinite;
 }
-.todo-toggle.active::after { animation: none; }
+.todo-drawer.active .todo-toggle::after { animation: none; }
 @keyframes todo-glow {
     0%   { opacity: 0;  scale: .96; }
     40%  { opacity: 1;  scale: 1; }
     100% { opacity: 0;  scale: 1.06; }
 }
-/* 载入后向右探出两次，提示可展开 */
-@keyframes todo-peek {
-    0%, 100% { transform: translateX(0); }
-    35%      { transform: translateX(10px); }
-    60%      { transform: translateX(-2px); }
-}
 
-/* 抽屉本体：默认移出视口左侧 */
+/* 抽屉本体：填满容器，收起时在过渡结束后隐藏 */
 .todo-sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 9000;
-    width: var(--todo-width);
+    position: absolute;
+    inset: 0;
     padding: 4.6em 1.1em 1.5em;     /* 顶部留出导航栏高度 */
     overflow-y: auto;
     overscroll-behavior: contain;
     box-sizing: border-box;
+    pointer-events: auto;
     background: rgba(255, 255, 255, 0.97);  /* 近乎不透明，省去移动中开销很大的 backdrop-filter */
     border-right: 1px solid rgba(0, 0, 0, 0.06);
     box-shadow: 0 0 45px rgba(0, 0, 0, 0.18);
-    transform: translateX(-100%);
     visibility: hidden;
-    will-change: transform;
-    transition: transform var(--todo-duration) var(--todo-ease), visibility 0s var(--todo-duration);
+    transition: visibility 0s var(--todo-duration);
 }
-.todo-sidebar.active {
-    transform: translateX(0);
+.todo-drawer.active .todo-sidebar {
     visibility: visible;
-    transition: transform var(--todo-duration) var(--todo-ease), visibility 0s;
+    transition: visibility 0s;
 }
 
 /* 内容依次淡入滑出，增加层次感 */
@@ -3286,15 +3304,15 @@ article sup a[data-footnote-ref] {
     transform: translateX(-16px);
     transition: opacity .25s ease, transform .25s ease;
 }
-.todo-sidebar.active .todo-head,
-.todo-sidebar.active .todo-block {
+.todo-drawer.active .todo-head,
+.todo-drawer.active .todo-block {
     opacity: 1;
     transform: translateX(0);
     transition: opacity .45s ease, transform .55s var(--todo-ease);
 }
-.todo-sidebar.active .todo-head { transition-delay: .08s; }
-.todo-sidebar.active .todo-block:nth-of-type(1) { transition-delay: .14s; }
-.todo-sidebar.active .todo-block:nth-of-type(2) { transition-delay: .22s; }
+.todo-drawer.active .todo-head { transition-delay: .08s; }
+.todo-drawer.active .todo-block:nth-of-type(1) { transition-delay: .14s; }
+.todo-drawer.active .todo-block:nth-of-type(2) { transition-delay: .22s; }
 
 .todo-head {
     display: flex;
@@ -3347,6 +3365,25 @@ article sup a[data-footnote-ref] {
     background: var(--light-border);
 }
 .todo-bgm img { height: 54px; }
+/* Bangumi 分组小标题：文字 + 细分界线 */
+.todo-sub {
+    display: flex;
+    align-items: center;
+    gap: .6em;
+    margin: 0 0 .3em;
+    padding-left: .4em;
+    font-size: .72em;
+    letter-spacing: .15em;
+    color: var(--blue);
+}
+.todo-sub::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: currentColor;
+    opacity: .3;
+}
+.todo-list + .todo-sub { margin-top: .9em; }
 .todo-text { display: flex; flex-direction: column; min-width: 0; }
 .todo-title {
     overflow: hidden;
@@ -3362,16 +3399,6 @@ article sup a[data-footnote-ref] {
     text-overflow: ellipsis;
     opacity: .7;
 }
-.todo-badge {
-    display: inline-block;
-    margin-right: .5em;
-    padding: 0 .45em;
-    font-size: .9em;
-    line-height: 1.5;
-    color: var(--blue);
-    border: 1px solid var(--blue);
-    border-radius: 3px;
-}
 .todo-rank {
     flex: none;
     width: 1.4em;
@@ -3380,16 +3407,14 @@ article sup a[data-footnote-ref] {
     opacity: .6;
 }
 .todo-music li:nth-child(-n+3) .todo-rank { color: var(--blue); opacity: 1; font-weight: 700; }
-.todo-empty { padding: .4em; font-size: .85em; opacity: .6; }
+.todo-empty { margin: 0; padding: .4em; font-size: .85em; opacity: .6; }
 .todo-note { margin: .6em 0 0; font-size: .72em; text-align: right; opacity: .5; }
 
 /* 设置面板「关闭首页 TODO 显示」 */
-body.hide-todo .todo-toggle,
-body.hide-todo .todo-sidebar { display: none; }
+body.hide-todo .todo-drawer { display: none; }
 
 /* 夜间模式 */
 .dark-theme .todo-toggle { color: #eee; }
-.dark-theme .todo-badge { opacity: 1; }
 .dark-theme .todo-sidebar {
     color: #ddd;
     background: rgba(24, 24, 24, 0.96);
@@ -3404,7 +3429,7 @@ body.hide-todo .todo-sidebar { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .todo-toggle, .todo-toggle::after, .todo-toggle i,
-    .todo-sidebar, .todo-sidebar.active,
+    .todo-drawer, .todo-toggle, .todo-toggle::after, .todo-toggle i,
+    .todo-sidebar, .todo-drawer.active .todo-sidebar,
     .todo-sidebar .todo-head, .todo-sidebar .todo-block { transition: none !important; animation: none !important; }
 }

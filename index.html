@@ -77,8 +77,10 @@
                 try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
             }
             window.addEventListener('pageswap', function (e) {
-                if (!e.viewTransition) return;
                 var to = e.activation && e.activation.entry && e.activation.entry.url;
+                // 给目录页留一份来源记录：它拿不到 navigation.activation.from 时据此判断是否从首页来
+                try { sessionStorage.setItem('cw-vt-hop', JSON.stringify({ from: norm(location.href), to: to ? norm(to) : '', t: Date.now() })); } catch (err) {}
+                if (!e.viewTransition) return;
                 if (!to || norm(to) !== target) e.viewTransition.skipTransition();
             });
             // 从目录页回来：整屏收回成卡片；卡片不在视口内（如恢复了滚动位置）就不做
@@ -131,6 +133,116 @@
             });
         })();
     </script>
+    
+<script>
+    (function () {
+        var on = false;
+        try { on = localStorage.getItem('cw-vt-debug') === '1'; } catch (err) {}
+        if (!on) return;
+
+        var LOG_KEY = 'cw-vt-log';
+        var MAX = 60;
+        function read() {
+            try { return JSON.parse(sessionStorage.getItem(LOG_KEY)) || []; } catch (err) { return []; }
+        }
+        function write(list) {
+            try { sessionStorage.setItem(LOG_KEY, JSON.stringify(list.slice(-MAX))); } catch (err) {}
+        }
+        function push(entry) {
+            var list = read();
+            entry.i = list.length ? list[list.length - 1].i + 1 : 1;
+            list.push(entry);
+            write(list);
+            console.info('[cw-vt]', entry);
+            return entry.i;
+        }
+        function patch(i, fields) {
+            var list = read();
+            for (var k = list.length - 1; k >= 0; k--) {
+                if (list[k].i !== i) continue;
+                for (var f in fields) list[k][f] = fields[f];
+                write(list);
+                console.info('[cw-vt] #' + i, fields);
+                return;
+            }
+        }
+        function path(u) {
+            try { return new URL(u, location.href).pathname; } catch (err) { return String(u); }
+        }
+        // 当前带过渡名的元素，及其是否在视口内
+        function names() {
+            var out = [];
+            var all = document.querySelectorAll('*');
+            for (var k = 0; k < all.length; k++) {
+                var n = getComputedStyle(all[k]).viewTransitionName;
+                if (!n || n === 'none') continue;
+                var r = all[k].getBoundingClientRect();
+                out.push(n + (r.bottom > 0 && r.top < innerHeight && r.width && r.height ? '' : '(视口外)'));
+            }
+            return out.join(' ');
+        }
+        function vp() {
+            var d = document.documentElement;
+            var v = window.visualViewport;
+            return innerWidth + 'x' + innerHeight + ' client ' + d.clientWidth + 'x' + d.clientHeight +
+                (v ? ' vv ' + Math.round(v.width) + 'x' + Math.round(v.height) + ' z' + v.scale : '') +
+                ' dpr ' + devicePixelRatio + ' sh ' + d.scrollHeight;
+        }
+        function track(i, vt) {
+            if (!vt) return;
+            var t0 = performance.now();
+            vt.ready.then(function () {
+                patch(i, { ready: 'ok' });
+            }, function (err) {
+                patch(i, { ready: (err && err.name) + ': ' + (err && err.message) });
+            });
+            vt.finished.then(function () {
+                patch(i, { finished: Math.round(performance.now() - t0) + 'ms' });
+            });
+        }
+
+        window.addEventListener('pageswap', function (e) {
+            var to = e.activation && e.activation.entry && e.activation.entry.url;
+            var i = push({
+                ev: 'pageswap',
+                page: location.pathname,
+                to: to ? path(to) : null,
+                type: e.activation && e.activation.navigationType,
+                vt: !!e.viewTransition,
+                vp: vp(),
+                cls: document.documentElement.className,
+                names: e.viewTransition ? names() : ''
+            });
+            track(i, e.viewTransition);
+        });
+        window.addEventListener('pagereveal', function (e) {
+            var act = window.navigation && navigation.activation;
+            var hop = null;
+            try { hop = sessionStorage.getItem('cw-vt-hop'); } catch (err) {}
+            var i = push({
+                ev: 'pagereveal',
+                page: location.pathname,
+                from: act && act.from ? path(act.from.url) : null,
+                type: act && act.navigationType,
+                vt: !!e.viewTransition,
+                hop: hop,
+                sinceNav: Math.round(performance.now()) + 'ms',
+                vp: vp(),
+                cls: document.documentElement.className,
+                names: e.viewTransition ? names() : ''
+            });
+            track(i, e.viewTransition);
+        });
+
+        window.cwVtLog = function () {
+            var list = read();
+            console.table(list);
+            return JSON.stringify(list, null, 1);
+        };
+        window.cwVtClear = function () { write([]); };
+    })();
+</script>
+
     
     <noscript>
         <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
@@ -649,10 +761,8 @@
 </main>
 
 
-<button class="todo-toggle" type="button" aria-controls="todo-sidebar" aria-expanded="false" title="TO DO">
-    <i class="fa fa-list-ul" aria-hidden="true"></i>
-    <span>TO DO</span>
-</button>
+
+<div class="todo-drawer">
 <aside class="todo-sidebar" id="todo-sidebar" aria-label="TO DO" data-bgm-user="whatasiger">
     <div class="todo-head">
         <h2>TO DO</h2>
@@ -661,113 +771,123 @@
 
     <section class="todo-block">
         <h3>
-            <a href="https://bgm.tv/user/whatasiger" target="_blank" rel="noopener">Bangumi · 在看 / 在玩</a>
+            <a href="https://bgm.tv/user/whatasiger" target="_blank" rel="noopener">Bangumi</a>
         </h3>
-        <ul class="todo-list todo-bgm">
+        <div class="todo-bgm">
             
                 
-                <li>
-                    <a href="https://bgm.tv/subject/7978" target="_blank" rel="noopener">
-                        <img src="https://lain.bgm.tv/r/200/pic/cover/l/3e/51/7978_hc6iN.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">最果てのイマ</span>
-                            <span class="todo-meta"><span class="todo-badge">在玩</span></span>
-                        </span>
-                    </a>
-                </li>
+                <p class="todo-sub">在看</p>
+                <ul class="todo-list">
+                    
+                    <li>
+                        <a href="https://bgm.tv/subject/495291" target="_blank" rel="noopener">
+                            <img src="https://lain.bgm.tv/r/200/pic/cover/l/18/af/495291_9WuBW.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">再见菈菈</span>
+                                <span class="todo-meta">0 / 12</span>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="https://bgm.tv/subject/493016" target="_blank" rel="noopener">
+                            <img src="https://lain.bgm.tv/r/200/pic/cover/l/fe/bf/493016_Qqmf5.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">异国日记</span>
+                                <span class="todo-meta">3 / 13</span>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="https://bgm.tv/subject/10440" target="_blank" rel="noopener">
+                            <img src="https://lain.bgm.tv/r/200/pic/cover/l/6c/e8/10440_8HP6O.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">我们仍未知道那天所看见的花的名字。</span>
+                                <span class="todo-meta">0 / 11</span>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="https://bgm.tv/subject/606263" target="_blank" rel="noopener">
+                            <img src="https://lain.bgm.tv/r/200/pic/cover/l/8d/c7/606263_cpB1P.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">主播女孩重度依赖</span>
+                                <span class="todo-meta">4 / 13</span>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="https://bgm.tv/subject/493724" target="_blank" rel="noopener">
+                            <img src="https://lain.bgm.tv/r/200/pic/cover/l/bd/33/493724_V6lXx.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">淡岛百景</span>
+                                <span class="todo-meta">0 / 12</span>
+                            </span>
+                        </a>
+                    </li>
+                    
+                </ul>
                 
-                <li>
-                    <a href="https://bgm.tv/subject/495291" target="_blank" rel="noopener">
-                        <img src="https://lain.bgm.tv/r/200/pic/cover/l/18/af/495291_9WuBW.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">再见菈菈</span>
-                            <span class="todo-meta"><span class="todo-badge">在看</span>0 / 12</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
-                    <a href="https://bgm.tv/subject/2723" target="_blank" rel="noopener">
-                        <img src="https://lain.bgm.tv/r/200/pic/cover/l/c3/15/2723_RWt07.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">KIRA☆KIRA 煌煌舞台</span>
-                            <span class="todo-meta"><span class="todo-badge">在玩</span></span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
-                    <a href="https://bgm.tv/subject/493016" target="_blank" rel="noopener">
-                        <img src="https://lain.bgm.tv/r/200/pic/cover/l/fe/bf/493016_Qqmf5.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">异国日记</span>
-                            <span class="todo-meta"><span class="todo-badge">在看</span>3 / 13</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
-                    <a href="https://bgm.tv/subject/465493" target="_blank" rel="noopener">
-                        <img src="https://lain.bgm.tv/r/200/pic/cover/l/cc/5d/465493_e3A48.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">anemoi -アネモイ-</span>
-                            <span class="todo-meta"><span class="todo-badge">在玩</span></span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
-                    <a href="https://bgm.tv/subject/10440" target="_blank" rel="noopener">
-                        <img src="https://lain.bgm.tv/r/200/pic/cover/l/6c/e8/10440_8HP6O.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">我们仍未知道那天所看见的花的名字。</span>
-                            <span class="todo-meta"><span class="todo-badge">在看</span>0 / 11</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
-                    <a href="https://bgm.tv/subject/606263" target="_blank" rel="noopener">
-                        <img src="https://lain.bgm.tv/r/200/pic/cover/l/8d/c7/606263_cpB1P.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">主播女孩重度依赖</span>
-                            <span class="todo-meta"><span class="todo-badge">在看</span>4 / 13</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
-                    <a href="https://bgm.tv/subject/493724" target="_blank" rel="noopener">
-                        <img src="https://lain.bgm.tv/r/200/pic/cover/l/bd/33/493724_V6lXx.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">淡岛百景</span>
-                            <span class="todo-meta"><span class="todo-badge">在看</span>0 / 12</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
-                    <a href="https://bgm.tv/subject/295957" target="_blank" rel="noopener">
-                        <img src="https://lain.bgm.tv/r/200/pic/cover/l/ab/76/295957_PsQ80.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">夏日口袋 REFLECTION BLUE</span>
-                            <span class="todo-meta"><span class="todo-badge">在玩</span></span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
-                    <a href="https://bgm.tv/subject/845" target="_blank" rel="noopener">
-                        <img src="https://lain.bgm.tv/r/200/pic/cover/l/b8/6e/845_u43XO.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">Little Busters! EX</span>
-                            <span class="todo-meta"><span class="todo-badge">在玩</span></span>
-                        </span>
-                    </a>
-                </li>
+                <p class="todo-sub">在玩</p>
+                <ul class="todo-list">
+                    
+                    <li>
+                        <a href="https://bgm.tv/subject/7978" target="_blank" rel="noopener">
+                            <img src="https://lain.bgm.tv/r/200/pic/cover/l/3e/51/7978_hc6iN.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">最果てのイマ</span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="https://bgm.tv/subject/2723" target="_blank" rel="noopener">
+                            <img src="https://lain.bgm.tv/r/200/pic/cover/l/c3/15/2723_RWt07.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">KIRA☆KIRA 煌煌舞台</span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="https://bgm.tv/subject/465493" target="_blank" rel="noopener">
+                            <img src="https://lain.bgm.tv/r/200/pic/cover/l/cc/5d/465493_e3A48.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">anemoi -アネモイ-</span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="https://bgm.tv/subject/295957" target="_blank" rel="noopener">
+                            <img src="https://lain.bgm.tv/r/200/pic/cover/l/ab/76/295957_PsQ80.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">夏日口袋 REFLECTION BLUE</span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="https://bgm.tv/subject/845" target="_blank" rel="noopener">
+                            <img src="https://lain.bgm.tv/r/200/pic/cover/l/b8/6e/845_u43XO.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">Little Busters! EX</span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                </ul>
                 
             
-        </ul>
+        </div>
     </section>
 
     <section class="todo-block">
@@ -844,30 +964,8 @@
                 </li>
                 
                 <li>
-                    <a href="https://music.163.com/#/song?id=2744488734" target="_blank" rel="noopener">
-                        <span class="todo-rank">7</span>
-                        <img src="https://p1.music.126.net/LcsEn0Yz6g_7Go401fzPIA==/109951171991978996.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">天体</span>
-                            <span class="todo-meta">RAY</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
-                    <a href="https://music.163.com/#/song?id=2748704319" target="_blank" rel="noopener">
-                        <span class="todo-rank">8</span>
-                        <img src="https://p1.music.126.net/hTnLSH8R5Wj0_seLnUw_0A==/109951172051293982.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">Feel</span>
-                            <span class="todo-meta">羊文学</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
                     <a href="https://music.163.com/#/song?id=2074462292" target="_blank" rel="noopener">
-                        <span class="todo-rank">9</span>
+                        <span class="todo-rank">7</span>
                         <img src="https://p1.music.126.net/ugsVSiUU08mb-2lHAxw1rw==/109951168829113419.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">青を掬う</span>
@@ -877,11 +975,33 @@
                 </li>
                 
                 <li>
-                    <a href="https://music.163.com/#/song?id=1942841969" target="_blank" rel="noopener">
-                        <span class="todo-rank">10</span>
-                        <img src="https://p1.music.126.net/8Aye9i1Pa9-9gNPs_lOiDQ==/109951167356356670.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                    <a href="https://music.163.com/#/song?id=3312282300" target="_blank" rel="noopener">
+                        <span class="todo-rank">8</span>
+                        <img src="https://p1.music.126.net/al8rcJlRxhiIkzgLmvzldQ==/109951172202387109.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">透明人間</span>
+                            <span class="todo-title">小小的眼泪</span>
+                            <span class="todo-meta">DOUDOU</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://music.163.com/#/song?id=2748704319" target="_blank" rel="noopener">
+                        <span class="todo-rank">9</span>
+                        <img src="https://p1.music.126.net/hTnLSH8R5Wj0_seLnUw_0A==/109951172051293982.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">Feel</span>
+                            <span class="todo-meta">羊文学</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://music.163.com/#/song?id=2744488734" target="_blank" rel="noopener">
+                        <span class="todo-rank">10</span>
+                        <img src="https://p1.music.126.net/LcsEn0Yz6g_7Go401fzPIA==/109951171991978996.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">天体</span>
                             <span class="todo-meta">RAY</span>
                         </span>
                     </a>
@@ -894,6 +1014,11 @@
         
     </section>
 </aside>
+<button class="todo-toggle" type="button" aria-controls="todo-sidebar" aria-expanded="false" title="TO DO">
+    <i class="fa fa-list-ul" aria-hidden="true"></i>
+    <span>TO DO</span>
+</button>
+</div>
 
 <script src="/static/todo-sidebar.js"></script>
 
