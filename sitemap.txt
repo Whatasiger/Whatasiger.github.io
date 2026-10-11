@@ -1,3 +1,4 @@
+https://whatasiger.xyz/about-me/index.html
 https://whatasiger.xyz/friend/index.html
 https://whatasiger.xyz/about-website/index.html
 https://whatasiger.xyz/posts/5/
@@ -11,7 +12,6 @@ https://whatasiger.xyz/posts/1/
 https://whatasiger.xyz/posts/3/
 https://whatasiger.xyz/posts/8/
 https://whatasiger.xyz/posts/7/
-https://whatasiger.xyz/about-me/index.html
 https://whatasiger.xyz/404.html
 https://whatasiger.xyz/comments/index.html
 https://whatasiger.xyz/
