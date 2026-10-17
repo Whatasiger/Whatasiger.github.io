@@ -3286,8 +3286,10 @@ article sup a[data-footnote-ref] {
     overscroll-behavior: contain;
     box-sizing: border-box;
     pointer-events: auto;
-    background: rgba(255, 255, 255, 0.97);  /* 近乎不透明，省去移动中开销很大的 backdrop-filter */
-    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.62);  /* 抽屉背景透明度，越低毛玻璃越通透 */
+    backdrop-filter: blur(16px) saturate(160%);   /* 抽屉毛玻璃模糊强度 */
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border-right: 1px solid rgba(255, 255, 255, 0.5);
     box-shadow: 0 0 45px rgba(0, 0, 0, 0.18);
     visibility: hidden;
     transition: visibility 0s var(--todo-duration);
@@ -3410,6 +3412,12 @@ article sup a[data-footnote-ref] {
 .todo-empty { margin: 0; padding: .4em; font-size: .85em; opacity: .6; }
 .todo-note { margin: .6em 0 0; font-size: .72em; text-align: right; opacity: .5; }
 
+/* 不支持毛玻璃的浏览器退回近乎不透明，保证文字可读 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .todo-sidebar { background: rgba(255, 255, 255, 0.97); }
+    .dark-theme .todo-sidebar { background: rgba(24, 24, 24, 0.96); }
+}
+
 /* 设置面板「关闭首页 TODO 显示」 */
 body.hide-todo .todo-drawer { display: none; }
 
@@ -3417,8 +3425,8 @@ body.hide-todo .todo-drawer { display: none; }
 .dark-theme .todo-toggle { color: #eee; }
 .dark-theme .todo-sidebar {
     color: #ddd;
-    background: rgba(24, 24, 24, 0.96);
-    border-color: rgba(255, 255, 255, 0.06);
+    background: rgba(24, 24, 24, 0.55);    /* 夜间抽屉背景透明度 */
+    border-color: rgba(255, 255, 255, 0.08);
     box-shadow: 0 0 45px rgba(0, 0, 0, 0.65);
 }
 
