@@ -211,7 +211,19 @@ input, textarea, pre, hr, blockquote {
     overflow: hidden;
     /* 模块整体（含 body）使用半透明深色叠在页面上，通透但比周围更深 */
     background: rgba(0, 0, 0, .08);
-    transition: background .3s, border-color .3s;
+    /* 用 grid 行高 0fr ↔ 1fr 做折叠动画：按内容真实高度过渡，不再受 max-height 上限拖累 */
+    display: grid;
+    grid-template-rows: min-content 1fr;
+    align-content: start;        /* 过渡中多余空间不分给顶栏，避免顶栏被拉高“弹一下” */
+    transition: background .3s, border-color .3s,
+                grid-template-rows .45s var(--ease-spring);
+}
+
+/* 折叠：先让内容淡出，高度随后收起，收起时用平滑曲线避免末尾突然停住 */
+.quote-box.is-collapsed {
+    grid-template-rows: min-content 0fr;
+    transition: background .3s, border-color .3s,
+                grid-template-rows .32s var(--ease-smooth);
 }
 
 .quote-box .quote-header {
@@ -254,7 +266,7 @@ input, textarea, pre, hr, blockquote {
 }
 
 .quote-box .quote-toggle .fa {
-    transition: transform .3s var(--ease-smooth);
+    transition: transform .45s var(--ease-spring);
 }
 
 .quote-box.is-collapsed .quote-toggle .fa {
@@ -262,6 +274,7 @@ input, textarea, pre, hr, blockquote {
 }
 
 .quote-box .quote-body {
+    min-height: 0;               /* 允许 grid 行收缩到 0 */
     padding: .85em 1.1em;
     /* 16 行高度上限：line-height 1.8 × 16 行，再加上下内边距 */
     max-height: calc(1.8em * 16 + 1.7em);
@@ -269,17 +282,35 @@ input, textarea, pre, hr, blockquote {
     font-size: .92em;            /* 引用部分整体小一号 */
     line-height: 1.8;
     color: inherit;              /* 与正文同亮度（浅色 #555 / 夜间 #bbb） */
-    transition: max-height .35s var(--ease-smooth),
-                padding .35s var(--ease-smooth),
-                opacity .25s ease;
+    transition: padding .45s var(--ease-spring);  /* 与 grid 行高同步 */
+}
+
+/* 内容淡入 + 轻微下落：展开时稍作延迟，等高度先拉开再显现 */
+.quote-box .quote-body > * {
+    transition: opacity .35s ease .08s,
+                transform .45s var(--ease-spring) .04s;
 }
 
 .quote-box.is-collapsed .quote-body {
-    max-height: 0;
     padding-top: 0;
     padding-bottom: 0;
-    opacity: 0;
     overflow: hidden;
+    transition: padding .32s var(--ease-smooth);
+}
+
+/* 折叠时内容快速淡出并略微上移，不等高度动画 */
+.quote-box.is-collapsed .quote-body > * {
+    opacity: 0;
+    transform: translateY(-.4em);
+    transition: opacity .15s ease,
+                transform .25s var(--ease-smooth);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .quote-box, .quote-box.is-collapsed,
+    .quote-box .quote-body, .quote-box.is-collapsed .quote-body,
+    .quote-box .quote-body > *, .quote-box.is-collapsed .quote-body > *,
+    .quote-box .quote-toggle .fa { transition: none; }
 }
 
 .quote-box .quote-body > :first-child { margin-top: 0; }
@@ -3440,4 +3471,149 @@ body.hide-todo .todo-drawer { display: none; }
     .todo-drawer, .todo-toggle, .todo-toggle::after, .todo-toggle i,
     .todo-sidebar, .todo-drawer.active .todo-sidebar,
     .todo-sidebar .todo-head, .todo-sidebar .todo-block { transition: none !important; animation: none !important; }
+}
+
+/* =========================================
+   8 - 白天模式配色（暮光）
+   取色自首页背景图：上方澄蓝天空 → 中段暖白云层 → 下方落日橙。
+   全部以 body:not(.dark-theme) 限定，只影响白天模式，夜间模式不受影响。
+   ========================================= */
+
+/* 白天模式全局：暖调文字 + 天空→暮色渐变底色，替代原先中性的 #fafafa（背景图与中性灰白叠加时会发灰） */
+body:not(.dark-theme) {
+    color: #4d4741;                 /* 白天正文颜色，带一点暖调的深灰 */
+    background: #fbf5ee linear-gradient(180deg,
+        #e9eff7 0%,                 /* 顶部：极淡的天空蓝 */
+        #f6f1ec 48%,                /* 中段：暖白云色 */
+        #fdeedf 100%) fixed;        /* 底部：极淡的落日杏色 */
+    --blue: #5481ae;                /* 白天主题蓝，取自背景图上方天空，比原色略深更清透 */
+    --light-blue: #e0894c;          /* 白天悬停色，取自落日橙，与天空蓝形成冷暖呼应 */
+    --border: #e6dbcf;              /* 白天边框颜色，暖灰 */
+    --light-border: #f0e7dc;        /* 白天浅边框颜色 */
+    --light-background: #fffaf4;    /* 白天卡片/输入框/目录背景，暖白 */
+}
+
+/* 白天模式背景图：略微提亮并增加饱和度，让天空与晚霞更通透，不再灰蒙 */
+body:not(.dark-theme):before {
+    filter: blur(var(--bg-blur)) saturate(1.25) brightness(1.07);
+}
+
+/* 白天模式阅读页（背景淡化时）：进一步提亮封面色，只留一层淡淡的色调，避免深色封面把页面染灰 */
+body.bg-faded:not(.dark-theme):before {
+    opacity: calc(var(--bg-opacity) * 0.14) !important; /* 白天阅读页背景图透明度，比夜间更淡 */
+    filter: blur(var(--bg-blur)) saturate(1.5) brightness(1.5);
+}
+
+/* 白天模式 body 滚动条轨道 */
+body:not(.dark-theme)::-webkit-scrollbar {
+    background: rgba(255, 250, 244, .6);
+}
+
+/* 白天模式导航栏：暖白毛玻璃 */
+body:not(.dark-theme) header {
+    background-color: rgba(255, 250, 244, 0.72);
+    border-color: rgba(120, 90, 60, 0.10);
+    box-shadow: 0 1px 12px rgba(120, 80, 40, 0.06);
+}
+
+/* 白天模式搜索框 */
+body:not(.dark-theme) .head-search input {
+    background-color: rgba(255, 255, 255, 0.6);
+    color: #4d4741;
+}
+body:not(.dark-theme) .head-search input:focus { background-color: #fffaf4; }
+
+/* 白天模式引用块：淡天空蓝底 */
+body:not(.dark-theme) blockquote {
+    background-color: rgba(84, 129, 174, 0.08);
+}
+
+/* --- 首页：头像与 ID 区域 ---
+   背景图保持清晰，用一圈柔和的暖白光晕托住头像、ID 与签名，让它们从画面中浮出来 */
+body:not(.dark-theme) .home-title {
+    position: relative;
+    isolation: isolate;
+}
+body:not(.dark-theme) .home-title:before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: -2.5em;
+    bottom: -1.5em;
+    left: 50%;
+    width: min(46em, 100%);         /* 光晕宽度，不超出内容区 */
+    transform: translateX(-50%);
+    pointer-events: none;
+    background: radial-gradient(ellipse 50% 50% at 50% 48%,
+        rgba(255, 251, 246, 0.82) 0%,
+        rgba(255, 247, 238, 0.55) 45%,
+        rgba(255, 247, 238, 0) 100%); /* 光晕由中心向外渐隐 */
+}
+
+/* 白天模式头像：白色描边 + 落日橙柔光投影（覆盖模板内联的灰色投影） */
+body:not(.dark-theme) .home-avatar {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.92),
+                0 8px 28px rgba(214, 112, 62, 0.35) !important;
+}
+
+/* 白天模式 ID：取自背景图上方的深暮蓝，配白色外发光，与天空区分开 */
+body:not(.dark-theme) .home-title h1 {
+    color: #2d5383;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7),
+                 0 0 18px rgba(255, 255, 255, 0.95);
+}
+/* 悬停头像时 ID 变为落日橙 */
+body:not(.dark-theme) .home-profile-link:hover h1 {
+    color: #d16b34;
+}
+
+/* 白天模式签名（打字机文字） */
+body:not(.dark-theme) #typewriter-text {
+    color: #3f3832;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.95);
+}
+
+/* 白天模式社交胶囊：暖白毛玻璃 */
+body:not(.dark-theme) .home-social {
+    background-color: rgba(255, 250, 244, 0.75);
+    box-shadow: 0 8px 22px rgba(120, 70, 30, 0.10);
+}
+
+/* 白天模式卡片投影：带一点暖色，与晚霞底色融合 */
+body:not(.dark-theme) .post-item.card-style {
+    box-shadow: 0 10px 30px rgba(70, 45, 30, 0.30);
+}
+body:not(.dark-theme) .post-item.card-style:hover {
+    box-shadow: 0 15px 40px rgba(70, 45, 30, 0.42);
+}
+
+/* 白天模式目录：暖白半透明 + 毛玻璃 */
+body:not(.dark-theme) .article-list {
+    background-color: rgba(255, 250, 244, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+body:not(.dark-theme) .article-list.active { background-color: var(--light-background); }
+body:not(.dark-theme) .article-list a:hover { background-color: rgba(84, 129, 174, 0.08); }
+body:not(.dark-theme) .article-list a.active {
+    border-left-color: rgba(84, 129, 174, 0.55);
+    background: linear-gradient(90deg, rgba(84, 129, 174, 0.15), rgba(84, 129, 174, 0.05));
+}
+
+/* 白天模式页脚：暖白毛玻璃 */
+body:not(.dark-theme) footer {
+    background-color: rgba(255, 250, 244, 0.72);
+    border-top-color: rgba(120, 90, 60, 0.08);
+}
+body:not(.dark-theme) footer a:hover {
+    color: var(--light-blue);
+    text-shadow: 0 0 12px rgba(224, 137, 76, 0.45);
+}
+@media screen and (max-width: 799px) {
+    body:not(.dark-theme) .article-list { background-color: var(--light-background); }
+}
+
+/* 白天模式 Quote Box：暖调半透明底，替代中性灰 */
+body:not(.dark-theme) .quote-box {
+    background: rgba(110, 80, 50, .07);
 }
