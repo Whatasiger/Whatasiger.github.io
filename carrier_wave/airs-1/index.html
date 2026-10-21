@@ -9,6 +9,7 @@
     <meta name="author" content="Whatasiger">
     <meta name="theme-color" content="#16181D">
     <link rel="canonical" href="https://whatasiger.xyz/carrier_wave/airs-1/">
+    
     <link rel="icon" href="/static/img/icon.png" sizes="192x192">
 
     <meta property="og:site_name" content="Whatasiger">
@@ -29,6 +30,7 @@
             var album = '/carrier_wave/';
             var hidden = album + 'i/';
             var limbo = album + 'limbo/';
+            var dot = album + 'dot/';
             function norm(u) {
                 try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
             }
@@ -81,6 +83,18 @@
             window.addEventListener('pageswap', function (e) {
                 var to = e.activation && e.activation.entry && e.activation.entry.url;
                 root.classList.toggle('cw-via-i', !!(e.viewTransition && to && viaI(here, norm(to))));
+            });
+
+            // 首屏 ↔ dot：标题末尾的句点同理
+            function viaDot(a, b) {
+                return (a === dot && b === album) || (b === dot && a === album);
+            }
+            window.addEventListener('pagereveal', function (e) {
+                root.classList.toggle('cw-via-dot', !!(e.viewTransition && cameFrom(function (p) { return viaDot(p, here); })));
+            });
+            window.addEventListener('pageswap', function (e) {
+                var to = e.activation && e.activation.entry && e.activation.entry.url;
+                root.classList.toggle('cw-via-dot', !!(e.viewTransition && to && viaDot(here, norm(to))));
             });
 
             // 目录页 → 博客首页：反向一镜到底，整屏收回成首页卡片；首屏已滚出视口时不做
@@ -167,8 +181,8 @@
 
         var root = document.documentElement;
         var KEY = 'cw-vt-fb';
-        var NAME = /^cw-(i|i-l|i-r|i-dot|t-.+)$/;
-        var SELECTOR = '.cw-i, .cw-glyph-i, .cw-glyph-l, .cw-glyph-r, .cw-glyph-dot, .cw-name-text';
+        var NAME = /^cw-(i|i-l|i-r|i-dot|period|t-.+)$/;
+        var SELECTOR = '.cw-i, .cw-glyph-i, .cw-glyph-l, .cw-glyph-r, .cw-glyph-dot, .cw-period, .cw-glyph-period, .cw-name-text';
         // 只在新页出现的字形：从 i 身后向两侧浮现（与 cw.css 中 cw-vt-bloom-* 一致）
         var BLOOM = {
             'cw-i-l': { x: 28, delay: 700, duration: 1000 },
@@ -236,6 +250,8 @@
             // i 一镜到底：挂上类名才有对应过渡名，首屏标题也会直接处于终态
             var viaI = 'cw-i' in rec.rects;
             if (viaI) root.classList.add('cw-via-i');
+            var viaDot = 'cw-period' in rec.rects;
+            if (viaDot) root.classList.add('cw-via-dot');
 
             var map = named();
             var keep = [];
@@ -269,6 +285,7 @@
             }
             if (!keep.length) {
                 if (viaI) root.classList.remove('cw-via-i');
+                if (viaDot) root.classList.remove('cw-via-dot');
                 return;
             }
 
@@ -298,6 +315,7 @@
             });
 
             if (viaI) setTimeout(function () { root.classList.remove('cw-via-i'); }, end + 50);
+            if (viaDot) setTimeout(function () { root.classList.remove('cw-via-dot'); }, end + 50);
         }
     })();
 </script>
@@ -413,8 +431,8 @@
 </script>
 
     
-    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mvi74r2k">
-    <script src="/static/carrier-wave/cw.js?v=mvi74r2k" defer></script>
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mvi9bfpa">
+    <script src="/static/carrier-wave/cw.js?v=mvi9bfpa" defer></script>
 <meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
 <link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
 </head>

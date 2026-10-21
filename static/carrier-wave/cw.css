@@ -808,13 +808,14 @@ html.cw-from-home::view-transition-new(root) {
 }
 
 
-/* 标题里的 i：通往隐藏篇目 i.，再从 i. 通往 limbo */
-.cw-i, .cw-glyph-i { display: inline-block; color: inherit; transition: color .6s var(--ease-out), transform .8s var(--spring-bouncy), text-shadow .6s var(--ease-out); }
+/* 标题里的 i：通往隐藏篇目 i.，再从 i. 通往 limbo；末尾的句点通往 dot. */
+.cw-i, .cw-glyph-i, .cw-period, .cw-glyph-period { display: inline-block; color: inherit; transition: color .6s var(--ease-out), transform .8s var(--spring-bouncy), text-shadow .6s var(--ease-out); }
 .cw-i:hover, .cw-i:focus-visible,
-a.cw-glyph-i:hover, a.cw-glyph-i:focus-visible { color: #B9A4C9; transform: translateY(-3px); text-shadow: 0 0 18px rgba(185,164,201,.45); }
+a.cw-glyph-i:hover, a.cw-glyph-i:focus-visible,
+.cw-period:hover, .cw-period:focus-visible { color: #B9A4C9; transform: translateY(-3px); text-shadow: 0 0 18px rgba(185,164,201,.45); }
 .cw-glyph-l, .cw-glyph-r, .cw-glyph-dot { display: inline-block; }
 
-/* ---------- 一镜到底：首屏 ↔ i. ↔ limbo. ---------- */
+/* ---------- 一镜到底：首屏 ↔ i. ↔ limbo.，首屏 ↔ dot. ---------- */
 
 .cw-via-i .cw-i,
 .cw-via-i .cw-glyph-i { view-transition-name: cw-i; }
@@ -822,15 +823,22 @@ a.cw-glyph-i:hover, a.cw-glyph-i:focus-visible { color: #B9A4C9; transform: tran
 .cw-via-i .cw-glyph-dot { view-transition-name: cw-i-dot; }
 .cw-via-i .cw-glyph-l { view-transition-name: cw-i-l; }
 .cw-via-i .cw-glyph-r { view-transition-name: cw-i-r; }
+.cw-via-dot .cw-period,
+.cw-via-dot .cw-glyph-period { view-transition-name: cw-period; }
 
 /* 回到首屏时标题直接处于终态，i 的落点不会随字距收拢而漂移 */
-.cw-via-i.cw-js .cw-hero .cw-title.cw-rise { opacity: 1; transform: none; filter: none; transition: none; }
-.cw-via-i.cw-js .cw-index .cw-title { letter-spacing: .01em; }
+.cw-via-i.cw-js .cw-hero .cw-title.cw-rise,
+.cw-via-dot.cw-js .cw-hero .cw-title.cw-rise { opacity: 1; transform: none; filter: none; transition: none; }
+.cw-via-i.cw-js .cw-index .cw-title,
+.cw-via-dot.cw-js .cw-index .cw-title { letter-spacing: .01em; }
 
 /* 先让场景退去，i 独自穿行，抵达后其余内容才浮现 */
-html.cw-via-i::view-transition-old(root) { animation: cw-vt-out .45s var(--ease-out) both; }
-html.cw-via-i::view-transition-new(root) { animation: cw-vt-in .8s var(--ease-out) .55s both; }
-html.cw-via-i::view-transition-group(cw-i) {
+html.cw-via-i::view-transition-old(root),
+html.cw-via-dot::view-transition-old(root) { animation: cw-vt-out .45s var(--ease-out) both; }
+html.cw-via-i::view-transition-new(root),
+html.cw-via-dot::view-transition-new(root) { animation: cw-vt-in .8s var(--ease-out) .55s both; }
+html.cw-via-i::view-transition-group(cw-i),
+html.cw-via-dot::view-transition-group(cw-period) {
     animation-duration: 1.2s;
     animation-timing-function: var(--spring);
 }

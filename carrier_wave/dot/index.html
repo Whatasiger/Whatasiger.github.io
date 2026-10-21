@@ -1,0 +1,482 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>. - CARRiER WAVE. - Whatasiger</title>
+    <meta name="description" content="CARRiER WAVE. 载波 · ？？ / 18">
+    <meta name="author" content="Whatasiger">
+    <meta name="theme-color" content="#16181D">
+    <link rel="canonical" href="https://whatasiger.xyz/carrier_wave/dot/">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="/static/img/icon.png" sizes="192x192">
+
+    <meta property="og:site_name" content="Whatasiger">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://whatasiger.xyz/carrier_wave/dot/">
+    <meta property="og:title" content=". - CARRiER WAVE. - Whatasiger">
+    <meta property="og:description" content="CARRiER WAVE. 载波 · ？？ / 18">
+
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Noto+Serif+SC:wght@300;400;500&display=swap">
+
+    <script>
+        (function () {
+            var root = document.documentElement;
+            root.classList.add('cw-js');
+            var home = '/';
+            var album = '/carrier_wave/';
+            var hidden = album + 'i/';
+            var limbo = album + 'limbo/';
+            var dot = album + 'dot/';
+            function norm(u) {
+                try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+            }
+            var here = norm(location.href);
+
+            // 来源页：优先用 navigation.activation；它偶尔拿不到时，退回到离开页在 pageswap 里写下的记录
+            // 记录须指向本页且在几秒之内，免得旧记录误判；揭幕后即清掉
+            var HOP_KEY = 'cw-vt-hop';
+            function hop() {
+                try {
+                    var h = JSON.parse(sessionStorage.getItem(HOP_KEY));
+                    return h && h.to === here && Date.now() - h.t < 6000 ? h.from : '';
+                } catch (err) { return ''; }
+            }
+            function cameFrom(test) {
+                var act = window.navigation && navigation.activation;
+                var from = act && act.from && act.from.url;
+                return (!!from && test(norm(from))) || test(hop());
+            }
+            window.addEventListener('pageswap', function (e) {
+                var to = e.activation && e.activation.entry && e.activation.entry.url;
+                try { sessionStorage.setItem(HOP_KEY, JSON.stringify({ from: here, to: to ? norm(to) : '', t: Date.now() })); } catch (err) {}
+            });
+
+            // 从博客首页卡片进入目录页：首屏元素不做入场，由跨页面过渡从卡片形变而来
+            // 全新加载时在首帧前就挂上（冻结首屏入场）；往返缓存恢复时 head 脚本不会重跑，靠 pagereveal 再判断一次
+            function isHome(p) { return p === home; }
+            if ('onpagereveal' in window && here === album && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                var firstLoad = true;
+                if (cameFrom(isHome)) root.classList.add('cw-from-home');
+                window.addEventListener('pagereveal', function (e) {
+                    var fresh = firstLoad;
+                    firstLoad = false;
+                    var hero = document.querySelector('.cw-hero');
+                    // 恢复时首屏可能已滚出视口，形变会落到看不见的地方，这时只做整页淡入淡出
+                    var heroIn = fresh || (hero && hero.getBoundingClientRect().bottom > 0);
+                    var on = !!(e.viewTransition && heroIn && cameFrom(isHome));
+                    root.classList.toggle('cw-from-home', on);
+                    if (on) e.viewTransition.finished.finally(function () { root.classList.remove('cw-from-home'); });
+                });
+            }
+
+            // 首屏 ↔ i ↔ limbo：标题里的 i 一镜到底，只在这几页之间互相跳转时才给它过渡名
+            function viaI(a, b) {
+                return (a === hidden && (b === album || b === limbo)) || (b === hidden && (a === album || a === limbo));
+            }
+            window.addEventListener('pagereveal', function (e) {
+                root.classList.toggle('cw-via-i', !!(e.viewTransition && cameFrom(function (p) { return viaI(p, here); })));
+            });
+            window.addEventListener('pageswap', function (e) {
+                var to = e.activation && e.activation.entry && e.activation.entry.url;
+                root.classList.toggle('cw-via-i', !!(e.viewTransition && to && viaI(here, norm(to))));
+            });
+
+            // 首屏 ↔ dot：标题末尾的句点同理
+            function viaDot(a, b) {
+                return (a === dot && b === album) || (b === dot && a === album);
+            }
+            window.addEventListener('pagereveal', function (e) {
+                root.classList.toggle('cw-via-dot', !!(e.viewTransition && cameFrom(function (p) { return viaDot(p, here); })));
+            });
+            window.addEventListener('pageswap', function (e) {
+                var to = e.activation && e.activation.entry && e.activation.entry.url;
+                root.classList.toggle('cw-via-dot', !!(e.viewTransition && to && viaDot(here, norm(to))));
+            });
+
+            // 目录页 → 博客首页：反向一镜到底，整屏收回成首页卡片；首屏已滚出视口时不做
+            if (here === album) {
+                window.addEventListener('pageswap', function (e) {
+                    if (!e.viewTransition) return;
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    if (!to || norm(to) !== home) return;
+                    var hero = document.querySelector('.cw-hero');
+                    if (!hero || hero.getBoundingClientRect().bottom <= 0) { e.viewTransition.skipTransition(); return; }
+                    root.classList.add('cw-to-home');
+                });
+                // 从往返缓存恢复时清掉，免得过渡名残留到其他跳转
+                window.addEventListener('pagereveal', function () { root.classList.remove('cw-to-home'); });
+
+                // 目录页 ↔ 阅读页：回到目录时停在离开时的位置，篇名的反向过渡才有落点
+                var RETURN_KEY = 'cw-return';
+                function isReader(p) { return !!p && p !== album && p.indexOf(album) === 0; }
+                function findTrack(p) {
+                    var links = document.querySelectorAll('.cw-track-link[href]');
+                    for (var i = 0; i < links.length; i++) if (norm(links[i].getAttribute('href')) === p) return links[i];
+                    return null;
+                }
+                // 离开时记下所点篇目在视口中的高度
+                window.addEventListener('pageswap', function (e) {
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    var p = to && norm(to);
+                    if (!isReader(p)) return;
+                    var link = findTrack(p);
+                    try { sessionStorage.setItem(RETURN_KEY, JSON.stringify({ top: link ? link.getBoundingClientRect().top : null })); } catch (err) {}
+                });
+                // 回来时（全新加载；往返缓存本就原样恢复）在首帧前把刚读完的那篇滚回同一高度
+                // 经上一篇/下一篇换过篇目时，落点是最后读的那篇
+                var firstReveal = true;
+                window.addEventListener('pagereveal', function (e) {
+                    if (!firstReveal) return;
+                    firstReveal = false;
+                    var act = window.navigation && navigation.activation;
+                    var from = act && act.from && norm(act.from.url);
+                    if (!isReader(from)) return;
+                    var link = findTrack(from);
+                    if (!link) return;
+                    var saved = null;
+                    try { saved = JSON.parse(sessionStorage.getItem(RETURN_KEY)); } catch (err) {}
+                    var top = saved && typeof saved.top === 'number' ? saved.top : innerHeight * .4;
+                    top = Math.min(Math.max(top, 90), innerHeight - 90);
+                    root.classList.add('cw-returning');
+                    window.scrollTo({ top: window.scrollY + link.getBoundingClientRect().top - top, behavior: 'instant' });
+                    // 视口内的曲目直接就位，不再逐行浮现，否则篇名的落点是透明的
+                    [].forEach.call(document.querySelectorAll('.cw-track'), function (li) {
+                        var r = li.getBoundingClientRect();
+                        if (r.bottom > 0 && r.top < innerHeight) li.classList.add('is-in');
+                    });
+                    var done = function () { root.classList.remove('cw-returning'); };
+                    if (e.viewTransition) e.viewTransition.finished.finally(done);
+                    else requestAnimationFrame(done);
+                });
+                // 上一页就是首页时，「← Whatasiger」等同后退：首页从往返缓存原样恢复，过渡才不卡
+                document.addEventListener('click', function (e) {
+                    var a = e.target.closest && e.target.closest('a.cw-home');
+                    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                    var nav = window.navigation;
+                    if (!nav || !nav.canGoBack) return;
+                    var prev = nav.entries()[nav.currentEntry.index - 1];
+                    if (!prev || norm(prev.url) !== home) return;
+                    e.preventDefault();
+                    nav.back();
+                });
+            }
+
+            // 来源记录只用于这一次揭幕：等本轮 pagereveal 监听（含诊断）都读过再清
+            window.addEventListener('pagereveal', function () {
+                setTimeout(function () {
+                    try { sessionStorage.removeItem(HOP_KEY); } catch (err) {}
+                }, 0);
+            });
+        })();
+    </script>
+    
+<script>
+    (function () {
+        if (!('onpagereveal' in window) || !Element.prototype.animate) return;
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        var root = document.documentElement;
+        var KEY = 'cw-vt-fb';
+        var NAME = /^cw-(i|i-l|i-r|i-dot|period|t-.+)$/;
+        var SELECTOR = '.cw-i, .cw-glyph-i, .cw-glyph-l, .cw-glyph-r, .cw-glyph-dot, .cw-period, .cw-glyph-period, .cw-name-text';
+        // 只在新页出现的字形：从 i 身后向两侧浮现（与 cw.css 中 cw-vt-bloom-* 一致）
+        var BLOOM = {
+            'cw-i-l': { x: 28, delay: 700, duration: 1000 },
+            'cw-i-r': { x: -28, delay: 780, duration: 1000 },
+            'cw-i-dot': { x: -28, delay: 750, duration: 900 }
+        };
+
+        function norm(u) {
+            try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+        }
+        var here = norm(location.href);
+
+        function named() {
+            var map = {};
+            var els = document.querySelectorAll(SELECTOR);
+            for (var k = 0; k < els.length; k++) {
+                var n = getComputedStyle(els[k]).viewTransitionName;
+                if (n && NAME.test(n)) map[n] = els[k];
+            }
+            return map;
+        }
+
+        window.addEventListener('pageswap', function (e) {
+            try { sessionStorage.removeItem(KEY); } catch (err) {}
+            if (!e.viewTransition) return;
+            var to = e.activation && e.activation.entry && e.activation.entry.url;
+            if (!to) return;
+            var map = named();
+            var rects = {};
+            var any = false;
+            for (var n in map) {
+                var r = map[n].getBoundingClientRect();
+                if (!r.width || !r.height || r.bottom <= 0 || r.top >= innerHeight) continue;
+                rects[n] = { x: r.left, y: r.top, h: r.height };
+                any = true;
+            }
+            if (!any) return;
+            try {
+                sessionStorage.setItem(KEY, JSON.stringify({
+                    to: norm(to), t: Date.now(), w: innerWidth, h: innerHeight, rects: rects
+                }));
+            } catch (err) {}
+        });
+
+        window.addEventListener('pagereveal', function (e) {
+            var rec = null;
+            try { rec = JSON.parse(sessionStorage.getItem(KEY)); sessionStorage.removeItem(KEY); } catch (err) {}
+            if (!rec || rec.to !== here || Date.now() - rec.t > 6000) return;
+
+            var mismatch = rec.w !== innerWidth || rec.h !== innerHeight;
+            if (e.viewTransition && !mismatch) {
+                // 视口一致仍可能因别的原因被放弃，那时再补
+                e.viewTransition.ready.catch(function () { play(rec); });
+                return;
+            }
+            if (e.viewTransition) e.viewTransition.skipTransition();
+            play(rec);
+        });
+
+        function play(rec) {
+            var cs = getComputedStyle(root);
+            var spring = cs.getPropertyValue('--spring').trim() || 'ease-out';
+            var easeOut = cs.getPropertyValue('--ease-out').trim() || 'ease-out';
+
+            // i 一镜到底：挂上类名才有对应过渡名，首屏标题也会直接处于终态
+            var viaI = 'cw-i' in rec.rects;
+            if (viaI) root.classList.add('cw-via-i');
+            var viaDot = 'cw-period' in rec.rects;
+            if (viaDot) root.classList.add('cw-via-dot');
+
+            var map = named();
+            var keep = [];
+            var colors = [];
+            var end = 0;
+            for (var n in map) {
+                var el = map[n];
+                var old = rec.rects[n];
+                if (old) {
+                    var r = el.getBoundingClientRect();
+                    if (!r.height) continue;
+                    var s = old.h / r.height;
+                    var from = 'translate(' + (old.x - r.left) + 'px,' + (old.y - r.top) + 'px) scale(' + s + ')';
+                    el.animate([
+                        { transformOrigin: '0 0', transform: from },
+                        { transformOrigin: '0 0', transform: 'none' }
+                    ], { duration: 1200, easing: spring });
+                    colors.push(getComputedStyle(el).color);
+                    keep.push(el);
+                    end = Math.max(end, 1200);
+                } else if (BLOOM[n]) {
+                    var b = BLOOM[n];
+                    el.animate([
+                        { opacity: 0, transform: 'translateX(' + b.x + 'px)', filter: 'blur(6px)' },
+                        { opacity: 1, transform: 'none', filter: 'none' }
+                    ], { duration: b.duration, delay: b.delay, easing: spring, fill: 'backwards' });
+                    colors.push(getComputedStyle(el).color);
+                    keep.push(el);
+                    end = Math.max(end, b.delay + b.duration);
+                }
+            }
+            if (!keep.length) {
+                if (viaI) root.classList.remove('cw-via-i');
+                if (viaDot) root.classList.remove('cw-via-dot');
+                return;
+            }
+
+            // 其余内容：先隐去，待文字落定后浮现（同原生过渡里 root 的延迟淡入）
+            var fadeIn = [{ opacity: 0, filter: 'blur(4px)' }, { opacity: 1, filter: 'none' }];
+            var fadeOpts = { duration: 800, delay: 550, easing: easeOut, fill: 'backwards' };
+            function holds(node) {
+                for (var k = 0; k < keep.length; k++) if (node === keep[k] || node.contains(keep[k])) return true;
+                return false;
+            }
+            (function walk(parent) {
+                var kids = parent.children;
+                for (var k = 0; k < kids.length; k++) {
+                    var c = kids[k];
+                    if (keep.indexOf(c) !== -1) continue;
+                    if (!holds(c)) { c.animate(fadeIn, fadeOpts); continue; }
+                    // 含有被保留文字的容器：它自己的文字（如 CARR / ER WAVE.）用颜色淡入，被保留的文字已单独锁定颜色
+                    var color = getComputedStyle(c).color;
+                    c.animate([{ color: 'transparent' }, { color: color }], fadeOpts);
+                    walk(c);
+                }
+            })(document.body);
+            end = Math.max(end, 550 + 800);
+            // 被保留的文字在整个过程中锁定颜色，不随所在容器的颜色淡入（颜色须在容器动画开始前取）
+            keep.forEach(function (el, k) {
+                el.animate([{ color: colors[k] }, { color: colors[k] }], { duration: end });
+            });
+
+            if (viaI) setTimeout(function () { root.classList.remove('cw-via-i'); }, end + 50);
+            if (viaDot) setTimeout(function () { root.classList.remove('cw-via-dot'); }, end + 50);
+        }
+    })();
+</script>
+
+    
+<script>
+    (function () {
+        var on = false;
+        try { on = localStorage.getItem('cw-vt-debug') === '1'; } catch (err) {}
+        if (!on) return;
+
+        var LOG_KEY = 'cw-vt-log';
+        var MAX = 60;
+        function read() {
+            try { return JSON.parse(sessionStorage.getItem(LOG_KEY)) || []; } catch (err) { return []; }
+        }
+        function write(list) {
+            try { sessionStorage.setItem(LOG_KEY, JSON.stringify(list.slice(-MAX))); } catch (err) {}
+        }
+        function push(entry) {
+            var list = read();
+            entry.i = list.length ? list[list.length - 1].i + 1 : 1;
+            list.push(entry);
+            write(list);
+            console.info('[cw-vt]', entry);
+            return entry.i;
+        }
+        function patch(i, fields) {
+            var list = read();
+            for (var k = list.length - 1; k >= 0; k--) {
+                if (list[k].i !== i) continue;
+                for (var f in fields) list[k][f] = fields[f];
+                write(list);
+                console.info('[cw-vt] #' + i, fields);
+                return;
+            }
+        }
+        function path(u) {
+            try { return new URL(u, location.href).pathname; } catch (err) { return String(u); }
+        }
+        // 当前带过渡名的元素，及其是否在视口内
+        function names() {
+            var out = [];
+            var all = document.querySelectorAll('*');
+            for (var k = 0; k < all.length; k++) {
+                var n = getComputedStyle(all[k]).viewTransitionName;
+                if (!n || n === 'none') continue;
+                var r = all[k].getBoundingClientRect();
+                out.push(n + (r.bottom > 0 && r.top < innerHeight && r.width && r.height ? '' : '(视口外)'));
+            }
+            return out.join(' ');
+        }
+        function vp() {
+            var d = document.documentElement;
+            var v = window.visualViewport;
+            return innerWidth + 'x' + innerHeight + ' client ' + d.clientWidth + 'x' + d.clientHeight +
+                (v ? ' vv ' + Math.round(v.width) + 'x' + Math.round(v.height) + ' z' + v.scale : '') +
+                ' dpr ' + devicePixelRatio + ' sh ' + d.scrollHeight;
+        }
+        function track(i, vt) {
+            if (!vt) return;
+            var t0 = performance.now();
+            vt.ready.then(function () {
+                patch(i, { ready: 'ok' });
+            }, function (err) {
+                patch(i, { ready: (err && err.name) + ': ' + (err && err.message) });
+            });
+            vt.finished.then(function () {
+                patch(i, { finished: Math.round(performance.now() - t0) + 'ms' });
+            });
+        }
+
+        window.addEventListener('pageswap', function (e) {
+            var to = e.activation && e.activation.entry && e.activation.entry.url;
+            var i = push({
+                ev: 'pageswap',
+                page: location.pathname,
+                to: to ? path(to) : null,
+                type: e.activation && e.activation.navigationType,
+                vt: !!e.viewTransition,
+                vp: vp(),
+                cls: document.documentElement.className,
+                names: e.viewTransition ? names() : ''
+            });
+            track(i, e.viewTransition);
+        });
+        window.addEventListener('pagereveal', function (e) {
+            var act = window.navigation && navigation.activation;
+            var hop = null;
+            try { hop = sessionStorage.getItem('cw-vt-hop'); } catch (err) {}
+            var i = push({
+                ev: 'pagereveal',
+                page: location.pathname,
+                from: act && act.from ? path(act.from.url) : null,
+                type: act && act.navigationType,
+                vt: !!e.viewTransition,
+                hop: hop,
+                sinceNav: Math.round(performance.now()) + 'ms',
+                vp: vp(),
+                cls: document.documentElement.className,
+                names: e.viewTransition ? names() : ''
+            });
+            track(i, e.viewTransition);
+        });
+
+        window.cwVtLog = function () {
+            var list = read();
+            console.table(list);
+            return JSON.stringify(list, null, 1);
+        };
+        window.cwVtClear = function () { write([]); };
+    })();
+</script>
+
+    
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mvi9bfpa">
+    <script src="/static/carrier-wave/cw.js?v=mvi9bfpa" defer></script>
+<meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
+</head>
+
+
+<body class="cw cw-reader" style="--tint:#C4C4C6">
+    <canvas class="cw-wave cw-wave-bar" aria-hidden="true" data-tint="#C4C4C6" data-wave="" data-seed="0"></canvas>
+
+    <nav class="cw-corner">
+        <a class="cw-home" href="/carrier_wave/" data-cw-back><span class="cw-arrow" aria-hidden="true">←</span>CARRiER WAVE.</a>
+        <span class="cw-count">？？ <i>/</i> 18</span>
+    </nav>
+
+    <main class="cw-read">
+        <header class="cw-read-head">
+            <p class="cw-read-no cw-rise" style="--d:0">？？</p>
+            <h1 class="cw-read-title">
+                <span class="cw-name-text"><span class="cw-glyph-period">.</span></span>
+            </h1>
+            <p class="cw-read-meta cw-rise" style="--d:2">113 字</p>
+        </header>
+
+        <article class="cw-prose cw-rise" style="--d:3">
+            <p>什么，你居然触发了这个英文句点的隐藏入口？实际上这里什么都没有，什么都不会有的。</p>
+<p>说来也怪，为什么每篇标题最后一定要加一个点呢？</p>
+<p>好处大概是……不觉得这样多了一些忧郁的感觉吗。</p>
+<p>但是，这里并不是真正的 彩蛋 &#x2F; 隐藏篇目，不过你应该很快就会找到的。</p>
+<hr>
+<p>以上内容由 ██ 代发送。</p>
+
+        </article>
+
+        <div class="cw-end" aria-hidden="true">
+            <svg viewBox="0 0 48 12" width="48" height="12"><path d="M0 6 Q6 0 12 6 T24 6 T36 6 T48 6" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+        </div>
+
+        <nav class="cw-pager">
+            <span class="cw-pager-link is-empty"></span>
+
+            <a class="cw-pager-back" href="/carrier_wave/">曲目</a>
+
+            <span class="cw-pager-link is-empty"></span>
+        </nav>
+    </main>
+</body>
+</html>
+
