@@ -2,16 +2,25 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://whatasiger.xyz/about-website/index.html</loc>
+    <loc>https://whatasiger.xyz/friend/index.html</loc>
     
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-19</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>https://whatasiger.xyz/friend/index.html</loc>
+    <loc>https://whatasiger.xyz/posts/5/</loc>
+    
+    <lastmod>2026-10-19</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://whatasiger.xyz/about-website/index.html</loc>
     
     <lastmod>2026-10-17</lastmod>
     
@@ -23,15 +32,6 @@
     <loc>https://whatasiger.xyz/about-me/index.html</loc>
     
     <lastmod>2026-10-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://whatasiger.xyz/posts/5/</loc>
-    
-    <lastmod>2026-10-02</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -148,7 +148,7 @@
 
   <url>
     <loc>https://whatasiger.xyz/</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-21</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -156,32 +156,52 @@
   
   <url>
     <loc>https://whatasiger.xyz/tags/%E9%9A%8F%E7%AC%94/</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://whatasiger.xyz/tags/%E8%AF%84%E6%9E%90/</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://whatasiger.xyz/tags/%E5%B0%8F%E8%AF%B4/</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://whatasiger.xyz/tags/%E7%89%B9%E6%AE%8A/</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
 
   
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;sin&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;pathos&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;mamihlapinatapei-1&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;anecdoche&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;eden&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;airs-1&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;mamihlapinatapei-2&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;eric&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;airs-2&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;remy&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;mamihlapinatapei-3&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;mora&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;sonder&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;mamihlapinatapei-4&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;enouement&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;airs-3&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;limbo&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;carrier-wave&#x2F;</loc></url>
+  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;i&#x2F;</loc></url>
 </urlset>
