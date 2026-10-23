@@ -165,6 +165,36 @@
                 });
             }
 
+            // 阅读页 ↔ 上一篇/下一篇：文末翻页里的篇名一镜到底，飞到新页标题的位置（新页标题本就带 cw-t-<slug>）
+            // 只在真正经它跳转、且它在视口内时才给过渡名，免得回目录时目录里的同名篇目从页底飞出
+            if (here !== album && here.indexOf(album) === 0) {
+                var pagerFor = function (p) {
+                    var links = document.querySelectorAll('[data-cw-prev], [data-cw-next]');
+                    for (var i = 0; i < links.length; i++) if (norm(links[i].getAttribute('href')) === p) return links[i];
+                    return null;
+                };
+                var namePager = function (link) {
+                    [].forEach.call(document.querySelectorAll('.cw-pager .cw-name-text'), function (el) { el.style.viewTransitionName = ''; });
+                    if (!link) return;
+                    var r = link.getBoundingClientRect();
+                    if (r.bottom <= 0 || r.top >= innerHeight) return;
+                    var text = link.querySelector('.cw-name-text');
+                    if (text) text.style.viewTransitionName = 'cw-t-' + link.getAttribute('data-slug');
+                };
+                window.addEventListener('pageswap', function (e) {
+                    var to = e.activation && e.activation.entry && e.activation.entry.url;
+                    namePager(e.viewTransition && to ? pagerFor(norm(to)) : null);
+                });
+                // 从下一篇后退回来时，标题反向飞回文末翻页；过渡结束即清掉
+                window.addEventListener('pagereveal', function (e) {
+                    var act = window.navigation && navigation.activation;
+                    if (!e.viewTransition || !act || act.navigationType !== 'traverse') { namePager(null); return; }
+                    var from = (act && act.from && norm(act.from.url)) || hop();
+                    namePager(from ? pagerFor(from) : null);
+                    e.viewTransition.finished.finally(function () { namePager(null); });
+                });
+            }
+
             // 来源记录只用于这一次揭幕：等本轮 pagereveal 监听（含诊断）都读过再清
             window.addEventListener('pagereveal', function () {
                 setTimeout(function () {
@@ -431,14 +461,15 @@
 </script>
 
     
-    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mvi9bfpa">
-    <script src="/static/carrier-wave/cw.js?v=mvi9bfpa" defer></script>
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mvl4l4aw">
+    <script src="/static/carrier-wave/cw.js?v=mvl4l4aw" defer></script>
 <meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
 <link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
 </head>
 
 
 <body class="cw cw-reader" style="--tint:#A8C3C1">
+    <div class="cw-stage" aria-hidden="true"></div>
     <canvas class="cw-wave cw-wave-bar" aria-hidden="true" data-tint="#A8C3C1" data-wave="#8FA7BF" data-seed="7"></canvas>
 
     <nav class="cw-corner">
@@ -448,6 +479,7 @@
 
     <main class="cw-read">
         <header class="cw-read-head">
+            <canvas class="cw-dust" aria-hidden="true"></canvas>
             <p class="cw-read-no cw-rise" style="--d:0">07</p>
             <h1 class="cw-read-title">
                 <span class="cw-name-text" style="view-transition-name:cw-t-mamihlapinatapei-2">maMihlApinaTapEi.</span><span class="cw-part cw-rise" style="--d:1">2nd</span>
@@ -541,18 +573,18 @@
 
         <nav class="cw-pager">
             
-            <a class="cw-pager-link is-prev" href="/carrier_wave/airs-1/" data-cw-prev style="--tint:#AEBFD6">
+            <a class="cw-pager-link is-prev" href="/carrier_wave/airs-1/" data-cw-prev data-slug="airs-1" style="--tint:#AEBFD6">
                 <span class="cw-pager-label"><span class="cw-arrow" aria-hidden="true">←</span>06</span>
-                <span class="cw-pager-title">AIRS. <span class="cw-part">Ⅰ</span></span>
+                <span class="cw-pager-title"><span class="cw-name-text">AIRS.</span> <span class="cw-part">Ⅰ</span></span>
             </a>
             
 
             <a class="cw-pager-back" href="/carrier_wave/">曲目</a>
 
             
-            <a class="cw-pager-link is-next" href="/carrier_wave/eric/" data-cw-next style="--tint:#BDB6CF">
+            <a class="cw-pager-link is-next" href="/carrier_wave/eric/" data-cw-next data-slug="eric" style="--tint:#BDB6CF">
                 <span class="cw-pager-label">08<span class="cw-arrow" aria-hidden="true">→</span></span>
-                <span class="cw-pager-title">Eric.</span>
+                <span class="cw-pager-title"><span class="cw-name-text">Eric.</span></span>
             </a>
             
         </nav>

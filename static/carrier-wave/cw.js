@@ -1,7 +1,9 @@
 /* ----
 # CARRiER WAVE. 载波
 # 目录页：一条纯载波，悬停曲目时被调制；未接收的篇目只留下一次失真。
-# 阅读页：顶部载波兼作进度，已读部分携带信号，未读部分只是载波。
+#         偶尔有一束信号沿载波驶过；载波上不时脱落几粒残响，飘散进 limbo。
+# 阅读页：顶部载波兼作进度，已读部分携带信号，未读部分只是载波；停下来读的时候它也放缓。
+#         标题附近偶尔飘过一两粒残响。
 ---- */
 
 (function () {
@@ -66,6 +68,12 @@
         this.envLen = new Spring(opts.envLen || 420, 70, 14);
         this.pull = new Spring(0, 130, 7);
         this.progress = new Spring(0, 140, 17);
+        // 自己的时钟：rate 放缓时载波整体变慢，相位连续，不会跳
+        this.rate = new Spring(1, 30, 11);
+        this.time = 0;
+        this.pulses = [];
+        this.motes = [];
+        this.moteDebt = 0;
 
         var c = hexToRgb(opts.tint);
         this.color = [new Spring(INK[0], 90, 19), new Spring(INK[1], 90, 19), new Spring(INK[2], 90, 19)];
@@ -109,18 +117,33 @@
         this.loss.target = 0;
     };
 
-    Carrier.prototype.strokeStrand = function (t, s) {
-        var ctx = this.ctx;
+    // 某条线在 xx 处的高度：载波 + 包络调制 + 指针牵引 + 驶过的信号
+    Carrier.prototype.yAt = function (t, xx, s) {
         var o = this.opts;
-        var w = this.w;
-        var y0 = this.baseY + s.offset;
         var k = TAU / o.wavelength;
         var ke = TAU / this.envLen.x;
         var amp = this.amp.x * o.amplitude * s.scale * this.scale;
-        var mod = this.mod.x;
+        var env = s.modulated
+            ? .5 + .5 * (.62 * Math.sin(ke * xx - t * .9 + s.phase) + .38 * Math.sin(ke * 1.73 * xx + t * .55 + 1.7))
+            : 0;
+        var a = amp * (1 + this.mod.x * s.gain * env * 3.4);
+        var y = this.baseY + s.offset + a * Math.sin(k * xx - t * o.speed + s.phase);
+        if (this.pull.x) {
+            var dx = (xx - this.pointer.x) / 120;
+            y += this.pull.x * Math.exp(-dx * dx) * s.scale;
+        }
+        for (var i = 0; i < this.pulses.length; i++) {
+            var p = this.pulses[i];
+            var d = (xx - p.cx) / p.width;
+            if (d > -3 && d < 3) y += p.amp * p.fade * s.scale * this.scale * Math.exp(-d * d) * Math.sin(d * 5.2 + s.phase * .6);
+        }
+        return y;
+    };
+
+    Carrier.prototype.strokeStrand = function (t, s) {
+        var ctx = this.ctx;
+        var w = this.w;
         var loss = this.loss.x;
-        var pull = this.pull.x;
-        var px = this.pointer.x;
         var from = s.from || 0;
         var to = s.to == null ? w : s.to;
         var step = 3;
@@ -142,15 +165,7 @@
                 if (!gate) { drawing = false; continue; }
             }
 
-            var env = s.modulated
-                ? .5 + .5 * (.62 * Math.sin(ke * xx - t * .9 + s.phase) + .38 * Math.sin(ke * 1.73 * xx + t * .55 + 1.7))
-                : 0;
-            var a = amp * (1 + mod * s.gain * env * 3.4);
-            var y = y0 + a * Math.sin(k * xx - t * o.speed + s.phase);
-            if (pull) {
-                var dx = (xx - px) / 120;
-                y += pull * Math.exp(-dx * dx) * s.scale;
-            }
+            var y = this.yAt(t, xx, s);
 
             if (drawing) ctx.lineTo(xx, y);
             else { ctx.moveTo(xx, y); drawing = true; }
@@ -170,7 +185,9 @@
         return g;
     };
 
-    Carrier.prototype.frame = function (t, dt) {
+    Carrier.prototype.frame = function (clockT, dt) {
+        if (!reduceMotion) this.time += dt * this.rate.step(dt);
+        var t = this.time;
         this.amp.step(dt);
         this.mod.step(dt);
         this.loss.step(dt);
@@ -190,15 +207,111 @@
         ctx.lineJoin = 'round';
 
         if (this.opts.mode === 'bar') this.drawBar(t, rgb, alpha);
-        else this.drawField(t, rgb, alpha);
+        else this.drawField(t, rgb, alpha, dt);
     };
 
-    Carrier.prototype.drawField = function (t, rgb, alpha) {
+    var MAIN = { offset: 0, scale: 1, gain: 1, phase: 0, modulated: true, width: 1 };
+
+    Carrier.prototype.drawField = function (t, rgb, alpha, dt) {
+        this.stepPulses(t);
+        this.stepMotes(t, dt);
+        this.drawMotes(t, rgb);
         var spread = 3 + this.mod.x * 5;
         var ghost = this.edgeGradient(mix(rgb, FAINT, .4), alpha * .32);
         this.strokeStrand(t, { offset: -spread, scale: .82, gain: .8, phase: 1.1, modulated: true, width: .75, style: ghost });
         this.strokeStrand(t, { offset: spread, scale: .7, gain: .6, phase: 2.3, modulated: true, width: .75, style: ghost });
-        this.strokeStrand(t, { offset: 0, scale: 1, gain: 1, phase: 0, modulated: true, width: 1, style: this.edgeGradient(rgb, alpha) });
+        MAIN.style = this.edgeGradient(rgb, alpha);
+        this.strokeStrand(t, MAIN);
+        this.drawPulses(t, rgb);
+    };
+
+    /* ---------- 驶过的信号 ---------- */
+
+    // 一束信号：沿载波行进的小波包，中心带一粒亮点
+    Carrier.prototype.emit = function (x, dir) {
+        if (reduceMotion || this.pulses.length > 5) return;
+        this.pulses.push({ x: x, cx: x, dir: dir, born: this.time, fade: 0, amp: 5.5, width: 74, speed: 250, glow: .55 });
+    };
+
+    Carrier.prototype.stepPulses = function (t) {
+        var w = this.w;
+        this.pulses = this.pulses.filter(function (p) {
+            var age = t - p.born;
+            p.cx = p.x + p.dir * p.speed * age;
+            p.fade = clamp(age / .35, 0, 1);
+            return p.cx > -240 && p.cx < w + 240;
+        });
+    };
+
+    Carrier.prototype.drawPulses = function (t, rgb) {
+        var ctx = this.ctx;
+        var w = this.w;
+        var c = 'rgba(' + (rgb[0] | 0) + ',' + (rgb[1] | 0) + ',' + (rgb[2] | 0) + ',';
+        for (var i = 0; i < this.pulses.length; i++) {
+            var p = this.pulses[i];
+            // 与载波两端的渐隐一致
+            var edge = clamp(Math.min(p.cx, w - p.cx) / (w * .14), 0, 1);
+            var a = p.glow * p.fade * edge * (.55 + .45 * this.scale);
+            if (a < .01) continue;
+            var y = this.yAt(t, p.cx, MAIN);
+            ctx.save();
+            ctx.shadowColor = c + (a * .8) + ')';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(p.cx, y, 1.9, 0, TAU);
+            ctx.fillStyle = c + a + ')';
+            ctx.fill();
+            ctx.restore();
+        }
+    };
+
+    /* ---------- 残响：从载波上脱落，飘散进 limbo ---------- */
+
+    // 浮现快、消散慢；中途偶尔闪断一下，像接收不稳
+    function moteAlpha(m, t) {
+        var a = Math.pow(Math.sin(Math.PI * Math.pow((t - m.born) / m.life, .6)), 1.4);
+        return hash(m.born * 13 + Math.floor(t * 9)) < .08 ? a * .25 : a;
+    }
+
+    Carrier.prototype.stepMotes = function (t, dt) {
+        if (reduceMotion || !dt) return;
+        var w = this.w;
+        // 平时稀疏；信号丢失时脱落得多
+        this.moteDebt += dt * (2.6 + this.loss.x * 14);
+        while (this.moteDebt >= 1 && this.motes.length < 60) {
+            this.moteDebt -= 1;
+            var x = w * (.16 + .68 * Math.random());
+            this.motes.push({
+                x: x,
+                dy: this.yAt(t, x, MAIN) - this.baseY,
+                vx: (Math.random() - .5) * 6,
+                vy: (Math.random() < .5 ? -1 : 1) * (3 + Math.random() * 6),
+                born: t,
+                life: 3.2 + Math.random() * 3.4,
+                r: .7 + Math.random() * .85
+            });
+        }
+        if (this.moteDebt > 1) this.moteDebt = 1;
+        this.motes = this.motes.filter(function (m) {
+            m.x += m.vx * dt;
+            m.dy += m.vy * dt;
+            return t - m.born < m.life;
+        });
+    };
+
+    Carrier.prototype.drawMotes = function (t, rgb) {
+        var ctx = this.ctx;
+        var c = 'rgba(' + (rgb[0] | 0) + ',' + (rgb[1] | 0) + ',' + (rgb[2] | 0) + ',';
+        var s = this.scale;
+        for (var i = 0; i < this.motes.length; i++) {
+            var m = this.motes[i];
+            var a = moteAlpha(m, t) * .58 * (.45 + .55 * s);
+            if (a < .01) continue;
+            ctx.beginPath();
+            ctx.arc(m.x, this.baseY + m.dy * (.5 + .5 * s), m.r, 0, TAU);
+            ctx.fillStyle = c + a + ')';
+            ctx.fill();
+        }
     };
 
     Carrier.prototype.drawBar = function (t, rgb, alpha) {
@@ -236,6 +349,73 @@
         this.strokeStrand(t, { offset: 0, scale: 1, gain: .55, phase: 0, modulated: true, width: 1.1, style: g, from: Math.max(0, px - r), to: px });
         this.strokeStrand(t, { offset: 0, scale: 1, gain: 0, phase: 0, modulated: false, width: 1, style: g, from: px, to: Math.min(this.w, px + r) });
         ctx.restore();
+    };
+
+    /* ---------- 阅读页：标题附近的残响 ---------- */
+
+    // 与目录页载波上脱落的是同一种东西，只是稀少得多；标题滚出视口后不再生成
+    function Dust(canvas, title) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.title = title;
+        var c = mix(hexToRgb(getComputedStyle(body).getPropertyValue('--tint').trim()), INK, .35);
+        this.rgba = 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',';
+        this.motes = [];
+        this.debt = 0;
+        this.time = 0;
+        this.w = this.h = 0;
+    }
+
+    Dust.prototype.frame = function (clockT, dt) {
+        var t = this.time += dt;
+        var rect = this.canvas.getBoundingClientRect();
+        if (rect.width !== this.w || rect.height !== this.h) {
+            var dpr = Math.min(window.devicePixelRatio || 1, 2);
+            this.w = rect.width;
+            this.h = rect.height;
+            this.canvas.width = Math.round(this.w * dpr);
+            this.canvas.height = Math.round(this.h * dpr);
+            this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        var visible = rect.bottom > 0 && rect.top < window.innerHeight;
+
+        // 入场后才开始，约一秒一粒，同时最多十六粒
+        if (visible && t > 1.4) {
+            this.debt += dt * 1.05;
+            if (this.debt >= 1 && this.motes.length < 16) {
+                this.debt = 0;
+                // 在标题四周一圈生成：短标题也不会全挤在字形里被挡住
+                var r = this.title.getBoundingClientRect();
+                var pad = Math.max(70, r.width * .25);
+                this.motes.push({
+                    x: r.left - rect.left - pad + (r.width + pad * 2) * Math.random(),
+                    y: r.top - rect.top + r.height * (-.35 + 1.7 * Math.random()),
+                    vx: (Math.random() - .5) * 5,
+                    vy: (Math.random() < .5 ? -1 : 1) * (2 + Math.random() * 4.5),
+                    born: t,
+                    life: 4 + Math.random() * 3.5,
+                    r: .7 + Math.random() * .8
+                });
+            }
+        }
+        this.motes = this.motes.filter(function (m) {
+            m.x += m.vx * dt;
+            m.y += m.vy * dt;
+            return t - m.born < m.life;
+        });
+
+        var ctx = this.ctx;
+        ctx.clearRect(0, 0, this.w, this.h);
+        if (!visible) return;
+        for (var i = 0; i < this.motes.length; i++) {
+            var m = this.motes[i];
+            var a = moteAlpha(m, t) * .62;
+            if (a < .01) continue;
+            ctx.beginPath();
+            ctx.arc(m.x, m.y, m.r, 0, TAU);
+            ctx.fillStyle = this.rgba + a + ')';
+            ctx.fill();
+        }
     };
 
     /* ---------- 动画循环 ---------- */
@@ -349,7 +529,13 @@
             carrier.resize();
         }
 
+        // 偶尔有一束信号从左侧驶过；入场后才开始
+        var nextPulse = 3.6;
         carrier.before = function () {
+            if (carrier.time > nextPulse) {
+                nextPulse = carrier.time + 9 + Math.random() * 8;
+                if (!document.hidden) carrier.emit(0, 1);
+            }
             var raw = axisTop - window.scrollY;
             carrier.baseY = Math.max(stuckY, raw);
             carrier.scale = .55 + .45 * clamp((raw - stuckY) / 260, 0, 1);
@@ -365,6 +551,15 @@
         trackPointer(carrier);
         carriers.push(carrier);
 
+        // 悬停篇目时，背景随之染上一层该篇的色调
+        var stage = document.querySelector('.cw-stage');
+        var glowRgb = '183,196,212';
+        function glow(tint) {
+            if (!stage) return;
+            if (tint) glowRgb = hexToRgb(tint).map(Math.round).join(',');
+            stage.style.setProperty('--cw-glow', 'rgba(' + glowRgb + ',' + (tint ? .1 : 0) + ')');
+        }
+
         var lossTimer = 0;
         var releaseTimer = 0;
 
@@ -373,6 +568,7 @@
             clearTimeout(releaseTimer);
             var lost = el.getAttribute('data-state') === 'lost';
             var tint = el.getAttribute('data-tint');
+            glow(lost ? '' : tint);
             carrier.loss.target = 0;
             carrier.tune(tint, +el.getAttribute('data-seed'), el.getAttribute('data-wave'), el.hasAttribute('data-flat'));
 
@@ -390,6 +586,7 @@
                     carrier.mod.target = 0;
                     lossTimer = setTimeout(function () {
                         carrier.release();
+                        glow('');
                         if (tuner) tuner.classList.remove('is-on');
                     }, 520);
                 }, 260);
@@ -401,6 +598,7 @@
             clearTimeout(releaseTimer);
             releaseTimer = setTimeout(function () {
                 carrier.release();
+                glow('');
                 if (tuner) tuner.classList.remove('is-on');
             }, 90);
         }
@@ -418,6 +616,7 @@
         window.addEventListener('pageshow', function (e) {
             if (e.persisted) {
                 carrier.release();
+                glow('');
                 if (tuner) tuner.classList.remove('is-on');
                 measure();
             }
@@ -450,15 +649,26 @@
                 carrier.resize();
                 carrier.baseY = window.innerWidth < 640 ? 52 : 62;
             };
+            // 停下来读的时候，载波放缓、起伏收小，不在视野边缘抢注意力；一滚动就醒来
+            var flat = canvas.hasAttribute('data-flat');
+            var lastScroll = performance.now();
+            window.addEventListener('scroll', function () { lastScroll = performance.now(); }, { passive: true });
             carrier.before = function () {
                 var max = document.documentElement.scrollHeight - window.innerHeight;
                 carrier.progress.target = max > 0 ? clamp(window.scrollY / max, 0, 1) : 1;
+                var idle = performance.now() - lastScroll > 2600;
+                carrier.rate.target = idle ? .32 : 1;
+                if (!flat) carrier.amp.target = idle ? .55 : 1;
             };
             layout();
             onResize(layout);
             trackPointer(carrier);
             carriers.push(carrier);
         }
+
+        var dust = document.querySelector('.cw-dust');
+        var title = document.querySelector('.cw-read-title .cw-name-text');
+        if (dust && title && !reduceMotion) carriers.push(new Dust(dust, title));
 
         reveal('.cw-end');
 
