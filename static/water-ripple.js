@@ -1,387 +1,441 @@
 /**
- * water-ripple.js (Rewritten version)
- * 首页背景水波纹效果 —— 追求“轻盈、润泽、灵动”的高级质感
+ * water-ripple.js
+ * 首页背景水波纹效果：点击背景浮现水波，拖拽留下尾流，长按持续激发
  *
- * 核心设计：
- *   - 物理：Hugo Elias 离散波动方程，优化衰减以实现“轻灵”感。
- *   - 渲染：除了传统的折射（Refraction），新增了高光（Specular）与边缘发光（Edge Glow），
- *           模拟光线在润泽水面的反射，提升质感。
- *   - 性能：双缓冲 Float32Array + 低分辨率离屏计算，确保 60fps 丝滑。
- *   - 交互：支持单击、长按持续激发、以及拖拽形成的 V 型尾流。
+ * 实现要点：
+ *   - 物理与渲染全部在 GPU（WebGL2）：波动方程在半精度浮点纹理上乒乓迭代，
+ *     渲染按屏幕原生分辨率逐像素计算折射、色散、明暗与高光，CPU 每帧只发几条绘制命令
+ *   - 画布平时隐藏；激发时把「底色 + 背景图（同透明度 / 模糊）」合成为一张纹理，
+ *     静水时画面与 CSS 背景完全一致，水波平息后再无缝隐藏
+ *   - 画布 z-index:-1，紧跟 body:before 之后绘制，只覆盖背景，不遮挡任何内容
+ *   - 物理按固定 60Hz 步进，高刷屏下波速不变；不支持 WebGL2 / 偏好减少动画时直接不启用
  */
 (function () {
     "use strict";
 
     /* ── 配置参数 ─────────────────────────────────────────── */
     var CFG = {
-        scale:        0.35,   // 计算分辨率缩放比（相对于视口），略低可提升“柔和度”
-        dampening:    0.985,  // 衰减系数，增加一点使波纹更持久而优雅（0.9~0.99）
-        distortion:   0.8,    // 折射偏移强度，适中，保持“轻微”
-        specular:     2.5,    // 高光强度，值越大水面看起来越“润泽”
-        edgeGlow:     0.12,   // 边缘发光强度，增加“灵动”感
-        alpha:        0.4,    // 整体最大不透明度
-        dropRadius:   12,     // 扰动半径
-        dropStrength: 280,    // 初始扰动能量
-        holdInterval: 180,    // 长按时连续激发的频率 (ms)
-        holdResumeDelay: 150, // 拖拽停止后恢复长按激发延迟 (ms)
-        moveMinDist:  1,      // 拖拽抖动过滤阈值
-        strokeUnitStrength: 90, // 拖拽路径单位长度能量（接近点击强度）
-        maxDropValue: 4000,   // 单格最大扰动，防止能量尖峰
-        fadeOutFrames: 10,     // 停止时淡出帧数
-        idleEnergy:   0.15,   // 停止动画的能量阈值，更细腻
+        simLongSide:    512,    // 物理网格长边格数（越大波纹越细腻）
+        stepsPerTick:   2,      // 每个 60Hz 节拍的物理步数（影响波速）
+        damping:        0.992,  // 每步速度衰减（越接近 1 余波越久）
+        maxPixelRatio:  2,      // 渲染分辨率上限（设备像素比）
+        maxPixels:      4.2e6,  // 渲染像素总数上限，超出时降低像素比
+        refraction:     130,    // 折射偏移强度（CSS px / 单位坡度），越大水显得越深
+        dispersion:     0.15,   // RGB 色散比例，边缘带一点虹彩
+        shade:          0.18,   // 迎光/背光明暗强度
+        depth:          0.02,   // 波峰提亮、波谷压暗的强度，增加体积感
+        specular:       0.5,    // 高光强度
+        lightDir:       [-0.55, 0.83], // 光源方向（左上）
+        dropRadius:     30,     // 点击扰动半径（CSS px），越大波长越长
+        dropStrength:   1.8,    // 点击扰动高度
+        strokeRadius:   30,     // 拖拽尾流半径（CSS px）
+        strokeStrength: 0.35,   // 拖拽尾流高度（每段）
+        holdInterval:   160,    // 长按连续激发间隔（ms）
+        holdRadius:     16,
+        holdStrength:   0.6,
+        maxHeight:      3,      // 单格高度上限，防止叠加出尖峰
+        idleAmp:        0.005   // 估算振幅低于此值即视为平息，隐藏画布
     };
 
     /* ── 环境检查 ─────────────────────────────────────────── */
-    var path = location.pathname;
-    var isHome = /^\/$|^\/page\/\d+\/?$/.test(path);
-    if (!isHome) return;
+    if (!/^\/$|^\/page\/\d+\/?$/.test(location.pathname)) return;
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    /* ── 状态管理 ─────────────────────────────────────────── */
-    var canvas, ctx;
-    var W = 0, H = 0;
-    var buf0, buf1;
+    /* ── 着色器 ──────────────────────────────────────────── */
+    var VS = [
+        "#version 300 es",
+        "in vec2 aPos;",
+        "out vec2 vUv;",
+        "void main() { vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }"
+    ].join("\n");
+
+    // 波动方程：R = 高度，G = 速度
+    var FS_UPDATE = [
+        "#version 300 es",
+        "precision highp float;",
+        "uniform sampler2D uState;",
+        "uniform vec2 uTexel;",
+        "uniform float uDamp;",
+        "in vec2 vUv;",
+        "out vec4 o;",
+        "void main() {",
+        "    vec4 s = texture(uState, vUv);",
+        "    float avg = (texture(uState, vUv + vec2(uTexel.x, 0.0)).r",
+        "               + texture(uState, vUv - vec2(uTexel.x, 0.0)).r",
+        "               + texture(uState, vUv + vec2(0.0, uTexel.y)).r",
+        "               + texture(uState, vUv - vec2(0.0, uTexel.y)).r) * 0.25;",
+        "    s.g += (avg - s.r) * 2.0;",
+        "    s.g *= uDamp;",
+        "    s.r += s.g;",
+        "    s.r *= 0.9995;", // 缓慢回落到静水面，避免能量累积成整体抬升
+        "    o = s;",
+        "}"
+    ].join("\n");
+
+    // 扰动：沿线段 A→B 叠加一个余弦形凸起（A=B 即圆形水滴）
+    var FS_DROP = [
+        "#version 300 es",
+        "precision highp float;",
+        "uniform sampler2D uState;",
+        "uniform vec2 uRes;",
+        "uniform vec2 uA;",
+        "uniform vec2 uB;",
+        "uniform float uRadius;",
+        "uniform float uStrength;",
+        "uniform float uMaxH;",
+        "in vec2 vUv;",
+        "out vec4 o;",
+        "void main() {",
+        "    vec4 s = texture(uState, vUv);",
+        "    vec2 p = vUv * uRes;",
+        "    vec2 ab = uB - uA;",
+        "    float t = clamp(dot(p - uA, ab) / max(dot(ab, ab), 1e-4), 0.0, 1.0);",
+        "    float d = length(p - (uA + ab * t));",
+        "    float k = max(0.0, 1.0 - d / uRadius);",
+        "    k = 0.5 - 0.5 * cos(k * 3.14159265);",
+        "    s.r = clamp(s.r + k * uStrength, -uMaxH, uMaxH);",
+        "    o = s;",
+        "}"
+    ].join("\n");
+
+    // 渲染：折射采样背景 + 色散 + 明暗 + 高光；静水处输出与背景完全一致
+    var FS_RENDER = [
+        "#version 300 es",
+        "precision highp float;",
+        "uniform sampler2D uState;",
+        "uniform sampler2D uBg;",
+        "uniform vec2 uTexel;",
+        "uniform vec2 uRes;",
+        "uniform float uRefract;",
+        "uniform float uDisp;",
+        "uniform float uShade;",
+        "uniform float uSpec;",
+        "uniform float uDepth;",
+        "uniform vec2 uLight;",
+        "in vec2 vUv;",
+        "out vec4 o;",
+        "void main() {",
+        "    float hL = texture(uState, vUv - vec2(uTexel.x, 0.0)).r;",
+        "    float hR = texture(uState, vUv + vec2(uTexel.x, 0.0)).r;",
+        "    float hD = texture(uState, vUv - vec2(0.0, uTexel.y)).r;",
+        "    float hU = texture(uState, vUv + vec2(0.0, uTexel.y)).r;",
+        "    vec2 g = vec2(hR - hL, hU - hD);",
+        "    vec2 off = -g * uRefract / uRes;",
+        "    vec3 c;",
+        "    c.r = texture(uBg, vUv + off * (1.0 + uDisp)).r;",
+        "    c.g = texture(uBg, vUv + off).g;",
+        "    c.b = texture(uBg, vUv + off * (1.0 - uDisp)).b;",
+        "    float h = texture(uState, vUv).r;",
+        "    float l = dot(g, uLight);",
+        // 高光 = 柔和的光晕 + 锐利的亮核
+        "    float spec = (pow(clamp(l * 2.0, 0.0, 1.0), 2.0) * 0.45",
+        "               + pow(clamp(l * 3.0, 0.0, 1.0), 6.0)) * uSpec;",
+        "    c += l * uShade + h * uDepth + spec;",
+        "    o = vec4(clamp(c, 0.0, 1.0), 1.0);",
+        "}"
+    ].join("\n");
+
+    /* ── 状态 ────────────────────────────────────────────── */
+    var canvas, gl;
+    var progUpdate, progDrop, progRender;
+    var quad;
+    var simW = 0, simH = 0, vw = 0, vh = 0;
+    var state = [];        // 两组 { tex, fbo } 乒乓
     var cur = 0;
+    var bgTex = null, bgKey = "", bgImg = null, bgSrc = "";
+    var bgCanvas = document.createElement("canvas");
+    var bgCtx = bgCanvas.getContext("2d");
 
-    var bgCanvas = null;
-    var bgCtx    = null;
-    var bgData   = null;
-    var bgLoaded = false;
-    var bgImg    = null;
-
-    var rafId     = null;
-    var isRunning = false;
-    var fadeLeft  = 0;
+    var rafId = null, lastTime = 0, acc = 0;
+    var amp = 0;           // 振幅估算，用于判断何时平息
+    var visible = false;
+    var pendingDrops = []; // 交互事件只入队，由帧循环统一提交到 GPU
 
     var activePointers = {};
     var activePointerCount = 0;
 
-    /* ── 初始化逻辑 ───────────────────────────────────── */
+    /* ── 初始化 ──────────────────────────────────────────── */
     function init() {
         if (document.getElementById("water-ripple-canvas")) return;
 
         canvas = document.createElement("canvas");
         canvas.id = "water-ripple-canvas";
-        // z-index: 0 配合 pointer-events: none 确保不阻碍点击且在内容下方
-        canvas.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block;";
+        canvas.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;display:block;visibility:hidden;";
+
+        gl = canvas.getContext("webgl2", { alpha: false, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false });
+        if (!gl || !gl.getExtension("EXT_color_buffer_float")) return;
+
+        progUpdate = program(VS, FS_UPDATE);
+        progDrop   = program(VS, FS_DROP);
+        progRender = program(VS, FS_RENDER);
+        if (!progUpdate || !progDrop || !progRender) return;
+
+        quad = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+        bgTex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, bgTex);
+        texParams(gl.LINEAR);
 
         document.body.insertBefore(canvas, document.body.firstChild);
-        ctx = canvas.getContext("2d", { alpha: true });
 
-        updateSize();
+        resize();
         loadBackground();
         bindEvents();
 
-        window.addEventListener("resize", debounce(function() {
-            updateSize(true);
-        }, 200));
+        window.addEventListener("resize", debounce(resize, 150));
+        canvas.addEventListener("webglcontextlost", function (e) {
+            e.preventDefault();
+            stop();
+            gl = null;
+        });
+
+        // 背景图或主题变化时，下次激发重新合成背景纹理
+        new MutationObserver(debounce(loadBackground, 200))
+            .observe(document.body, { attributes: true, attributeFilter: ["class", "style"] });
     }
 
-    function updateSize(force) {
-        var newW = Math.ceil(window.innerWidth  * CFG.scale);
-        var newH = Math.ceil(window.innerHeight * CFG.scale);
-
-        if (!force && newW === W && newH === H) return;
-
-        W = newW;
-        H = newH;
-
-        buf0 = new Float32Array(W * H);
-        buf1 = new Float32Array(W * H);
-        cur  = 0;
-        fadeLeft = 0;
-
-        canvas.width  = W;
-        canvas.height = H;
-        ctx = canvas.getContext("2d", { alpha: true });
-
-        if (bgLoaded && bgImg) renderBgCache();
-    }
-
-    /* ── 背景图处理 ─────────────────────────────────────── */
-    function loadBackground() {
-        var bgVal = getComputedStyle(document.body).getPropertyValue("--page-bg-image").trim();
-        var match = bgVal.match(/url\(\s*["']?([^"')]+)["']?\s*\)/);
-        if (!match || !match[1] || match[1] === "none") {
-            bgLoaded = false;
-            bgData = null;
-            return;
+    function program(vsSrc, fsSrc) {
+        var p = gl.createProgram();
+        [[gl.VERTEX_SHADER, vsSrc], [gl.FRAGMENT_SHADER, fsSrc]].forEach(function (s) {
+            var sh = gl.createShader(s[0]);
+            gl.shaderSource(sh, s[1]);
+            gl.compileShader(sh);
+            gl.attachShader(p, sh);
+        });
+        gl.bindAttribLocation(p, 0, "aPos");
+        gl.linkProgram(p);
+        if (!gl.getProgramParameter(p, gl.LINK_STATUS)) return null;
+        p.u = {};
+        var n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+        for (var i = 0; i < n; i++) {
+            var name = gl.getActiveUniform(p, i).name;
+            p.u[name] = gl.getUniformLocation(p, name);
         }
+        return p;
+    }
 
-        var src = match[1];
+    function texParams(filter) {
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    }
+
+    function resize() {
+        if (!gl) return;
+        vw = window.innerWidth;
+        vh = window.innerHeight;
+
+        var dpr = Math.min(window.devicePixelRatio || 1, CFG.maxPixelRatio);
+        if (vw * vh * dpr * dpr > CFG.maxPixels) dpr = Math.sqrt(CFG.maxPixels / (vw * vh));
+        canvas.width  = Math.round(vw * dpr);
+        canvas.height = Math.round(vh * dpr);
+
+        var s = CFG.simLongSide / Math.max(vw, vh);
+        simW = Math.max(2, Math.round(vw * s));
+        simH = Math.max(2, Math.round(vh * s));
+
+        state.forEach(function (st) {
+            gl.deleteTexture(st.tex);
+            gl.deleteFramebuffer(st.fbo);
+        });
+        state = [0, 1].map(function () {
+            var tex = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, simW, simH, 0, gl.RGBA, gl.HALF_FLOAT, null);
+            texParams(gl.LINEAR);
+            var fbo = gl.createFramebuffer();
+            gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            return { tex: tex, fbo: fbo };
+        });
+        cur = 0;
+        amp = 0;
+        bgKey = "";
+        if (visible) stop();
+    }
+
+    /* ── 背景纹理：复刻 body 底色 + body:before 背景图 ─────── */
+    function loadBackground() {
+        var val = getComputedStyle(document.body).getPropertyValue("--page-bg-image").trim();
+        var m = val.match(/url\(\s*["']?([^"')]+)["']?\s*\)/);
+        var src = m ? m[1] : "";
+        bgKey = "";
+        if (src === bgSrc) return;
+        bgSrc = src;
+        bgImg = null;
+        if (!src) return;
         var img = new Image();
-        img.crossOrigin = "anonymous";
         img.onload = function () {
-            bgImg = img;
-            renderBgCache();
-            bgLoaded = true;
+            if (bgSrc === src) bgImg = img;
         };
         img.src = src;
     }
 
-    function renderBgCache() {
-        bgCanvas = document.createElement("canvas");
-        bgCanvas.width  = W;
-        bgCanvas.height = H;
-        bgCtx = bgCanvas.getContext("2d");
+    function syncBackground() {
+        var bodyCS = getComputedStyle(document.body);
+        var beforeCS = getComputedStyle(document.body, "::before");
+        var color = bodyCS.backgroundColor;
+        if (/rgba\(.*,\s*0\)$|transparent/.test(color)) color = getComputedStyle(document.documentElement).backgroundColor;
+        var opacity = parseFloat(beforeCS.opacity) || 0;
+        var blurM = (beforeCS.filter || "").match(/blur\(([\d.]+)px\)/);
+        var blur = blurM ? parseFloat(blurM[1]) : 0;
 
-        var s  = Math.max(W / bgImg.naturalWidth, H / bgImg.naturalHeight);
-        var dw = bgImg.naturalWidth  * s;
-        var dh = bgImg.naturalHeight * s;
-        bgCtx.drawImage(bgImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
-        bgData = bgCtx.getImageData(0, 0, W, H).data;
+        var key = [canvas.width, canvas.height, color, opacity, blur, bgImg ? bgSrc : ""].join("|");
+        if (key === bgKey) return;
+        bgKey = key;
+
+        var w = canvas.width, h = canvas.height, k = w / vw;
+        bgCanvas.width = w;
+        bgCanvas.height = h;
+        bgCtx.globalAlpha = 1;
+        bgCtx.filter = "none";
+        bgCtx.fillStyle = color;
+        bgCtx.fillRect(0, 0, w, h);
+        if (bgImg && opacity > 0) {
+            var s  = Math.max(w / bgImg.naturalWidth, h / bgImg.naturalHeight);
+            var dw = bgImg.naturalWidth * s, dh = bgImg.naturalHeight * s;
+            bgCtx.globalAlpha = Math.min(opacity, 1);
+            if (blur > 0) bgCtx.filter = "blur(" + blur * k + "px)";
+            bgCtx.drawImage(bgImg, (w - dw) / 2, (h - dh) / 2, dw, dh);
+        }
+
+        gl.bindTexture(gl.TEXTURE_2D, bgTex);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bgCanvas);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     }
 
-    /* ── 核心物理仿真 ────────────────────────────────────── */
-    function step() {
-        var r = cur === 0 ? buf0 : buf1;
-        var w = cur === 0 ? buf1 : buf0;
-        var damp = CFG.dampening;
-        var maxE = 0;
-
-        for (var y = 1; y < H - 1; y++) {
-            var row = y * W;
-            for (var x = 1; x < W - 1; x++) {
-                var i = row + x;
-                // 拉普拉斯算子简化计算
-                var v = (r[i - 1] + r[i + 1] + r[i - W] + r[i + W]) * 0.5 - w[i];
-                v *= damp;
-
-                // 极小值清理，避免 CPU 空转
-                if (v < 0.0001 && v > -0.0001) v = 0;
-
-                w[i] = v;
-                if (v !== 0) {
-                    var av = v < 0 ? -v : v;
-                    if (av > maxE) maxE = av;
-                }
-            }
-        }
+    /* ── GPU 通道 ────────────────────────────────────────── */
+    function pass(prog, uniforms) {
+        var dst = state[1 - cur];
+        gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fbo);
+        gl.viewport(0, 0, simW, simH);
+        gl.useProgram(prog);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, state[cur].tex);
+        gl.uniform1i(prog.u.uState, 0);
+        uniforms(prog.u);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         cur = 1 - cur;
-        return maxE;
     }
 
-    /* ── 灵动渲染引擎 ────────────────────────────────────── */
-    function render() {
-        if (!bgLoaded || !bgCanvas || !bgData) return;
+    function applyDrop(d) {
+        pass(progDrop, function (u) {
+            gl.uniform2f(u.uRes, vw, vh);
+            gl.uniform2f(u.uA, d.ax, d.ay);
+            gl.uniform2f(u.uB, d.bx, d.by);
+            gl.uniform1f(u.uRadius, d.r);
+            gl.uniform1f(u.uStrength, d.s);
+            gl.uniform1f(u.uMaxH, CFG.maxHeight);
+        });
+        amp = Math.min(amp + Math.abs(d.s), CFG.maxHeight);
+    }
 
-        var hBuf = cur === 0 ? buf0 : buf1;
-        var outData = ctx.createImageData(W, H);
-        var dst = outData.data;
+    function stepSim() {
+        pass(progUpdate, function (u) {
+            gl.uniform2f(u.uTexel, 1 / simW, 1 / simH);
+            gl.uniform1f(u.uDamp, CFG.damping);
+        });
+        amp *= CFG.damping;
+    }
 
-        var distStr = CFG.distortion;
-        var specStr = CFG.specular;
-        var glowStr = CFG.edgeGlow;
-        var maxA    = CFG.alpha;
-
-        for (var y = 1; y < H - 1; y++) {
-            var row = y * W;
-            for (var x = 1; x < W - 1; x++) {
-                var i = row + x;
-
-                // 计算水平和垂直梯度
-                var gx = hBuf[i + 1] - hBuf[i - 1];
-                var gy = hBuf[i + W] - hBuf[i - W];
-
-                if (gx === 0 && gy === 0) continue;
-
-                // 1. 折射计算 (Refraction)
-                var sx = Math.round(x + gx * distStr);
-                var sy = Math.round(y + gy * distStr);
-
-                // 边界约束
-                if (sx < 0) sx = 0; else if (sx >= W) sx = W - 1;
-                if (sy < 0) sy = 0; else if (sy >= H) sy = H - 1;
-
-                // 2. 高光与润泽感 (Specular & Highlights)
-                // 基于梯度模拟表面法线方向，计算简单的漫反射/高光增益
-                var mag = Math.sqrt(gx * gx + gy * gy);
-                // 向上倾斜的表面（gy < 0）通常接收更多上方光照
-                var specular = -gy * specStr + mag * glowStr;
-
-                var si = (sy * W + sx) * 4;
-                var di = i * 4;
-
-                // 3. 颜色混合
-                // 取采样点颜色，并注入高光
-                var r = bgData[si]     + specular;
-                var g = bgData[si + 1] + specular;
-                var b = bgData[si + 2] + specular;
-
-                // 限制颜色范围并在边缘保持柔和 alpha
-                dst[di]     = r > 255 ? 255 : (r < 0 ? 0 : r);
-                dst[di + 1] = g > 255 ? 255 : (g < 0 ? 0 : g);
-                dst[di + 2] = b > 255 ? 255 : (b < 0 ? 0 : b);
-
-                // Alpha 随波动能量自然衰减，实现“轻灵”感
-                var alpha = Math.min(mag * 0.015, 1) * maxA;
-                dst[di + 3] = (alpha * 255) | 0;
-            }
-        }
-        ctx.putImageData(outData, 0, 0);
+    function draw() {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.useProgram(progRender);
+        var u = progRender.u;
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, state[cur].tex);
+        gl.uniform1i(u.uState, 0);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, bgTex);
+        gl.uniform1i(u.uBg, 1);
+        gl.uniform2f(u.uTexel, 1 / simW, 1 / simH);
+        gl.uniform2f(u.uRes, vw, vh);
+        gl.uniform1f(u.uRefract, CFG.refraction);
+        gl.uniform1f(u.uDisp, CFG.dispersion);
+        var dark = document.body.classList.contains("dark-theme");
+        gl.uniform1f(u.uShade, CFG.shade * (dark ? 0.7 : 1));
+        gl.uniform1f(u.uSpec, CFG.specular * (dark ? 0.6 : 1));
+        gl.uniform1f(u.uDepth, CFG.depth);
+        gl.uniform2f(u.uLight, CFG.lightDir[0], CFG.lightDir[1]);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
     /* ── 动画主循环 ──────────────────────────────────────── */
-    function loop() {
-        var energy = step();
-        render();
+    function frame(now) {
+        rafId = null;
+        if (!gl) return;
 
-        if (energy > CFG.idleEnergy || activePointerCount > 0) {
-            fadeLeft = 0;
-            rafId = requestAnimationFrame(loop);
-        } else {
-            if (fadeLeft <= 0) fadeLeft = CFG.fadeOutFrames;
-            if (fadeLeft > 0) {
-                ctx.save();
-                ctx.globalCompositeOperation = "destination-out";
-                ctx.globalAlpha = 1 / CFG.fadeOutFrames;
-                ctx.fillRect(0, 0, W, H);
-                ctx.restore();
-                fadeLeft--;
-                rafId = requestAnimationFrame(loop);
-            } else {
-                isRunning = false;
-                rafId = null;
-                ctx.clearRect(0, 0, W, H);
-            }
-        }
-    }
-
-    function startLoop() {
-        if (isRunning) return;
-        isRunning = true;
-        rafId = requestAnimationFrame(loop);
-    }
-
-    /* ── 交互逻辑 ────────────────────────────────────────── */
-    function addDrop(lx, ly, radius, strength) {
-        var r = Math.ceil(radius);
-        var buf = cur === 0 ? buf0 : buf1;
-
-        for (var dy = -r; dy <= r; dy++) {
-            for (var dx = -r; dx <= r; dx++) {
-                if (dx * dx + dy * dy > r * r) continue;
-                var nx = (lx + dx) | 0;
-                var ny = (ly + dy) | 0;
-
-                if (nx < 1 || nx >= W - 1 || ny < 1 || ny >= H - 1) continue;
-
-                var dist = Math.sqrt(dx * dx + dy * dy);
-                var fade = Math.pow(1 - dist / r, 2);
-                var idx = ny * W + nx;
-                var v = buf[idx] + strength * fade;
-                if (v > CFG.maxDropValue) v = CFG.maxDropValue;
-                else if (v < -CFG.maxDropValue) v = -CFG.maxDropValue;
-                buf[idx] = v;
-            }
-        }
-    }
-
-    function addStroke(ax, ay, bx, by, radius, strengthPerUnit) {
-        var dx = bx - ax;
-        var dy = by - ay;
-        var len2 = dx * dx + dy * dy;
-        if (len2 < 0.0001) {
-            addDrop(ax, ay, radius, strengthPerUnit);
+        // 长时间没有帧（切到后台等）：水波早该平息，直接收起
+        if (now - lastTime > 1000 && !activePointerCount) {
+            stop();
             return;
         }
+        if (!bgKey) syncBackground(); // 波动中切换了主题/背景
+        while (pendingDrops.length) applyDrop(pendingDrops.shift());
 
-        var r = radius;
-        var r2 = r * r;
-        var minX = Math.max(1, Math.floor(Math.min(ax, bx) - r));
-        var maxX = Math.min(W - 2, Math.ceil(Math.max(ax, bx) + r));
-        var minY = Math.max(1, Math.floor(Math.min(ay, by) - r));
-        var maxY = Math.min(H - 2, Math.ceil(Math.max(ay, by) + r));
-        var buf = cur === 0 ? buf0 : buf1;
+        // 固定 60Hz 物理步进；切回标签页等长间隔时最多补 4 拍
+        acc += Math.min(now - lastTime, 67);
+        lastTime = now;
+        while (acc >= 1000 / 60) {
+            for (var i = 0; i < CFG.stepsPerTick; i++) stepSim();
+            acc -= 1000 / 60;
+        }
 
-        for (var ny = minY; ny <= maxY; ny++) {
-            for (var nx = minX; nx <= maxX; nx++) {
-                var px = nx + 0.5;
-                var py = ny + 0.5;
-                var t = ((px - ax) * dx + (py - ay) * dy) / len2;
-                if (t < 0) t = 0;
-                else if (t > 1) t = 1;
+        draw();
+        if (!visible) {
+            visible = true;
+            canvas.style.visibility = "visible";
+        }
 
-                var cx = ax + t * dx;
-                var cy = ay + t * dy;
-                var ox = px - cx;
-                var oy = py - cy;
-                var d2 = ox * ox + oy * oy;
-                if (d2 > r2) continue;
-
-                var d = Math.sqrt(d2);
-                var fade = Math.pow(1 - d / r, 2);
-                var idx = ny * W + nx;
-                var v = buf[idx] + strengthPerUnit * fade;
-                if (v > CFG.maxDropValue) v = CFG.maxDropValue;
-                else if (v < -CFG.maxDropValue) v = -CFG.maxDropValue;
-                buf[idx] = v;
-            }
+        if (amp > CFG.idleAmp || activePointerCount > 0) {
+            rafId = requestAnimationFrame(frame);
+        } else {
+            stop();
         }
     }
 
-    function getPointerKey(e) {
-        return e.pointerId !== undefined ? "p:" + e.pointerId : "mouse";
+    function start() {
+        if (!gl || rafId) return;
+        if (!visible) {
+            syncBackground();
+            lastTime = performance.now();
+            acc = 1000 / 60;
+        }
+        rafId = requestAnimationFrame(frame);
     }
 
-    function isTouchPointer(e) {
-        return e.pointerType === "touch";
+    function stop() {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = null;
+        visible = false;
+        canvas.style.visibility = "hidden";
+        amp = 0;
+        pendingDrops.length = 0;
+        state.forEach(function (st) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, st.fbo);
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+        });
     }
 
-    function getCanvasPoint(e) {
-        var rect = canvas.getBoundingClientRect();
-        return {
-            x: (e.clientX - rect.left) * CFG.scale,
-            y: (e.clientY - rect.top)  * CFG.scale,
-        };
-    }
-
-    function clearHoldTimer(pointer) {
-        clearInterval(pointer.holdTimer);
-        pointer.holdTimer = null;
-    }
-
-    function clearPointerTimers(pointer) {
-        clearHoldTimer(pointer);
-        clearTimeout(pointer.holdResumeTimer);
-        pointer.holdResumeTimer = null;
-    }
-
-    function scheduleHoldResume(pointer) {
-        clearTimeout(pointer.holdResumeTimer);
-        pointer.holdResumeTimer = setTimeout(function() {
-            if (!activePointers[pointer.id]) return;
-            startHoldTimer(pointer);
-        }, CFG.holdResumeDelay);
-    }
-
-    function startHoldTimer(pointer) {
-        clearHoldTimer(pointer);
-        pointer.holdTimer = setInterval(function() {
-            if (!activePointers[pointer.id]) {
-                clearPointerTimers(pointer);
-                return;
-            }
-            addDrop(pointer.x, pointer.y, CFG.dropRadius * 0.8, CFG.dropStrength * 0.4);
-            var mouse = { x: -999999, y: -999999 };
-            // 长按时注入较小的能量，保持水面波动
-            addDrop(mouse.x, mouse.y, CFG.dropRadius * 0.8, CFG.dropStrength * 0.4);
-            startLoop();
-        }, CFG.holdInterval);
-    }
-
-    function isContentTargetLegacy(el) {
-        if (!el || el === canvas) return false;
-        // 排除头像、卡片、社交栏等核心内容区域
-        return !!el.closest(
-            "header, footer, .settings-panel, " +
-            ".home-social, .home-profile-link, " +
-            ".post-item, .page-navigator, " +
-            "nav, a, button, input, select, textarea, label, img"
-        );
+    /* ── 交互 ────────────────────────────────────────────── */
+    // 坐标统一为 CSS px，y 轴向上（与纹理坐标一致）
+    function queueDrop(ax, ay, bx, by, r, s) {
+        pendingDrops.push({ ax: ax, ay: vh - ay, bx: bx, by: vh - by, r: r, s: s });
+        start();
     }
 
     function isContentTarget(el) {
-        if (!el || el === canvas) return false;
+        if (!el || !el.closest) return false;
         return !!el.closest(
             "header, footer, .settings-panel, " +
             ".home-social, .home-profile-link, " +
@@ -390,138 +444,86 @@
         );
     }
 
-    function onInputDown(e) {
-        if ((e.button !== undefined && e.button !== 0) || isContentTarget(e.target)) return;
-
-        var key = getPointerKey(e);
-        var point = getCanvasPoint(e);
-        var pointer = {
-            id: key,
-            x: point.x,
-            y: point.y,
-            lastX: point.x,
-            lastY: point.y,
-            holdTimer: null,
-            holdResumeTimer: null,
-        };
-
-        if (activePointers[key]) endInput(key);
-        activePointers[key] = pointer;
+    function onDown(key, x, y, target) {
+        if (!gl || isContentTarget(target)) return;
+        if (activePointers[key]) onUp(key);
+        var p = { x: x, y: y, moved: 0, timer: null };
+        p.timer = setInterval(function () {
+            // 静止长按时持续激发；拖拽中则交给尾流
+            if (p.moved < 2) queueDrop(p.x, p.y, p.x, p.y, CFG.holdRadius, CFG.holdStrength);
+            p.moved = 0;
+        }, CFG.holdInterval);
+        activePointers[key] = p;
         activePointerCount++;
-
-        addDrop(point.x, point.y, CFG.dropRadius, CFG.dropStrength);
-        startLoop();
-        startHoldTimer(pointer);
+        queueDrop(x, y, x, y, CFG.dropRadius, CFG.dropStrength);
     }
 
-    function onInputMove(e) {
-        var key = getPointerKey(e);
-        var pointer = activePointers[key];
-        if (!pointer) return;
-
-        var point = getCanvasPoint(e);
-        var dx = point.x - pointer.lastX;
-        var dy = point.y - pointer.lastY;
+    function onMove(key, x, y) {
+        var p = activePointers[key];
+        if (!p) return;
+        var dx = x - p.x, dy = y - p.y;
         var dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist >= CFG.moveMinDist) {
-            clearHoldTimer(pointer);
-            addStroke(pointer.lastX, pointer.lastY, point.x, point.y, CFG.dropRadius * 0.68, CFG.strokeUnitStrength);
-            var mouse = { lastX: -999999, lastY: -999999 };
-            var x = -999999;
-            var y = -999999;
-            // 拖拽时沿路径注入连续能量，避免快速移动出现“点串”
-            addStroke(mouse.lastX, mouse.lastY, x, y, CFG.dropRadius * 0.68, CFG.strokeUnitStrength);
-            pointer.lastX = point.x;
-            pointer.lastY = point.y;
-            pointer.x = point.x;
-            pointer.y = point.y;
-            startLoop();
-            scheduleHoldResume(pointer);
-        }
+        if (dist < 3) return;
+        // 尾流强度随速度略增，但封顶，避免甩动时炸开
+        var s = CFG.strokeStrength * Math.min(1 + dist / 40, 2);
+        queueDrop(p.x, p.y, x, y, CFG.strokeRadius, s);
+        p.moved += dist;
+        p.x = x;
+        p.y = y;
     }
 
-    function endInput(key) {
-        var pointer = activePointers[key];
-        if (!pointer) return;
-
-        clearPointerTimers(pointer);
+    function onUp(key) {
+        var p = activePointers[key];
+        if (!p) return;
+        clearInterval(p.timer);
         delete activePointers[key];
         activePointerCount = Math.max(0, activePointerCount - 1);
     }
 
-    function endAllInputs() {
+    function endAll() {
         for (var key in activePointers) {
-            if (Object.prototype.hasOwnProperty.call(activePointers, key)) endInput(key);
+            if (Object.prototype.hasOwnProperty.call(activePointers, key)) onUp(key);
         }
-    }
-
-    function onPointerDown(e) {
-        if (isTouchPointer(e)) return;
-        onInputDown(e);
-    }
-
-    function onPointerMove(e) {
-        if (isTouchPointer(e)) return;
-        onInputMove(e);
-    }
-
-    function onTouchStart(e) {
-        forEachTouch(e.changedTouches, function(t) {
-            onInputDown({ pointerId: "t:" + t.identifier, clientX: t.clientX, clientY: t.clientY, target: t.target });
-        });
-    }
-
-    function onTouchMove(e) {
-        forEachTouch(e.changedTouches, function(t) {
-            onInputMove({ pointerId: "t:" + t.identifier, clientX: t.clientX, clientY: t.clientY });
-        });
-    }
-
-    function onTouchEnd(e) {
-        forEachTouch(e.changedTouches, function(t) {
-            endInput("p:t:" + t.identifier);
-        });
     }
 
     function bindEvents() {
-        if (window.PointerEvent) {
-            document.addEventListener("pointerdown",   onPointerDown,  { passive: true });
-            document.addEventListener("pointermove",   onPointerMove,  { passive: true });
-            document.addEventListener("pointerup",     function(e) { endInput(getPointerKey(e)); }, { passive: true });
-            document.addEventListener("pointercancel", function(e) { endInput(getPointerKey(e)); }, { passive: true });
-        } else {
-            document.addEventListener("mousedown",  onInputDown);
-            document.addEventListener("mousemove",  onInputMove);
-            document.addEventListener("mouseup",    function(e) { endInput(getPointerKey(e)); });
-            document.addEventListener("mouseleave", endAllInputs);
-        }
+        // 鼠标/笔走 Pointer Events；触摸走 Touch Events（滚动时 pointer 会被取消）
+        document.addEventListener("pointerdown", function (e) {
+            if (e.pointerType === "touch" || e.button !== 0) return;
+            onDown("p" + e.pointerId, e.clientX, e.clientY, e.target);
+        }, { passive: true });
+        document.addEventListener("pointermove", function (e) {
+            if (e.pointerType === "touch") return;
+            onMove("p" + e.pointerId, e.clientX, e.clientY);
+        }, { passive: true });
+        document.addEventListener("pointerup",     function (e) { onUp("p" + e.pointerId); }, { passive: true });
+        document.addEventListener("pointercancel", function (e) { onUp("p" + e.pointerId); }, { passive: true });
 
-        document.addEventListener("touchstart",  onTouchStart, { passive: true });
-        document.addEventListener("touchmove",   onTouchMove,  { passive: true });
-        document.addEventListener("touchend",    onTouchEnd,   { passive: true });
-        document.addEventListener("touchcancel", onTouchEnd,   { passive: true });
-        window.addEventListener("blur", endAllInputs);
+        function eachTouch(e, fn) {
+            for (var i = 0; i < e.changedTouches.length; i++) fn(e.changedTouches[i]);
+        }
+        document.addEventListener("touchstart", function (e) {
+            eachTouch(e, function (t) { onDown("t" + t.identifier, t.clientX, t.clientY, t.target); });
+        }, { passive: true });
+        document.addEventListener("touchmove", function (e) {
+            eachTouch(e, function (t) { onMove("t" + t.identifier, t.clientX, t.clientY); });
+        }, { passive: true });
+        function touchEnd(e) {
+            eachTouch(e, function (t) { onUp("t" + t.identifier); });
+        }
+        document.addEventListener("touchend",    touchEnd, { passive: true });
+        document.addEventListener("touchcancel", touchEnd, { passive: true });
+        window.addEventListener("blur", endAll);
     }
 
     /* ── 工具函数 ────────────────────────────────────────── */
     function debounce(fn, ms) {
         var timer;
-        return function() {
+        return function () {
             clearTimeout(timer);
             timer = setTimeout(fn, ms);
         };
     }
-
-    function forEachTouch(touches, fn) {
-        for (var i = 0; i < touches.length; i++) {
-            fn(touches[i]);
-        }
-    }
-
-    // 观察背景或主题变化
-    var observer = new MutationObserver(debounce(loadBackground, 300));
-    observer.observe(document.body, { attributes: true, attributeFilter: ["class", "style"] });
 
     /* ── 启动 ──────────────────────────────────────────── */
     if (document.readyState === "loading") {
@@ -529,5 +531,4 @@
     } else {
         init();
     }
-
 })();

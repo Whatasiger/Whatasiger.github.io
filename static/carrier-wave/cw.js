@@ -86,17 +86,25 @@
 
         this.pointer = { x: -9999, y: -9999, inside: false };
         this.baseY = 0;
+        // band：画布只是一条随载波上下移动的窄带（高度由 CSS 定），不铺满视口，每帧重绘与合成的面积小得多
+        this.band = !!opts.band;
+        this.top = null;
+        // hold：定格时只画一帧，之后不再重绘（画布不变，跨页面过渡也就不必每帧重新截取它）
+        this.hold = false;
+        this.held = false;
         this.resize();
     }
 
     Carrier.prototype.resize = function () {
         var dpr = Math.min(window.devicePixelRatio || 1, 2);
         var rect = this.canvas.getBoundingClientRect();
+        this.dpr = dpr;
         this.w = rect.width;
         this.h = rect.height;
         this.canvas.width = Math.round(this.w * dpr);
         this.canvas.height = Math.round(this.h * dpr);
         this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.held = false;
     };
 
     Carrier.prototype.tune = function (tint, seed, wave, flat) {
@@ -201,8 +209,21 @@
         this.pull.target = near ? clamp((p.y - this.baseY) * .4, -26, 26) : 0;
         this.pull.step(dt);
 
+        if (this.hold && this.held) return;
+        this.held = this.hold;
+
         var ctx = this.ctx;
+        ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
         ctx.clearRect(0, 0, this.w, this.h);
+        if (this.band) {
+            // 窄带以载波为中线；绘制仍用视口坐标，只把画布整体平移过去（合成层位移，不触发重排）
+            var top = Math.round(this.baseY - this.h / 2);
+            if (top !== this.top) {
+                this.top = top;
+                this.canvas.style.transform = 'translateY(' + top + 'px)';
+            }
+            ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, -top * this.dpr);
+        }
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
@@ -510,6 +531,7 @@
         var narrow = window.innerWidth < 640;
         var carrier = new Carrier(canvas, {
             mode: 'field',
+            band: true,
             wavelength: narrow ? 46 : 58,
             amplitude: narrow ? 4 : 5.5,
             speed: 1.7,
@@ -531,7 +553,34 @@
 
         // 偶尔有一束信号从左侧驶过；入场后才开始
         var nextPulse = 3.6;
+        // 从首页卡片进入：卡片载波离场前已对准画布的波长与振幅（head.ejs），这里按它留下的波峰位置定相位；
+        // 过渡期间画布定格，与形变到位的卡片载波重合，交接完再流动起来
+        // 预渲染时脚本早已跑完，激活揭幕时（pagereveal）再对一次
+        function fromHome() {
+            if (!root.classList.contains('cw-from-home')) return;
+            var hop = null;
+            try {
+                hop = JSON.parse(sessionStorage.getItem('cw-wave-hop'));
+                sessionStorage.removeItem('cw-wave-hop');
+            } catch (err) {}
+            carrier.amp.x = 1;
+            carrier.rate.x = 0;
+            carrier.held = false;
+            if (hop && Date.now() - hop.t < 6000) {
+                // 向上的波峰：sin(k·x − t·speed) = −1
+                var o = carrier.opts;
+                var t = (TAU / o.wavelength * hop.x + Math.PI / 2) / o.speed;
+                var cycle = TAU / o.speed;
+                carrier.time = (t % cycle + cycle) % cycle;
+                nextPulse = carrier.time + 3.6;
+            }
+        }
+        window.addEventListener('pagereveal', fromHome);
+
         carrier.before = function () {
+            // 过渡期间定格：时钟停住，画布也只画一帧
+            carrier.hold = root.classList.contains('cw-from-home');
+            carrier.rate.target = carrier.hold ? 0 : 1;
             if (carrier.time > nextPulse) {
                 nextPulse = carrier.time + 9 + Math.random() * 8;
                 if (!document.hidden) carrier.emit(0, 1);
@@ -547,6 +596,7 @@
         };
 
         measure();
+        fromHome();
         onResize(measure);
         trackPointer(carrier);
         carriers.push(carrier);

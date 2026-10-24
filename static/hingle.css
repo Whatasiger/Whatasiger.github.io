@@ -24,6 +24,22 @@
     --radius: .25em;             /* 通用圆角半径，调整此值可改变所有圆角元素的弧度 */
     --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);      /* 弹性缓动曲线，用于有弹跳感的动画 */
     --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* 平滑缓动曲线，用于柔和过渡的动画 */
+    --ease-exit: cubic-bezier(0.4, 0, 1, 1);           /* 离场缓动曲线：由慢到快，用于浮层收起 */
+
+    /* 浮层卡片（设置面板 / 手机端导航）统一的毛玻璃设计语言 */
+    --glass-radius: 16px;                                /* 卡片圆角；支持 squircle 时见下方 @supports */
+    --glass-bg: rgba(255, 255, 255, 0.8);                /* 卡片底色，透出背后内容 */
+    --glass-filter: blur(32px) saturate(170%);           /* 毛玻璃：模糊 + 提饱和，背后颜色更通透 */
+    --glass-border: rgba(255, 255, 255, 0.6);            /* 卡片描边 */
+    --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7),            /* 顶部内高光，像玻璃边缘 */
+                    0 24px 56px -12px rgba(30, 40, 60, 0.28),          /* 大范围柔和投影 */
+                    0 6px 16px -6px rgba(30, 40, 60, 0.14);            /* 贴近卡片的接触投影 */
+    --glass-tile: rgba(255, 255, 255, 0.5);              /* 卡片内的次级色块（导航磁贴等） */
+}
+
+/* 支持超椭圆圆角的浏览器：改用 squircle 平滑圆角，半径相应放大以保持观感 */
+@supports (corner-shape: squircle) {
+    :root { --glass-radius: 26px; }
 }
 
 /* 全局 body 样式，定义页面基础字体、颜色与背景图相关变量 */
@@ -393,6 +409,14 @@ input, textarea, pre, hr, blockquote {
     --light-border: #333;           /* 夜间模式浅边框颜色，更深的灰色 */
     --light-background: #333;       /* 夜间模式浅色背景（卡片/输入框），深灰 */
     --twikoo-input-bg: rgba(0, 0, 0, 0.22); /* 夜间 Twikoo 输入区半透明加深层 */
+
+    /* 夜间浮层卡片毛玻璃 */
+    --glass-bg: rgba(30, 30, 32, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+                    0 24px 56px -12px rgba(0, 0, 0, 0.7),
+                    0 6px 16px -6px rgba(0, 0, 0, 0.45);
+    --glass-tile: rgba(255, 255, 255, 0.05);
 }
 
 /* 夜间模式 body 滚动条：透明边框 + 半透明白色轨道 */
@@ -599,6 +623,9 @@ header {
 
 /* 菜单链接悬停颜色：橙黄色高亮 */
 .head-menu a:hover { color: #ffa628; /* 导航链接悬停颜色，可改为任意颜色 */ }
+
+/* 菜单图标仅在手机端导航卡片中显示 */
+.head-menu a .fa { display: none; }
 
 /* 含子菜单的菜单项，末尾添加向下箭头图标 */
 .head-menu .has-child > a:after {
@@ -1195,7 +1222,7 @@ main img {
     margin: 0;
     padding: 0;
     border: 0;
-    font-family: "Cormorant Garamond", serif;
+    font-family: "CW Title", "Cormorant Garamond", serif; /* CW Title 为内联的标题子集字体，见 _partial/cw-title-font.ejs */
     font-weight: 300;
     font-size: 2.6em;
     line-height: 1;
@@ -1232,6 +1259,23 @@ main img {
 @media (prefers-reduced-motion: reduce) {
     .cw-card-wave { animation: none; }
 }
+
+/* 按下：卡片微沉，标题与载波从悬停状态回落到静止状态（与目录页首屏一致），点击的回应不必等新页面 */
+.post-item.cw-card.is-pressed {
+    transform: translateY(-4px) scale(.985);
+    transition: transform .5s var(--ease-spring), box-shadow .5s ease;
+}
+.post-item.cw-card.is-pressed .cw-card-title {
+    letter-spacing: .04em;
+    transform: none;
+    transition: letter-spacing .45s cubic-bezier(.22, 1, .36, 1), transform .45s cubic-bezier(.22, 1, .36, 1);
+}
+.post-item.cw-card.is-pressed .cw-card-strand { stroke: rgba(228, 228, 224, .38); transform: none; transition: stroke .45s ease, transform .45s cubic-bezier(.22, 1, .36, 1); }
+.post-item.cw-card.is-pressed .cw-card-strand.is-ghost { stroke: rgba(174, 191, 214, .16); transform: translateY(5px) scaleY(.7); }
+/* 离场快照前（pageswap，见 head.ejs）：未走完的回落直接到位；主载波的波长、相位、振幅由脚本对准目录页画布 */
+html.cw-leaving .post-item.cw-card .cw-card-title { letter-spacing: .04em; transform: none; transition: none; }
+html.cw-leaving .post-item.cw-card .cw-card-strand { stroke: rgba(228, 228, 224, .38); transform: none; transition: none; }
+html.cw-leaving .post-item.cw-card .cw-card-strand.is-ghost { stroke: rgba(174, 191, 214, .16); transform: translateY(5px) scaleY(.7); }
 
 /* 一镜到底：与 /carrier_wave/ 首屏的同名元素配对形变（仅在跳往该页时生效） */
 .post-item.cw-card { view-transition-name: cw-stage; }
@@ -2340,42 +2384,49 @@ html {
     position: fixed;
     top: 4.2em;                     /* 面板距顶部距离（应在导航栏下方） */
     right: 1.2em;                   /* 面板距右边缘距离 */
-    width: 280px;                   /* 面板宽度 */
+    width: 300px;                   /* 面板宽度 */
     max-width: 92vw;                /* 面板最大宽度（防止小屏溢出） */
     padding: 0.9em 1em 1.1em;       /* 面板内边距 */
-    border-radius: 0.9em;           /* 面板圆角 */
-    background: rgba(255, 255, 255, 0.96); /* 面板背景透明度 */
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18); /* 面板投影强度 */
-    backdrop-filter: blur(12px);    /* 面板毛玻璃模糊强度 */
-    -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--glass-radius);
+    corner-shape: squircle;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
     font-size: 0.9rem;              /* 面板内字号 */
     line-height: 1.4;
     color: #333;
-    z-index: 10001;
+    z-index: 100001;                /* 高于页眉（99999），位于 header 之外不再继承其层级 */
     opacity: 0;                     /* 初始隐藏 */
-    transform: translateY(-8px);    /* 初始向上偏移，打开时滑入 */
+    transform: translateY(-8px) scale(0.96); /* 初始略小并上移，打开时从齿轮处展开 */
+    transform-origin: calc(100% - 1.4em) -0.6em;
     pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: opacity 0.2s var(--ease-exit), transform 0.25s var(--ease-exit); /* 收起：快速利落 */
 }
 
 /* 设置面板打开状态：完全可见并可交互 */
 .settings-panel.open {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
     pointer-events: auto;
+    transition: opacity 0.3s var(--ease-spring), transform 0.55s var(--ease-spring); /* 展开：先快后缓 */
 }
+
+/* 设置面板与手机端导航卡片同时打开时，后打开的那个在上（由 hingle.js 挂 .on-top） */
+.settings-panel.on-top, .head-menu.on-top { z-index: 100003; }
 
 /* 设置面板内容容器 */
 .settings-panel-inner { width: 100%; }
 
-/* 设置面板头部：标题与提示文字两端对齐 */
+/* 设置面板头部：图标 + 标题，与手机端导航卡片标题同款 */
 .settings-panel-header {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 0.4em;
+    align-items: center;
+    gap: 0.5em;
+    margin: 0 0.15em 0.6em;
 }
+.settings-panel-header .fa { color: var(--blue); font-size: 0.95rem; }
 
 /* 设置面板标题字号与字重 */
 .settings-panel-title {
@@ -2383,60 +2434,131 @@ html {
     font-weight: 600;               /* 面板标题字重 */
 }
 
-/* 设置面板副标题/提示文字 */
-.settings-panel-hint {
-    font-size: 0.7rem;              /* 面板提示字号（较小） */
-    color: #888;
-}
-
-/* 设置面板主体：纵向弹性布局 */
+/* 设置面板主体：纵向排列各分组 */
 .settings-panel-body {
     display: flex;
     flex-direction: column;
-    gap: 0.35em;                    /* 设置项之间的间距 */
 }
 
-/* 设置分组标题（如"字体"/"显示"等小节标题） */
+/* 设置分组：圆角色块承载若干设置行（与导航磁贴同款底色） */
+.settings-group {
+    padding: 0.1em 0.75em;
+    border-radius: calc(var(--glass-radius) - 0.5em);
+    corner-shape: squircle;
+    background: var(--glass-tile);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
+}
+
+/* 分组标题：小号灰字，右侧可附说明 */
 .settings-group-title {
-    margin-top: 0.4em;
-    margin-bottom: 0.1em;
-    font-size: 0.78rem;             /* 分组标题字号 */
-    letter-spacing: 0.08em;         /* 分组标题字间距，使大写字母更易读 */
-    text-transform: uppercase;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 0.9em 0.4em 0.35em;
+    font-size: 0.75rem;             /* 分组标题字号 */
+    letter-spacing: 0.08em;
     color: #999;
 }
+.settings-group-title small { font-size: 0.68rem; letter-spacing: 0; }
 
-/* 设置行：标签与控件两端对齐 */
+/* 设置行：图标 + 标签 + 控件，行间细线分隔 */
 .settings-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.75em;                    /* 标签与控件之间的间距 */
+    gap: 0.6em;
+    min-height: 2.7em;              /* 行高，保证手指好点 */
+    cursor: pointer;
+}
+.settings-row + .settings-row { border-top: 1px solid rgba(0, 0, 0, 0.06); }
+
+/* 行首图标：与导航磁贴同款圆形浅蓝底 */
+.settings-row .fa {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.8em;
+    height: 1.8em;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    color: var(--blue);
+    background: rgba(111, 159, 199, 0.15);
 }
 
 /* 设置行标签文字 */
 .settings-row span {
+    flex: 1;
     font-size: 0.85rem;             /* 设置项标签字号 */
     white-space: nowrap;
 }
 
-/* 设置行复选框样式 */
+/* 滑动条行：标签定宽，让各滑动条左端对齐 */
+.settings-row-range span { flex: none; width: 3em; }
+
+/* 复选框绘制为开关：底色为轨道，径向渐变画出滑块，靠 background-position 滑动 */
 .settings-row input[type="checkbox"] {
-    width: 1.15em;                  /* 复选框宽度 */
-    height: 1.15em;                 /* 复选框高度 */
+    -webkit-appearance: none;
+    appearance: none;
+    flex: none;
+    float: none;
+    width: 2.5em;                   /* 开关宽度 */
+    height: 1.5em;                  /* 开关高度 */
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.12)
+                radial-gradient(circle closest-side, #fff calc(100% - 3px), rgba(0, 0, 0, 0.1) calc(100% - 2px), transparent 100%)
+                no-repeat 0 0 / 1.5em 1.5em;
     cursor: pointer;
+    transition: background-color 0.3s var(--ease-smooth), background-position 0.45s var(--ease-spring);
+}
+.settings-row input[type="checkbox"]::before,
+.settings-row input[type="checkbox"]::after { content: none; } /* 撤掉 kico.css 的方框与对勾 */
+.settings-row input[type="checkbox"]:checked {
+    background-color: var(--blue);
+    background-position: 1em 0;     /* 宽度 − 高度 */
+}
+.settings-row input[type="checkbox"]:focus-visible {
+    outline: 2px solid rgba(111, 159, 199, 0.35);
+    outline-offset: 2px;
 }
 
-/* 设置行下拉选择框样式 */
+/* 下拉选择框：浅蓝胶囊 + 自绘箭头 */
 .settings-row select {
-    width: 120px;                   /* 下拉框宽度，影响选项文字显示空间 */
-    padding: 0.3em 0.5em;
-    border-radius: 0.3em;
-    border: 1px solid #ddd;
-    background: #fff;
+    flex: none;
+    width: auto;
+    height: 2em;
+    min-height: 0;
+    padding: 0 1.9em 0 0.8em;
+    border: none;
+    border-radius: 999px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(111, 159, 199, 0.15) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236f9fc7' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 0.7em center / 0.65em;
+    color: var(--blue);
+    font-size: 0.8rem;              /* 下拉框字号 */
+    font-weight: 600;
     cursor: pointer;
-    font-size: 0.85rem;             /* 下拉框字号 */
 }
+.settings-row select option { color: #333; background: #fff; }
+
+/* 面板内容依次浮现（与导航磁贴相同节奏） */
+.settings-panel-body > *, .settings-panel-footer {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.15s var(--ease-exit), transform 0.15s var(--ease-exit);
+}
+.settings-panel.open .settings-panel-body > *, .settings-panel.open .settings-panel-footer {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.35s var(--ease-spring), transform 0.5s var(--ease-spring);
+}
+.settings-panel.open .settings-panel-body > :nth-child(2),
+.settings-panel.open .settings-panel-body > :nth-child(3) { transition-delay: 40ms; }
+.settings-panel.open .settings-panel-body > :nth-child(4),
+.settings-panel.open .settings-panel-body > :nth-child(5) { transition-delay: 80ms; }
+.settings-panel.open .settings-panel-footer { transition-delay: 120ms; }
 
 /* ---- 设置面板 · 滑动条 ----
    架构：input background 承载 JS 动态渐变（进度+轨道），
@@ -2448,9 +2570,11 @@ html {
     flex: 1;
     -webkit-appearance: none;
     appearance: none;
-    background: transparent;
-    height: 3px;
-    border-radius: 999px;
+    height: 16px;                   /* 容得下手柄（kico.css 设了 overflow: hidden） */
+    min-height: 0;                  /* 覆盖 kico.css 的 1.5rem 最小高度 */
+    margin: 0;
+    background: transparent no-repeat center / 100% 6px; /* 渐变图由 JS 设置，只画在中间 6px 作为轨道 */
+    border-radius: 3px;
     outline: none;
     cursor: pointer;
 }
@@ -2462,7 +2586,7 @@ html {
 
 /* 2. WebKit 轨道：透明，让 input 背景渐变透出作为可见轨道 */
 .settings-row-range input[type="range"]::-webkit-slider-runnable-track {
-    height: 3px;
+    height: 6px;
     border-radius: 999px;
     background: transparent;
     cursor: pointer;
@@ -2472,12 +2596,12 @@ html {
 .settings-row-range input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 13px;
-    height: 13px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background: #fff;
     border: none;
-    margin-top: -5px;           /* 垂直居中：(轨道高 3 − 手柄高 13) / 2 */
+    margin-top: -5px;           /* 垂直居中：(轨道高 6 − 手柄高 16) / 2 */
     box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.3),
                 0 0 0 0.5px rgba(0, 0, 0, 0.04);
     cursor: pointer;
@@ -2487,7 +2611,7 @@ html {
 
 /* 悬停：弹性过冲放大 + 浅蓝光晕 */
 .settings-row-range input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.4);
+    transform: scale(1.25);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16),
                 0 0 0 4px rgba(111, 159, 199, 0.08);
 }
@@ -2502,7 +2626,7 @@ html {
 
 /* 4. Firefox 轨道 */
 .settings-row-range input[type="range"]::-moz-range-track {
-    height: 3px;
+    height: 6px;
     border-radius: 999px;
     background: rgba(0, 0, 0, 0.045);
     border: none;
@@ -2510,15 +2634,15 @@ html {
 
 /* 5. Firefox 进度填充 */
 .settings-row-range input[type="range"]::-moz-range-progress {
-    height: 3px;
+    height: 6px;
     border-radius: 999px;
     background: rgba(111, 159, 199, 0.55);
 }
 
 /* 6. Firefox 手柄 */
 .settings-row-range input[type="range"]::-moz-range-thumb {
-    width: 13px;
-    height: 13px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background: #fff;
     border: none;
@@ -2530,7 +2654,7 @@ html {
 }
 
 .settings-row-range input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.4);
+    transform: scale(1.25);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16),
                 0 0 0 4px rgba(111, 159, 199, 0.08);
 }
@@ -2577,64 +2701,54 @@ html {
 
 /* 夜间模式设置面板样式 */
 .dark-theme .settings-panel {
-    background: rgba(24, 24, 24, 0.96);         /* 夜间面板背景透明度 */
-    border-color: rgba(255, 255, 255, 0.06);
-    color: #ddd;
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65); /* 夜间面板投影强度 */
+    color: #ddd;                    /* 毛玻璃底色与投影由 --glass-* 变量统一控制 */
 }
-
-/* 夜间模式面板提示与分组标题颜色 */
-.dark-theme .settings-panel-hint { color: #aaa; }
 .dark-theme .settings-group-title { color: #777; }
-
-/* 夜间模式复选框主题色 */
-.dark-theme .settings-row input[type="checkbox"] { accent-color: #8bb4e0; /* 夜间复选框选中颜色 */ }
+.dark-theme .settings-group, .dark-theme .settings-reset-btn { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04); }
+.dark-theme .settings-row + .settings-row { border-top-color: rgba(255, 255, 255, 0.06); }
+.dark-theme .settings-panel-header .fa { color: #8bb4e0; }
+.dark-theme .settings-row .fa { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
+.dark-theme .settings-row input[type="checkbox"] { background-color: rgba(255, 255, 255, 0.14); }
+.dark-theme .settings-row input[type="checkbox"]:checked { background-color: #6f9fc7; }
+.dark-theme .settings-row select { background-color: rgba(139, 180, 224, 0.12); color: #8bb4e0; }
+.dark-theme .settings-row select option { color: #ddd; background: #333; }
 
 /* 设置面板底部区域（重置按钮区） */
-.settings-panel-footer {
-    margin-top: 0.8em;
-    padding-top: 0.6em;
-    border-top: 1px solid rgba(0, 0, 0, 0.08); /* 底部分隔线透明度 */
-}
+.settings-panel-footer { margin-top: 0.9em; }
 
-/* 重置设置按钮 */
+/* 恢复默认按钮：与分组同款色块，主题蓝文字 */
 .settings-reset-btn {
     width: 100%;
-    padding: 0.5em 1em;
+    height: 2.7em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
     border: none;
-    border-radius: 0.4em;           /* 按钮圆角 */
-    background: linear-gradient(135deg, #6f9fc7, #5a8db5); /* 按钮背景渐变颜色 */
-    color: #fff;
+    border-radius: calc(var(--glass-radius) - 0.5em);
+    corner-shape: squircle;
+    background: var(--glass-tile);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
+    color: var(--blue);
     font-size: 0.85rem;             /* 按钮文字字号 */
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    transition: transform 0.3s var(--ease-spring), background-color 0.25s, color 0.25s;
 }
+.settings-reset-btn .fa { transition: transform 0.6s var(--ease-spring); }
 
-/* 重置按钮悬停：上移 + 蓝色光晕 */
-.settings-reset-btn:hover {
-    transform: translateY(-1px);    /* 悬停上移距离 */
-    box-shadow: 0 4px 12px rgba(111, 159, 199, 0.4); /* 悬停投影颜色与强度 */
-    background: linear-gradient(135deg, #5a8db5, #4a7ca0); /* 悬停渐变颜色（略深） */
-}
+/* 悬停：染上浅蓝，图标逆时针转一下 */
+.settings-reset-btn:hover { background-color: rgba(111, 159, 199, 0.15); }
+.settings-reset-btn:hover .fa { transform: rotate(-180deg); }
 
-/* 重置按钮点击：下压效果 */
+/* 按下：轻微回缩 */
 .settings-reset-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(111, 159, 199, 0.3);
+    transform: scale(0.97);
+    transition-duration: 0.12s;
 }
 
-/* 夜间模式设置面板底部分隔线 */
-.dark-theme .settings-panel-footer {
-    border-top-color: rgba(255, 255, 255, 0.08);
-}
-
-/* 夜间模式下拉选择框样式 */
-.dark-theme .settings-row select {
-    background: #333;               /* 夜间下拉框背景色 */
-    border-color: #555;             /* 夜间下拉框边框颜色 */
-    color: #ddd;                    /* 夜间下拉框文字颜色 */
-}
+.dark-theme .settings-reset-btn { color: #8bb4e0; }
+.dark-theme .settings-reset-btn:hover { background-color: rgba(139, 180, 224, 0.12); }
 
 /* Prism 代码高亮主题：各种 token 类型的颜色定义 */
 /* - Prism 代码块 */
@@ -2918,41 +3032,119 @@ pre[class*="language-"].line-numbers {
         display: none;
     }
 
-    /* 手机端导航菜单：点击汉堡菜单后从左上角弹出 */
+    /* 手机端导航卡片：点击汉堡菜单后从按钮处展开，与设置面板同一套毛玻璃语言 */
     .head-menu {
         position: fixed;
-        top: 3.4em;                 /* 菜单距顶部（等于导航栏高度） */
-        left: 0.8em;                /* 菜单距左侧距离 */
+        top: 3.7em;                 /* 与手机端设置面板顶部对齐 */
+        left: 0.6em;
         right: auto;
-        width: auto;
-        min-width: 8em;             /* 菜单最小宽度 */
+        width: min(17em, calc(100vw - 1.2em)); /* 卡片宽度 */
         max-height: 75vh;           /* 菜单最大高度（防止溢出屏幕） */
         overflow-y: auto;
-        display: block;
-        padding: 0.5em 0.4em;
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* 两列磁贴 */
+        gap: 0.5em;                 /* 磁贴间距 */
+        padding: 0.9em;
         margin: 0;
-        border-right: none;
-        background-color: rgba(255, 255, 255, 0.88); /* 手机端菜单背景透明度 */
-        backdrop-filter: blur(20px);                  /* 手机端菜单毛玻璃模糊强度 */
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 14px;                          /* 手机端菜单圆角 */
-        border: 1px solid rgba(255, 255, 255, 0.65);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06); /* 菜单投影 */
+        border-radius: var(--glass-radius);
+        corner-shape: squircle;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        backdrop-filter: var(--glass-filter);
+        -webkit-backdrop-filter: var(--glass-filter);
+        color: #333;
         z-index: 100002;
         opacity: 0;                 /* 默认隐藏 */
         pointer-events: none;
-        transform: scale(0.85) translateY(-12px); /* 初始缩小并向上偏移 */
-        transform-origin: top left;
-        transition: opacity 0.18s ease-in, transform 0.2s ease-in;
+        transform: translateY(-8px) scale(0.96);
+        transform-origin: 1.4em -0.6em; /* 从汉堡按钮处展开 */
+        transition: opacity 0.2s var(--ease-exit), transform 0.25s var(--ease-exit); /* 收起：快速利落 */
     }
 
-    /* 手机端导航菜单激活（展开）动画 */
+    /* 卡片标题，与设置面板「阅读设置」同款 */
+    .head-menu:before {
+        content: "导航";
+        grid-column: 1 / -1;
+        padding: 0 0.15em 0.1em;
+        font-size: 0.95rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    /* 手机端导航卡片展开：先快后缓 */
     .head-menu.active {
         opacity: 1;
         pointer-events: auto;
-        transform: scale(1) translateY(0);
-        transition: opacity 0.3s var(--ease-spring),
-                    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); /* 带弹性的展开动画 */
+        transform: none;
+        transition: opacity 0.3s var(--ease-spring), transform 0.55s var(--ease-spring);
+    }
+
+    /* 导航磁贴：图标在上、文字在下，居中排布 */
+    .head-menu a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45em;
+        padding: 0.85em 0.4em 0.75em;
+        border-radius: calc(var(--glass-radius) - 0.5em);
+        corner-shape: squircle;
+        background: var(--glass-tile);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
+        font-size: 0.85rem;
+        line-height: 1.2;
+        letter-spacing: 0.05em;
+        text-align: center;
+        -webkit-tap-highlight-color: transparent;
+        opacity: 0;                 /* 磁贴随卡片依次浮现 */
+        transform: translateY(6px);
+        transition: opacity 0.15s var(--ease-exit), transform 0.15s var(--ease-exit),
+                    background-color 0.25s, color 0.25s;
+    }
+    .head-menu.active a {
+        opacity: 1;
+        transform: none;
+        transition: opacity 0.35s var(--ease-spring), transform 0.5s var(--ease-spring),
+                    background-color 0.25s, color 0.25s;
+    }
+    .head-menu.active a:nth-of-type(2) { transition-delay: 40ms; }
+    .head-menu.active a:nth-of-type(3) { transition-delay: 80ms; }
+    .head-menu.active a:nth-of-type(4) { transition-delay: 120ms; }
+    .head-menu.active a:nth-of-type(n+5) { transition-delay: 160ms; }
+
+    .head-menu a:hover { color: var(--blue); }
+
+    /* 按下：轻微回缩 */
+    .head-menu.active a:active {
+        transform: scale(0.95);
+        transition-delay: 0s;
+        transition-duration: 0.12s;
+    }
+
+    /* 磁贴图标：圆形浅蓝底 */
+    .head-menu a .fa {
+        display: grid;
+        place-items: center;
+        width: 2.4em;
+        height: 2.4em;
+        border-radius: 50%;
+        font-size: 1.05rem;
+        color: var(--blue);
+        background: rgba(111, 159, 199, 0.15);
+        transition: background-color 0.25s, color 0.25s;
+    }
+
+    /* 当前所在页面：磁贴染上主题蓝，图标反白 */
+    .head-menu a.current { color: var(--blue); background: rgba(111, 159, 199, 0.16); }
+    .head-menu a.current .fa { color: #fff; background: var(--blue); }
+
+    /* 菜单展开时，汉堡按钮变为关闭图标 */
+    .toggle-btn:before { transition: transform 0.45s var(--ease-spring); }
+    body:has(.head-menu.active) .toggle-btn { background-color: rgba(0, 0, 0, .05); }
+    body:has(.head-menu.active) .toggle-btn:before {
+        content: "\f00d";
+        transform: rotate(90deg);
     }
 
     /* 手机端子菜单：左侧缩进 */
@@ -2972,11 +3164,13 @@ pre[class*="language-"].line-numbers {
     }
 
     /* 夜间模式手机端菜单 */
-    .dark-theme .head-menu {
-        background-color: rgba(25, 25, 25, 0.92); /* 夜间菜单背景透明度 */
-        border-color: rgba(255, 255, 255, 0.1);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
+    .dark-theme .head-menu { color: #ddd; } /* 毛玻璃底色与投影由 --glass-* 变量统一控制 */
+    .dark-theme .head-menu a { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04); }
+    .dark-theme .head-menu a .fa { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
+    .dark-theme .head-menu a.current { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
+    .dark-theme .head-menu a.current .fa { color: #1e1e20; background: #8bb4e0; }
+    .dark-theme .head-menu a:hover { color: #8bb4e0; }
+    body.dark-theme:has(.head-menu.active) .toggle-btn { background-color: rgba(255, 255, 255, .06); }
 
     /* 手机端显示搜索图标按钮 */
     .search-btn { display: block; }

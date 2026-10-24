@@ -139,13 +139,20 @@ var Paul_Hingle = function (config) {
         var pct = ((val - min) / (max - min)) * 100;
         var isDark = body.classList.contains("dark-theme");
         var fill = isDark ? "rgba(139,180,224,0.5)" : "rgba(111,159,199,0.55)";
-        var track = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.045)";
-        input.style.background = "linear-gradient(90deg, " + fill + " " + pct + "%, " + track + " " + pct + "%)";
+        var track = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)";
+        input.style.backgroundImage = "linear-gradient(90deg, " + fill + " " + pct + "%, " + track + " " + pct + "%)";
     }
 
     function updateAllSliderFills() {
         var sliders = document.querySelectorAll(".settings-row-range input[type='range']");
         for (var i = 0; i < sliders.length; i++) updateSliderFill(sliders[i]);
+    }
+
+    // 浮层（设置面板 / 手机端导航卡片）同时打开时，后打开的置于最上层
+    function bringToFront(el) {
+        var tops = document.querySelectorAll(".on-top");
+        for (var i = 0; i < tops.length; i++) tops[i].classList.remove("on-top");
+        el.classList.add("on-top");
     }
 
     function setupSettingsPanel() {
@@ -188,7 +195,7 @@ var Paul_Hingle = function (config) {
         // 打开 / 关闭面板
         btn.addEventListener("click", function (e) {
             e.stopPropagation();
-            panel.classList.toggle("open");
+            if (panel.classList.toggle("open")) bringToFront(panel);
         });
 
         document.addEventListener("click", function (e) {
@@ -324,7 +331,7 @@ var Paul_Hingle = function (config) {
 
         toggleBtn.onclick = function (e) {
             e.stopPropagation();
-            menu.classList.toggle("active");
+            if (menu.classList.toggle("active")) bringToFront(menu);
         };
 
         // 点击菜单内的链接后自动收起（手机端浮动菜单体验）

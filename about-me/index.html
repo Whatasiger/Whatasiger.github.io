@@ -182,7 +182,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - GA 2.1</a>
+    <a href="/" class="header-logo">Whatasiger - GA 2.2</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -203,71 +203,86 @@
             <div id="local-search-result"></div>
         </div>
     
+</header>
 
-    <div class="settings-panel" id="reader-settings-panel">
-        <div class="settings-panel-inner">
-            <div class="settings-panel-header">
-                <span class="settings-panel-title">阅读设置</span>
-                <span class="settings-panel-hint"></span>
-            </div>
-            <div class="settings-panel-body">
+<div class="settings-panel" id="reader-settings-panel">
+    <div class="settings-panel-inner">
+        <div class="settings-panel-header">
+            <i class="fa fa-sliders"></i>
+            <span class="settings-panel-title">阅读设置</span>
+        </div>
+        <div class="settings-panel-body">
+            <div class="settings-group">
                 <label class="settings-row">
+                    <i class="fa fa-arrow-up"></i>
                     <span>显示「回到顶部」</span>
                     <input type="checkbox" id="setting-show-top">
                 </label>
                 <label class="settings-row">
+                    <i class="fa fa-picture-o"></i>
                     <span>隐藏背景图片</span>
                     <input type="checkbox" id="setting-hide-bg">
                 </label>
                 <label class="settings-row">
+                    <i class="fa fa-list-ul"></i>
                     <span>关闭首页 TODO 显示</span>
                     <input type="checkbox" id="setting-hide-todo">
                 </label>
                 <label class="settings-row">
+                    <i class="fa fa-font"></i>
                     <span>字体</span>
                     <select id="setting-font-family">
                         <option value="noto-sans-sc">思源黑体</option>
                         <option value="system-default">系统默认</option>
                     </select>
                 </label>
-                <div class="settings-group-title">文字设置 仅在文章页对正文生效</div>
+            </div>
+            <div class="settings-group-title">文字<small>仅在文章页对正文生效</small></div>
+            <div class="settings-group">
                 <label class="settings-row settings-row-range">
+                    <i class="fa fa-bold"></i>
                     <span>字重</span>
                     <input type="range" id="setting-font-weight" min="1" max="5" step="1">
                 </label>
                 <label class="settings-row settings-row-range">
+                    <i class="fa fa-text-width"></i>
                     <span>字间距</span>
                     <input type="range" id="setting-letter-spacing" min="-2" max="8" step="1">
                 </label>
                 <label class="settings-row settings-row-range">
+                    <i class="fa fa-text-height"></i>
                     <span>字号</span>
                     <input type="range" id="setting-font-size" min="90" max="130" step="10">
                 </label>
-                <div class="settings-group-title">背景</div>
+            </div>
+            <div class="settings-group-title">背景</div>
+            <div class="settings-group">
                 <label class="settings-row settings-row-range">
-                    <span>背景可见度</span>
+                    <i class="fa fa-eye"></i>
+                    <span>可见度</span>
                     <input type="range" id="setting-bg-opacity" min="0" max="50" step="2.5">
                 </label>
                 <label class="settings-row settings-row-range settings-row-range-rtl">
-                    <span>背景模糊度</span>
+                    <i class="fa fa-tint"></i>
+                    <span>模糊度</span>
                     <input type="range" id="setting-bg-blur" min="0" max="20" step="1">
                 </label>
             </div>
-            <div class="settings-panel-footer">
-                <button id="setting-reset-btn" class="settings-reset-btn">重置</button>
-            </div>
+        </div>
+        <div class="settings-panel-footer">
+            <button id="setting-reset-btn" class="settings-reset-btn"><i class="fa fa-undo"></i>恢复默认</button>
         </div>
     </div>
+</div>
 
-</header>
 <nav class="head-menu">
-    <a href="/">首页</a>
+    <a href="/"><i class="fa fa-home"></i><span>首页</span></a>
     
-        <a href="/about-me">关于我</a>
+        <a href="/about-me" class="current"><i class="fa fa-user"></i><span>关于我</span></a>
     
-        <a href="/about-website">关于网站</a>
+        <a href="/about-website"><i class="fa fa-info-circle"></i><span>关于网站</span></a>
     
-        <a href="/comments">留言板</a>
+        <a href="/comments"><i class="fa fa-comments"></i><span>留言板</span></a>
     
 </nav>
 

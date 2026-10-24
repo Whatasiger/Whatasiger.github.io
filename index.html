@@ -64,7 +64,12 @@
           href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
           media="print" onload="this.media='all'; this.onload=null;">
     
-    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Cormorant+Garamond:wght@300&display=swap">
+    <!-- 卡片标题用内联的子集字体，不再外链 Cormorant Garamond -->
+    
+<style>@font-face{font-family:"CW Title";font-style:normal;font-weight:300;font-display:block;src:url(data:font/woff2;base64,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) format("woff2");}</style>
+
+    <!-- 预渲染目录页：指针停在卡片上（或按下）时就在后台把它完整加载好，点击即刻切换、过渡立即开始，不必等网络与字体 -->
+    <script type="speculationrules">{"prerender": [{"urls": ["/carrier_wave/"], "eagerness": "moderate"}]}</script>
     <!-- 卡片副题「载波·短篇辑」与目录页同用思源宋体；只取这几个字，字体文件很小 -->
     <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@300&text=%E8%BD%BD%E6%B3%A2%E7%9F%AD%E7%AF%87%E8%BE%91&display=swap">
     <!-- 跨页面过渡只用于「首页 ↔ CARRiER WAVE.」，其余跳转一律跳过 -->
@@ -81,15 +86,45 @@
                 // 给目录页留一份来源记录：它拿不到 navigation.activation.from 时据此判断是否从首页来
                 try { sessionStorage.setItem('cw-vt-hop', JSON.stringify({ from: norm(location.href), to: to ? norm(to) : '', t: Date.now() })); } catch (err) {}
                 if (!e.viewTransition) return;
-                if (!to || norm(to) !== target) e.viewTransition.skipTransition();
+                if (!to || norm(to) !== target) { e.viewTransition.skipTransition(); return; }
+                // 快照前把卡片收回静止状态：悬停时标题字距变宽、载波鼓起变色，与目录页首屏对不上，交叉淡化时会出现重影
+                root.classList.add('cw-leaving');
+                alignWave();
             });
+            // 卡片载波对准目录页的画布载波：形变时卡片被横向拉伸到首屏宽度，拉伸后的波长须等于画布波长（cw.js 中 58 / 窄屏 46），
+            // 再平移到某个波峰，把它在新页中的横坐标交给目录页，画布按此定相位，两条波交接时严丝合缝
+            function alignWave() {
+                var box = document.querySelector('.cw-card-wave-box');
+                var svg = box && box.querySelector('.cw-card-wave');
+                var main = svg && svg.querySelector('.cw-card-strand:not(.is-ghost)');
+                if (!main) return;
+                var boxW = box.getBoundingClientRect().width;
+                // 目录页首屏的载波轴：视口去掉滚动条，左右各留 24px（.cw-hero 的内边距）
+                var axisL = 24, axisW = document.documentElement.clientWidth - 48;
+                if (!boxW || axisW <= 0) return;
+                var narrow = innerWidth < 640;
+                var period = (narrow ? 46 : 58) * boxW / axisW;    // 卡片里应有的波长
+                var width = period * 40;                           // SVG 共 40 个周期
+                if (width < boxW + period) return;                 // 卡片过宽、平移后盖不满时放弃对齐
+                // 第一个向上的波峰在路径的 10/1600（即 1/4 周期）处，左移 1/4 周期让它正对盒子左缘，形变后即落在载波轴左端
+                svg.style.cssText = 'animation:none;width:' + width + 'px;transform:translateX(' + (-period / 4) + 'px)';
+                main.style.transform = 'scaleY(' + ((narrow ? 4 : 5.5) / 3.6) + ')'; // 卡片振幅约 3.6px，放大到画布振幅
+                try { sessionStorage.setItem('cw-wave-hop', JSON.stringify({ x: axisL, t: Date.now() })); } catch (err) {}
+            }
+            function resetWave() {
+                var svg = document.querySelector('.cw-card-wave');
+                if (svg) svg.style.cssText = '';
+                var main = document.querySelector('.cw-card-strand:not(.is-ghost)');
+                if (main) main.style.transform = '';
+            }
             // 从目录页回来：整屏收回成卡片；卡片不在视口内（如恢复了滚动位置）就不做
             // 只在从往返缓存恢复时做：全新加载要等首页渲染，旧画面会先冻住，首帧布局也未定型，形变起止对不上
             var revealed = false;
             window.addEventListener('pagereveal', function (e) {
                 var restored = revealed;
                 revealed = true;
-                root.classList.remove('cw-back');
+                root.classList.remove('cw-back', 'cw-leaving');
+                resetWave();
                 if (!e.viewTransition) return;
                 if (!restored) { e.viewTransition.skipTransition(); return; }
                 var act = window.navigation && navigation.activation;
@@ -126,6 +161,22 @@
                 ['pointerenter', 'pointerdown', 'touchstart', 'focus'].forEach(function (t) {
                     card.addEventListener(t, warm, { once: true, passive: true });
                 });
+                // 按下即有回应：卡片微微沉下、标题与载波从悬停状态回落，不必等新页面就绪；离场快照会从这里接续
+                // 抬起后保持按下状态直到离开本页；移出卡片、触摸转为滚动、带修饰键（新标签页打开）时复原
+                function release() { card.classList.remove('is-pressed'); }
+                card.addEventListener('pointerdown', function (e) {
+                    if (e.button === 0) card.classList.add('is-pressed');
+                });
+                // 触摸抬起时也会触发 pointerleave，只认鼠标
+                card.addEventListener('pointerleave', function (e) {
+                    if (e.pointerType === 'mouse') release();
+                });
+                card.addEventListener('pointercancel', release);
+                card.addEventListener('click', function (e) {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) release();
+                });
+                // 从往返缓存回来时复原
+                window.addEventListener('pageshow', release);
                 window.addEventListener('load', function () {
                     if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 3000 });
                     else setTimeout(warm, 1000);
@@ -364,7 +415,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - GA 2.1</a>
+    <a href="/" class="header-logo">Whatasiger - GA 2.2</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -385,71 +436,86 @@
             <div id="local-search-result"></div>
         </div>
     
+</header>
 
-    <div class="settings-panel" id="reader-settings-panel">
-        <div class="settings-panel-inner">
-            <div class="settings-panel-header">
-                <span class="settings-panel-title">阅读设置</span>
-                <span class="settings-panel-hint"></span>
-            </div>
-            <div class="settings-panel-body">
+<div class="settings-panel" id="reader-settings-panel">
+    <div class="settings-panel-inner">
+        <div class="settings-panel-header">
+            <i class="fa fa-sliders"></i>
+            <span class="settings-panel-title">阅读设置</span>
+        </div>
+        <div class="settings-panel-body">
+            <div class="settings-group">
                 <label class="settings-row">
+                    <i class="fa fa-arrow-up"></i>
                     <span>显示「回到顶部」</span>
                     <input type="checkbox" id="setting-show-top">
                 </label>
                 <label class="settings-row">
+                    <i class="fa fa-picture-o"></i>
                     <span>隐藏背景图片</span>
                     <input type="checkbox" id="setting-hide-bg">
                 </label>
                 <label class="settings-row">
+                    <i class="fa fa-list-ul"></i>
                     <span>关闭首页 TODO 显示</span>
                     <input type="checkbox" id="setting-hide-todo">
                 </label>
                 <label class="settings-row">
+                    <i class="fa fa-font"></i>
                     <span>字体</span>
                     <select id="setting-font-family">
                         <option value="noto-sans-sc">思源黑体</option>
                         <option value="system-default">系统默认</option>
                     </select>
                 </label>
-                <div class="settings-group-title">文字设置 仅在文章页对正文生效</div>
+            </div>
+            <div class="settings-group-title">文字<small>仅在文章页对正文生效</small></div>
+            <div class="settings-group">
                 <label class="settings-row settings-row-range">
+                    <i class="fa fa-bold"></i>
                     <span>字重</span>
                     <input type="range" id="setting-font-weight" min="1" max="5" step="1">
                 </label>
                 <label class="settings-row settings-row-range">
+                    <i class="fa fa-text-width"></i>
                     <span>字间距</span>
                     <input type="range" id="setting-letter-spacing" min="-2" max="8" step="1">
                 </label>
                 <label class="settings-row settings-row-range">
+                    <i class="fa fa-text-height"></i>
                     <span>字号</span>
                     <input type="range" id="setting-font-size" min="90" max="130" step="10">
                 </label>
-                <div class="settings-group-title">背景</div>
+            </div>
+            <div class="settings-group-title">背景</div>
+            <div class="settings-group">
                 <label class="settings-row settings-row-range">
-                    <span>背景可见度</span>
+                    <i class="fa fa-eye"></i>
+                    <span>可见度</span>
                     <input type="range" id="setting-bg-opacity" min="0" max="50" step="2.5">
                 </label>
                 <label class="settings-row settings-row-range settings-row-range-rtl">
-                    <span>背景模糊度</span>
+                    <i class="fa fa-tint"></i>
+                    <span>模糊度</span>
                     <input type="range" id="setting-bg-blur" min="0" max="20" step="1">
                 </label>
             </div>
-            <div class="settings-panel-footer">
-                <button id="setting-reset-btn" class="settings-reset-btn">重置</button>
-            </div>
+        </div>
+        <div class="settings-panel-footer">
+            <button id="setting-reset-btn" class="settings-reset-btn"><i class="fa fa-undo"></i>恢复默认</button>
         </div>
     </div>
+</div>
 
-</header>
 <nav class="head-menu">
-    <a href="/">首页</a>
+    <a href="/" class="current"><i class="fa fa-home"></i><span>首页</span></a>
     
-        <a href="/about-me">关于我</a>
+        <a href="/about-me"><i class="fa fa-user"></i><span>关于我</span></a>
     
-        <a href="/about-website">关于网站</a>
+        <a href="/about-website"><i class="fa fa-info-circle"></i><span>关于网站</span></a>
     
-        <a href="/comments">留言板</a>
+        <a href="/comments"><i class="fa fa-comments"></i><span>留言板</span></a>
     
 </nav>
 
@@ -900,7 +966,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=2111740365" target="_blank" rel="noopener">
                         <span class="todo-rank">1</span>
-                        <img src="https://p2.music.126.net/19xlS-oxqi3yG7890PEehA==/109951173986849987.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/19xlS-oxqi3yG7890PEehA==/109951173986849987.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">itsuka</span>
                             <span class="todo-meta">ひとひら</span>
@@ -911,7 +977,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=2066755272" target="_blank" rel="noopener">
                         <span class="todo-rank">2</span>
-                        <img src="https://p2.music.126.net/cGIdZW4EEtPhd3rB775SaQ==/109951168857920159.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/cGIdZW4EEtPhd3rB775SaQ==/109951168857920159.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">飞松</span>
                             <span class="todo-meta">陈粒</span>
@@ -922,7 +988,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=26405133" target="_blank" rel="noopener">
                         <span class="todo-rank">3</span>
-                        <img src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">Girl meets NUMBER GIRL</span>
                             <span class="todo-meta">きのこ帝国</span>
@@ -933,7 +999,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=26405131" target="_blank" rel="noopener">
                         <span class="todo-rank">4</span>
-                        <img src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">スクールフィクション</span>
                             <span class="todo-meta">きのこ帝国</span>
@@ -942,20 +1008,9 @@
                 </li>
                 
                 <li>
-                    <a href="https://music.163.com/#/song?id=2131278053" target="_blank" rel="noopener">
-                        <span class="todo-rank">5</span>
-                        <img src="https://p2.music.126.net/RUncgVNxqcwGwp84Ikf0Xw==/109951169377173678.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">13月</span>
-                            <span class="todo-meta">downt</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
                     <a href="https://music.163.com/#/song?id=2722426126" target="_blank" rel="noopener">
-                        <span class="todo-rank">6</span>
-                        <img src="https://p2.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">5</span>
+                        <img src="https://p1.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">おとぎ</span>
                             <span class="todo-meta">RAY</span>
@@ -965,8 +1020,8 @@
                 
                 <li>
                     <a href="https://music.163.com/#/song?id=2748701151" target="_blank" rel="noopener">
-                        <span class="todo-rank">7</span>
-                        <img src="https://p2.music.126.net/hTnLSH8R5Wj0_seLnUw_0A==/109951172051293982.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">6</span>
+                        <img src="https://p1.music.126.net/hTnLSH8R5Wj0_seLnUw_0A==/109951172051293982.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">doll</span>
                             <span class="todo-meta">羊文学</span>
@@ -976,8 +1031,8 @@
                 
                 <li>
                     <a href="https://music.163.com/#/song?id=2712589107" target="_blank" rel="noopener">
-                        <span class="todo-rank">8</span>
-                        <img src="https://p2.music.126.net/jd5vRmlAEaJ40ao4HK2Wag==/109951171268447043.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">7</span>
+                        <img src="https://p1.music.126.net/jd5vRmlAEaJ40ao4HK2Wag==/109951171268447043.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">春の嵐</span>
                             <span class="todo-meta">羊文学</span>
@@ -986,20 +1041,20 @@
                 </li>
                 
                 <li>
-                    <a href="https://music.163.com/#/song?id=28095028" target="_blank" rel="noopener">
-                        <span class="todo-rank">9</span>
-                        <img src="https://p2.music.126.net/o7w7szxFLTeSnDJJa9hoKw==/109951163560123952.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                    <a href="https://music.163.com/#/song?id=2131278053" target="_blank" rel="noopener">
+                        <span class="todo-rank">8</span>
+                        <img src="https://p1.music.126.net/RUncgVNxqcwGwp84Ikf0Xw==/109951169377173678.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">FLOWER GIRL</span>
-                            <span class="todo-meta">きのこ帝国</span>
+                            <span class="todo-title">13月</span>
+                            <span class="todo-meta">downt</span>
                         </span>
                     </a>
                 </li>
                 
                 <li>
                     <a href="https://music.163.com/#/song?id=2600524616" target="_blank" rel="noopener">
-                        <span class="todo-rank">10</span>
-                        <img src="https://p2.music.126.net/TZyy6V0geCU5zP0j9lLDZg==/109951169703704961.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">9</span>
+                        <img src="https://p1.music.126.net/TZyy6V0geCU5zP0j9lLDZg==/109951169703704961.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">流れゆく季節</span>
                             <span class="todo-meta">Haruka Nakamura</span>
@@ -1007,10 +1062,21 @@
                     </a>
                 </li>
                 
+                <li>
+                    <a href="https://music.163.com/#/song?id=2055198410" target="_blank" rel="noopener">
+                        <span class="todo-rank">10</span>
+                        <img src="https://p1.music.126.net/0ALOBu-1GDqWarT7Vh9TXA==/109951168675399206.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">it begins</span>
+                            <span class="todo-meta">牛尾憲輔</span>
+                        </span>
+                    </a>
+                </li>
+                
             
         </ol>
         
-            <p class="todo-note">更新于 2026-10-23</p>
+            <p class="todo-note">更新于 2026-10-24</p>
         
     </section>
 </aside>
@@ -1022,7 +1088,6 @@
 
 <script src="/static/todo-sidebar.js"></script>
 
-<script src="/static/glass-crack.js"></script>
 <script src="/static/water-ripple.js"></script>
 
     <footer>

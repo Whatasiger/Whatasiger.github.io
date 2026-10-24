@@ -182,7 +182,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - GA 2.1</a>
+    <a href="/" class="header-logo">Whatasiger - GA 2.2</a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -203,71 +203,86 @@
             <div id="local-search-result"></div>
         </div>
     
+</header>
 
-    <div class="settings-panel" id="reader-settings-panel">
-        <div class="settings-panel-inner">
-            <div class="settings-panel-header">
-                <span class="settings-panel-title">阅读设置</span>
-                <span class="settings-panel-hint"></span>
-            </div>
-            <div class="settings-panel-body">
+<div class="settings-panel" id="reader-settings-panel">
+    <div class="settings-panel-inner">
+        <div class="settings-panel-header">
+            <i class="fa fa-sliders"></i>
+            <span class="settings-panel-title">阅读设置</span>
+        </div>
+        <div class="settings-panel-body">
+            <div class="settings-group">
                 <label class="settings-row">
+                    <i class="fa fa-arrow-up"></i>
                     <span>显示「回到顶部」</span>
                     <input type="checkbox" id="setting-show-top">
                 </label>
                 <label class="settings-row">
+                    <i class="fa fa-picture-o"></i>
                     <span>隐藏背景图片</span>
                     <input type="checkbox" id="setting-hide-bg">
                 </label>
                 <label class="settings-row">
+                    <i class="fa fa-list-ul"></i>
                     <span>关闭首页 TODO 显示</span>
                     <input type="checkbox" id="setting-hide-todo">
                 </label>
                 <label class="settings-row">
+                    <i class="fa fa-font"></i>
                     <span>字体</span>
                     <select id="setting-font-family">
                         <option value="noto-sans-sc">思源黑体</option>
                         <option value="system-default">系统默认</option>
                     </select>
                 </label>
-                <div class="settings-group-title">文字设置 仅在文章页对正文生效</div>
+            </div>
+            <div class="settings-group-title">文字<small>仅在文章页对正文生效</small></div>
+            <div class="settings-group">
                 <label class="settings-row settings-row-range">
+                    <i class="fa fa-bold"></i>
                     <span>字重</span>
                     <input type="range" id="setting-font-weight" min="1" max="5" step="1">
                 </label>
                 <label class="settings-row settings-row-range">
+                    <i class="fa fa-text-width"></i>
                     <span>字间距</span>
                     <input type="range" id="setting-letter-spacing" min="-2" max="8" step="1">
                 </label>
                 <label class="settings-row settings-row-range">
+                    <i class="fa fa-text-height"></i>
                     <span>字号</span>
                     <input type="range" id="setting-font-size" min="90" max="130" step="10">
                 </label>
-                <div class="settings-group-title">背景</div>
+            </div>
+            <div class="settings-group-title">背景</div>
+            <div class="settings-group">
                 <label class="settings-row settings-row-range">
-                    <span>背景可见度</span>
+                    <i class="fa fa-eye"></i>
+                    <span>可见度</span>
                     <input type="range" id="setting-bg-opacity" min="0" max="50" step="2.5">
                 </label>
                 <label class="settings-row settings-row-range settings-row-range-rtl">
-                    <span>背景模糊度</span>
+                    <i class="fa fa-tint"></i>
+                    <span>模糊度</span>
                     <input type="range" id="setting-bg-blur" min="0" max="20" step="1">
                 </label>
             </div>
-            <div class="settings-panel-footer">
-                <button id="setting-reset-btn" class="settings-reset-btn">重置</button>
-            </div>
+        </div>
+        <div class="settings-panel-footer">
+            <button id="setting-reset-btn" class="settings-reset-btn"><i class="fa fa-undo"></i>恢复默认</button>
         </div>
     </div>
+</div>
 
-</header>
 <nav class="head-menu">
-    <a href="/">首页</a>
+    <a href="/"><i class="fa fa-home"></i><span>首页</span></a>
     
-        <a href="/about-me">关于我</a>
+        <a href="/about-me" class="current"><i class="fa fa-user"></i><span>关于我</span></a>
     
-        <a href="/about-website">关于网站</a>
+        <a href="/about-website"><i class="fa fa-info-circle"></i><span>关于网站</span></a>
     
-        <a href="/comments">留言板</a>
+        <a href="/comments"><i class="fa fa-comments"></i><span>留言板</span></a>
     
 </nav>
 
@@ -295,7 +310,7 @@
 <div class="quote-box quote-tip"><div class="quote-header"><i class="quote-icon fa fa-lightbulb-o" aria-hidden="true"></i><span class="quote-title">一句话结论</span><button class="quote-toggle" type="button" aria-label="折叠/展开"><i class="fa fa-chevron-down" aria-hidden="true"></i></button></div><div class="quote-body">
 <p>这份分数最接近 <strong>INFP</strong>（内倾情感主导、外倾直觉辅助），但带有一个很显眼的「异常值」——<strong>内倾思维（Ti）高居第二</strong>。整体画像是：<strong>一个用内心的价值与内心的逻辑双重把关、向外发散联想、同时又很恋旧的人；对外部的效率标准与社交共识兴趣不大。</strong></p>
 </div></div>
-<h2 id="一、先说说荣格八维是什么"><a href="#一、先说说荣格八维是什么" class="headerlink" title="一、先说说荣格八维是什么"></a>一、先说说荣格八维是什么</h2><p>荣格在《心理类型》（1921）里提出：人有四种基本的心理功能——两种<strong>感知</strong>功能（感觉 S、直觉 N）负责「收集信息」，两种<strong>判断</strong>功能（思维 T、情感 F）负责「下结论」；每种功能又可以朝向<strong>外部世界</strong>（外倾 e）或<strong>内心世界</strong>（内倾 i）。4 × 2 &#x3D; 8，就是所谓的「八维」。</p>
+<h2 id="一、先说说荣格八维是什么"><a href="#一、先说说荣格八维是什么" class="headerlink" title="一、先说说荣格八维是什么"></a><strong>一、先说说荣格八维是什么</strong></h2><p>荣格在《心理类型》（1921）里提出：人有四种基本的心理功能——两种<strong>感知</strong>功能（感觉 S、直觉 N）负责「收集信息」，两种<strong>判断</strong>功能（思维 T、情感 F）负责「下结论」；每种功能又可以朝向<strong>外部世界</strong>（外倾 e）或<strong>内心世界</strong>（内倾 i）。4 × 2 &#x3D; 8，就是所谓的「八维」。</p>
 <table>
 <thead>
 <tr>
@@ -346,7 +361,7 @@
 </tr>
 </tbody></table>
 <p>常见的 MBTI 四字母，就是从这八个功能的<strong>排列顺序</strong>（所谓「功能栈」）推出来的。分数本身衡量的是<strong>偏好与使用频率</strong>，不是能力高低——Te 分低不代表不会做计划，只是不太「自发地」用这种方式看世界。</p>
-<h2 id="二、分数一览"><a href="#二、分数一览" class="headerlink" title="二、分数一览"></a>二、分数一览</h2><div class="cf-bars">
+<h2 id="二、分数一览"><a href="#二、分数一览" class="headerlink" title="二、分数一览"></a><strong>二、分数一览</strong></h2><div class="cf-bars">
 <div class="cf-row"><span class="cf-name">Fi 信念力</span><span class="cf-track"><span class="cf-fill top" style="display:block;width:100%"></span></span><span class="cf-num">138</span></div>
 <div class="cf-row"><span class="cf-name">Ti 定义力</span><span class="cf-track"><span class="cf-fill top" style="display:block;width:89.9%"></span></span><span class="cf-num">124</span></div>
 <div class="cf-row"><span class="cf-name">Ne 展望感</span><span class="cf-track"><span class="cf-fill" style="display:block;width:84.8%"></span></span><span class="cf-num">117</span></div>
@@ -358,7 +373,7 @@
 </div>
 
 <p>按从高到低排：<strong>Fi &gt; Ti &gt; Ne &gt; Si &gt; Ni &gt; Fe &gt; Se &gt; Te</strong>。</p>
-<h2 id="三、四个宏观读法"><a href="#三、四个宏观读法" class="headerlink" title="三、四个宏观读法"></a>三、四个宏观读法</h2><h3 id="1-明显偏内倾"><a href="#1-明显偏内倾" class="headerlink" title="1. 明显偏内倾"></a>1. 明显偏内倾</h3><table>
+<h2 id="三、四个宏观读法"><a href="#三、四个宏观读法" class="headerlink" title="三、四个宏观读法"></a><strong>三、四个宏观读法</strong></h2><h3 id="1-明显偏内倾"><a href="#1-明显偏内倾" class="headerlink" title="1. 明显偏内倾"></a>1. 明显偏内倾</h3><table>
 <thead>
 <tr>
 <th></th>
@@ -439,7 +454,7 @@
 <td>几乎持平：既爱新的可能，也依恋旧的经验</td>
 </tr>
 </tbody></table>
-<h2 id="四、所以是哪种类型？"><a href="#四、所以是哪种类型？" class="headerlink" title="四、所以是哪种类型？"></a>四、所以是哪种类型？</h2><p>把分数排序和几种候选类型的标准功能栈对照：</p>
+<h2 id="四、所以是哪种类型？"><a href="#四、所以是哪种类型？" class="headerlink" title="四、所以是哪种类型？"></a><strong>四、所以是哪种类型？</strong></h2><p>把分数排序和几种候选类型的标准功能栈对照：</p>
 <table>
 <thead>
 <tr>
@@ -471,7 +486,7 @@
 </tbody></table>
 <p><strong>结论：INFP 是最合理的读法，可以描述为「带有强 Ti 色彩的 INFP」，或者说站在 INFP 与 INTP 的交界处偏 INFP 一侧。</strong></p>
 <p>Te 恰好是全表最低分，这一点反而加强了 INFP 的判断——在功能栈理论中，第四位的「劣势功能」本来就该是最不发达、最不自觉的那一个。</p>
-<h2 id="五、逐项解读"><a href="#五、逐项解读" class="headerlink" title="五、逐项解读"></a>五、逐项解读</h2><h3 id="Fi-信念力-·-138（主导）"><a href="#Fi-信念力-·-138（主导）" class="headerlink" title="Fi 信念力 · 138（主导）"></a>Fi 信念力 · 138（主导）</h3><p>主导功能是一个人看待世界的「默认镜头」。Fi 主导者心中有一套高度个人化、往往难以言传的价值体系，判断事物的第一反应是「这是否真实、是否与我所珍视的东西一致」。</p>
+<h2 id="五、逐项解读"><a href="#五、逐项解读" class="headerlink" title="五、逐项解读"></a><strong>五、逐项解读</strong></h2><h3 id="Fi-信念力-·-138（主导）"><a href="#Fi-信念力-·-138（主导）" class="headerlink" title="Fi 信念力 · 138（主导）"></a>Fi 信念力 · 138（主导）</h3><p>主导功能是一个人看待世界的「默认镜头」。Fi 主导者心中有一套高度个人化、往往难以言传的价值体系，判断事物的第一反应是「这是否真实、是否与我所珍视的东西一致」。</p>
 <p>常见表现：</p>
 <ul>
 <li>对「真诚」极度敏感，能很快嗅出敷衍、虚伪、表演性的东西；</li>
@@ -516,14 +531,14 @@
 <li>不喜欢被外部的条条框框评估。</li>
 </ul>
 <p>荣格学派还有一个说法叫「劣势功能爆发」：在长期高压或极度疲惫时，平时最弱的功能会以一种粗糙、失控的方式跳出来。对 Fi 主导者来说，这往往表现为<strong>突然变得苛刻、挑剔、执着于效率，对自己或别人「这也不对那也不行」</strong>。如果察觉到这种状态，通常是该休息的信号。</p>
-<h2 id="六、如果要「成长」的话"><a href="#六、如果要「成长」的话" class="headerlink" title="六、如果要「成长」的话"></a>六、如果要「成长」的话</h2><p>按照荣格类型理论的惯常建议（仅供参考）：</p>
+<h2 id="六、如果要「成长」的话"><a href="#六、如果要「成长」的话" class="headerlink" title="六、如果要「成长」的话"></a><strong>六、如果要「成长」的话</strong></h2><p>按照荣格类型理论的惯常建议（仅供参考）：</p>
 <ul>
 <li><strong>练一点 Te</strong>：给想法设一个截止日期，把「写完」和「写好」分开对待——先让作品存在，再让它完美。</li>
 <li><strong>借 Ti 补 Te</strong>：Ti 已经足够强，可以把它从「想通」延伸到「做成」，用自己认可的逻辑去设计流程，而不是套用别人的。</li>
 <li><strong>偶尔让 Fe 出场</strong>：把心里那些已经很明确的感受，适当地说给在乎的人听。</li>
 <li><strong>给 Se 一点空间</strong>：运动、出门、做一些不需要思考的身体性活动，有助于从过度内省中抽离。</li>
 </ul>
-<h2 id="七、这份结果应该怎么看"><a href="#七、这份结果应该怎么看" class="headerlink" title="七、这份结果应该怎么看"></a>七、这份结果应该怎么看</h2><p>最后必须说清楚几件事：</p>
+<h2 id="七、这份结果应该怎么看"><a href="#七、这份结果应该怎么看" class="headerlink" title="七、这份结果应该怎么看"></a><strong>七、这份结果应该怎么看</strong></h2><p>最后必须说清楚几件事：</p>
 <ol>
 <li><strong>这是自评问卷。</strong> 结果反映的是作答时对自己的看法，会随心境、年龄、近况而变化；隔几个月再测，排序发生变化是很正常的。</li>
 <li><strong>八维理论不是主流科学心理学。</strong> 荣格的原始理论是思辨性的；MBTI 及其衍生的「功能栈」模型在学术界的信度、效度都饱受质疑。心理学研究中更常用的是「大五人格」（开放性、尽责性、外向性、宜人性、神经质）。</li>

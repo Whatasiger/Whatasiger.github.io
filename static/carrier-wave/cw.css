@@ -136,11 +136,16 @@ main { position: relative; z-index: 1; }
 
 .cw-wave {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 100%;
     pointer-events: none;
     z-index: 3;
+}
+/* 目录页：只是一条窄带，由 cw.js 按载波位置平移（载波起伏、牵引、残响都在中线上下约 100px 内） */
+.cw-index .cw-wave {
+    height: 280px;
+    will-change: transform;
 }
 
 /* 载波吸附到顶部后，为其下方滚动的文字让出一条安静的带 */
@@ -261,6 +266,8 @@ main { position: relative; z-index: 1; }
     color: var(--ink);
     white-space: nowrap;
 }
+/* 目录页大标题用内联的标题字体（_partial/cw-title-font.ejs），首帧即是 Cormorant，过渡中途不再跳字体 */
+.cw-index .cw-title { font-family: "CW Title", var(--latin); }
 .cw-js .cw-index .cw-title { letter-spacing: .16em; }
 .cw-js.is-ready .cw-index .cw-title {
     letter-spacing: .01em;
@@ -744,53 +751,65 @@ main { position: relative; z-index: 1; }
 .cw-from-home .cw-wave { view-transition-name: cw-carrier; }
 
 /* 首屏标题与副题直接处于终态，由过渡负责「入场」 */
+/* 底部提示也直接就位：过渡期间页面其余部分保持静止，root 快照只需截取一次（它本就随 root 整体浮现） */
 .cw-from-home.cw-js .cw-hero .cw-title.cw-rise,
-.cw-from-home.cw-js .cw-hero .cw-sub.cw-rise {
+.cw-from-home.cw-js .cw-hero .cw-sub.cw-rise,
+.cw-from-home.cw-js .cw-hero .cw-cue.cw-rise {
     opacity: 1;
     transform: none;
     filter: none;
     transition: none;
 }
 .cw-from-home.cw-js .cw-index .cw-title { letter-spacing: .01em; }
+/* 预渲染时文档时间线早已开始，提示线的循环动画可能在过渡中途起跑，暂停到过渡结束 */
+.cw-from-home .cw-cue span::after { animation-play-state: paused; }
 
-/* 卡片 → 整屏：带轻微回弹地铺满视口 */
+/* 卡片 → 整屏：铺满视口；用 ease-out 不用弹簧——过冲发生在视口之外看不见，只会拖慢收尾 */
 html.cw-from-home::view-transition-group(cw-stage) {
-    animation-duration: 1.15s;
-    animation-timing-function: var(--spring);
+    animation-duration: .85s;
+    animation-timing-function: var(--ease-out);
 }
-/* 旧卡片全程不透明垫底，新背景以普通叠加盖上，避免交叉淡化时中途透出首页 */
-html.cw-from-home::view-transition-old(cw-stage) {
-    animation: none;
-    mix-blend-mode: normal;
-}
+/* 新旧背景都裁成圆角矩形，圆角随铺开从卡片的 24px 收成直角；也顺带裁掉被拉伸的卡片投影
+   旧卡片全程不透明垫底，新背景以普通叠加盖上，避免交叉淡化时中途透出首页 */
+html.cw-from-home::view-transition-old(cw-stage),
 html.cw-from-home::view-transition-new(cw-stage) {
-    animation: cw-vt-fade-in .6s var(--ease-out) .15s both;
+    overflow: clip;
     mix-blend-mode: normal;
+}
+/* 新背景完全不透明后（.6s），被盖住的旧卡片直接隐去，不再参与每帧合成 */
+html.cw-from-home::view-transition-old(cw-stage) {
+    animation: cw-vt-unround .85s var(--ease-out) both, cw-vt-fade-out 0s linear .6s forwards;
+}
+/* 新背景按视口比例裁切而非拉伸，像一扇逐渐开大的窗 */
+html.cw-from-home::view-transition-new(cw-stage) {
+    object-fit: cover;
+    animation: cw-vt-fade-in .5s var(--ease-out) .1s both, cw-vt-unround .85s var(--ease-out) both;
 }
 
-/* 标题、副题、载波：从卡片中的位置放大到首屏，稍错开 */
+/* 标题、副题：从卡片中的位置放大到首屏，带轻微回弹，稍错开 */
 html.cw-from-home::view-transition-group(cw-hero-title) {
-    animation-duration: 1.25s;
+    animation-duration: 1s;
     animation-timing-function: var(--spring);
-    animation-delay: .04s;
+    animation-delay: .03s;
 }
 html.cw-from-home::view-transition-group(cw-hero-sub) {
-    animation-duration: 1.3s;
+    animation-duration: 1.05s;
     animation-timing-function: var(--spring);
-    animation-delay: .1s;
+    animation-delay: .08s;
 }
+/* 载波不回弹：须准确停在轴上，才能与画布载波对上 */
 html.cw-from-home::view-transition-group(cw-hero-wave) {
-    animation-duration: 1.2s;
-    animation-timing-function: var(--spring);
+    animation-duration: .85s;
+    animation-timing-function: var(--ease-out);
 }
 /* 默认快照按宽高比缩放且顶端对齐，会让载波中线下坠；只横向拉伸，中线始终对准 */
 html.cw-from-home::view-transition-old(cw-hero-wave),
 html.cw-from-home::view-transition-new(cw-hero-wave),
-html.cw-from-home::view-transition-old(cw-stage),
-html.cw-from-home::view-transition-new(cw-stage) {
+html.cw-from-home::view-transition-old(cw-stage) {
     height: 100%;
     object-fit: fill;
 }
+html.cw-from-home::view-transition-new(cw-stage) { height: 100%; }
 html.cw-from-home::view-transition-old(cw-hero-title),
 html.cw-from-home::view-transition-old(cw-hero-sub) {
     animation: cw-vt-fade-out .6s var(--ease-out) both;
@@ -799,32 +818,29 @@ html.cw-from-home::view-transition-new(cw-hero-title),
 html.cw-from-home::view-transition-new(cw-hero-sub) {
     animation: cw-vt-fade-in .7s var(--ease-out) .08s both;
 }
-/* 卡片里的载波在抵达后才把位置交给画布上的真实载波 */
+/* 卡片里的载波抵达后才交给画布上的真实载波：首页离场时已把它的波长、相位、振幅对准画布（head.ejs），
+   画布在过渡期间定格（cw.js），两条波重合，交接只在落定后的短短一段里完成 */
 html.cw-from-home::view-transition-old(cw-hero-wave) {
-    animation: cw-vt-wave-handoff 1.4s linear both;
+    animation: cw-vt-fade-out .3s ease-in-out .7s both;
 }
 html.cw-from-home::view-transition-new(cw-hero-wave) { animation: none; opacity: 0; }
 html.cw-from-home::view-transition-group(cw-carrier) { animation: none; }
 html.cw-from-home::view-transition-new(cw-carrier) {
-    animation: cw-vt-fade-in .8s ease-in-out .45s both;
+    animation: cw-vt-fade-in .35s ease-in-out .6s both;
 }
 
 /* 首页其余卡片：后退、虚化、淡出；子页面其余内容在后段浮现 */
 html.cw-from-home::view-transition-old(root) {
-    animation: cw-vt-home-out .6s var(--ease-out) both;
+    animation: cw-vt-home-out .5s var(--ease-out) both;
     transform-origin: 50% 30%;
 }
 html.cw-from-home::view-transition-new(root) {
-    animation: cw-vt-in .7s var(--ease-out) .6s both;
+    animation: cw-vt-in .6s var(--ease-out) .45s both;
 }
 
 @keyframes cw-vt-fade-out { to { opacity: 0; } }
 @keyframes cw-vt-fade-in { from { opacity: 0; } }
-@keyframes cw-vt-wave-handoff {
-    0% { opacity: 1; }
-    40% { opacity: 1; animation-timing-function: ease-in-out; }
-    100% { opacity: 0; }
-}
+@keyframes cw-vt-unround { from { border-radius: 24px; } to { border-radius: 0; } }
 @keyframes cw-vt-home-out {
     to { opacity: 0; transform: scale(.94); filter: blur(8px); }
 }
