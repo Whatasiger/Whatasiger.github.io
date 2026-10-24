@@ -227,14 +227,14 @@
                     <span>关闭首页 TODO 显示</span>
                     <input type="checkbox" id="setting-hide-todo">
                 </label>
-                <label class="settings-row">
+                <div class="settings-row">
                     <i class="fa fa-font"></i>
                     <span>字体</span>
-                    <select id="setting-font-family">
-                        <option value="noto-sans-sc">思源黑体</option>
-                        <option value="system-default">系统默认</option>
-                    </select>
-                </label>
+                    <div class="settings-segment" id="setting-font-family" role="radiogroup" aria-label="字体">
+                        <button type="button" role="radio" data-value="noto-sans-sc">思源黑体</button>
+                        <button type="button" role="radio" data-value="system-default">系统默认</button>
+                    </div>
+                </div>
             </div>
             <div class="settings-group-title">文字<small>仅在文章页对正文生效</small></div>
             <div class="settings-group">
@@ -284,6 +284,63 @@
         <a href="/comments"><i class="fa fa-comments"></i><span>留言板</span></a>
     
 </nav>
+<script>
+    // 顶栏导航是否收起：按钮居中排开时若会碰到左侧 Logo 或右侧搜索框 / 按钮，就收进汉堡菜单（html.nav-collapsed）
+    // 紧跟在 nav 后同步执行，首帧即为正确布局；按钮宽度用 canvas 量文字算出，不必来回切换布局
+    (function () {
+        var root = document.documentElement;
+        var nav = document.querySelector(".head-menu");
+        var ctx = document.createElement("canvas").getContext("2d");
+        var GAP = 24; // 与两侧元素至少留出的间距（px）
+
+        function update() {
+            var collapse = window.innerWidth < 600; // 手机端始终收起
+            if (!collapse) {
+                // 桌面端导航宽度：各按钮文字宽 + 按钮间距（.head-menu > a 的 margin-right: 1em）
+                var cs = getComputedStyle(nav);
+                var fontSize = parseFloat(cs.fontSize);
+                ctx.font = "600 " + cs.fontSize + " " + cs.fontFamily;
+                var labels = nav.querySelectorAll("a span");
+                var width = (labels.length - 1) * fontSize;
+                for (var i = 0; i < labels.length; i++) width += ctx.measureText(labels[i].textContent).width;
+
+                var vw = root.clientWidth;
+                var left = (vw - width) / 2, right = (vw + width) / 2;
+
+                // 左侧 Logo 展开态位于 left: 1.5em（收起态会右移，故按展开态计算）
+                var logo = document.querySelector(".header-logo");
+                var logoRight = logo ? 1.5 * parseFloat(getComputedStyle(logo).fontSize) + logo.getBoundingClientRect().width : 0;
+
+                // 右侧最靠左的元素（搜索框 / 日夜 / 设置按钮）
+                var rightLimit = vw;
+                var obstacles = document.querySelectorAll("header .head-search, header .light-btn, header .settings-btn");
+                for (var j = 0; j < obstacles.length; j++) {
+                    var r = obstacles[j].getBoundingClientRect();
+                    if (r.width) rightLimit = Math.min(rightLimit, r.left);
+                }
+                collapse = left < logoRight + GAP || right > rightLimit - GAP;
+            }
+            if (root.classList.contains("nav-collapsed") !== collapse) {
+                // 切换形态时直接跳到结果，不播放磁贴 ↔ 文字的过渡（字体加载后可能改判）
+                root.classList.add("nav-switching");
+                root.classList.toggle("nav-collapsed", collapse);
+                if (!collapse) nav.classList.remove("active");
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () { root.classList.remove("nav-switching"); });
+                });
+            }
+        }
+
+        update();
+        window.addEventListener("resize", update);
+        // 字体加载完成或在设置里切换字体后，文字宽度会变
+        if (document.fonts) {
+            document.fonts.ready.then(update);
+            document.fonts.addEventListener("loadingdone", update);
+        }
+        new MutationObserver(update).observe(document.body, { attributes: true, attributeFilter: ["style"] });
+    })();
+</script>
 
     <main>
     <div class="wrap min">

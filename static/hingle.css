@@ -2382,7 +2382,7 @@ html {
 /* - 设置面板 */
 .settings-panel {
     position: fixed;
-    top: 4.2em;                     /* 面板距顶部距离（应在导航栏下方） */
+    top: 3.7rem;                    /* 面板距顶部距离（导航栏下方）；用 rem 与导航卡片顶边对齐 */
     right: 1.2em;                   /* 面板距右边缘距离 */
     width: 300px;                   /* 面板宽度 */
     max-width: 92vw;                /* 面板最大宽度（防止小屏溢出） */
@@ -2414,7 +2414,7 @@ html {
 }
 
 /* 设置面板与手机端导航卡片同时打开时，后打开的那个在上（由 hingle.js 挂 .on-top） */
-.settings-panel.on-top, .head-menu.on-top { z-index: 100003; }
+.settings-panel.on-top, html.nav-collapsed .head-menu.on-top { z-index: 100003; } /* 选择器须压过 html.nav-collapsed .head-menu */
 
 /* 设置面板内容容器 */
 .settings-panel-inner { width: 100%; }
@@ -2524,24 +2524,48 @@ html {
     outline-offset: 2px;
 }
 
-/* 下拉选择框：浅蓝胶囊 + 自绘箭头 */
-.settings-row select {
+/* 二选一按钮（字体）：浅灰底槽 + 白色滑块，滑块随 data-value 平移 */
+div.settings-row { cursor: default; }
+.settings-segment {
+    position: relative;
     flex: none;
-    width: auto;
-    height: 2em;
-    min-height: 0;
-    padding: 0 1.9em 0 0.8em;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 两个选项等宽，滑块平移一格即对齐 */
+    padding: 2px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.07);
+}
+.settings-segment:before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 2px;
+    width: calc(50% - 2px);
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    transition: transform 0.45s var(--ease-spring);
+}
+.settings-segment[data-value="system-default"]:before { transform: translateX(100%); }
+.settings-segment button {
+    position: relative;             /* 位于滑块之上 */
+    padding: 0.35em 0.8em;
     border: none;
     border-radius: 999px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: rgba(111, 159, 199, 0.15) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236f9fc7' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 0.7em center / 0.65em;
-    color: var(--blue);
-    font-size: 0.8rem;              /* 下拉框字号 */
+    background: none;
+    color: #999;
+    font-size: 0.78rem;
     font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
+    transition: color 0.25s;
 }
-.settings-row select option { color: #333; background: #fff; }
+.settings-segment button[aria-checked="true"] { color: var(--blue); }
+.settings-segment button:focus-visible {
+    outline: 2px solid rgba(111, 159, 199, 0.35);
+    outline-offset: 0;
+}
 
 /* 面板内容依次浮现（与导航磁贴相同节奏） */
 .settings-panel-body > *, .settings-panel-footer {
@@ -2705,8 +2729,10 @@ html {
 .dark-theme .settings-row .fa { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
 .dark-theme .settings-row input[type="checkbox"] { background-color: rgba(255, 255, 255, 0.14); }
 .dark-theme .settings-row input[type="checkbox"]:checked { background-color: #6f9fc7; }
-.dark-theme .settings-row select { background-color: rgba(139, 180, 224, 0.12); color: #8bb4e0; }
-.dark-theme .settings-row select option { color: #ddd; background: #333; }
+.dark-theme .settings-segment { background: rgba(255, 255, 255, 0.07); }
+.dark-theme .settings-segment:before { background: rgba(255, 255, 255, 0.14); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
+.dark-theme .settings-segment button { color: #888; }
+.dark-theme .settings-segment button[aria-checked="true"] { color: #8bb4e0; }
 
 /* 设置面板底部区域（重置按钮区） */
 .settings-panel-footer { margin-top: 0.9em; }
@@ -2928,10 +2954,10 @@ pre[class*="language-"].line-numbers {
     .head-title { display: none; }
 
     /* 桌面端隐藏汉堡菜单按钮 */
-    .toggle-btn { display: none; }
+    html:not(.nav-collapsed) .toggle-btn { display: none; }
 
     /* 桌面端导航菜单：固定在顶部，透明背景 */
-    .head-menu {
+    html:not(.nav-collapsed) .head-menu {
         position: fixed;
         top: 0;
         left: 0;
@@ -2949,31 +2975,31 @@ pre[class*="language-"].line-numbers {
     }
 
     /* 桌面端导航链接和有子菜单的项目可以交互 */
-    .head-menu a,
-    .head-menu .has-child {
+    html:not(.nav-collapsed) .head-menu a,
+    html:not(.nav-collapsed) .head-menu .has-child {
         pointer-events: auto;
     }
 
     /* 桌面端导航链接的内边距与行高 */
-    .head-menu > a, .has-child > a {
+    html:not(.nav-collapsed) .head-menu > a, html:not(.nav-collapsed) .has-child > a {
         padding: .6em 0;
         line-height: 2em;
         margin-right: 1em;          /* 导航项之间的间距 */
     }
-    .head-menu > a:last-child { margin-right: 0; }
+    html:not(.nav-collapsed) .head-menu > a:last-child { margin-right: 0; }
 
     /* 有子菜单的项目使用相对定位（子菜单绝对定位参考） */
-    .head-menu .has-child { position: relative; }
+    html:not(.nav-collapsed) .head-menu .has-child { position: relative; }
 
     /* 子菜单悬停/焦点时显示 */
-    .head-menu .has-child:hover > .sub-menu,
-    .head-menu .has-child:focus-within .sub-menu {
+    html:not(.nav-collapsed) .head-menu .has-child:hover > .sub-menu,
+    html:not(.nav-collapsed) .head-menu .has-child:focus-within .sub-menu {
         opacity: 1;
         visibility: visible;
     }
 
     /* 子菜单下拉面板样式 */
-    .head-menu .sub-menu {
+    html:not(.nav-collapsed) .head-menu .sub-menu {
         opacity: 0;
         top: 3.2em;                 /* 子菜单距顶部（等于导航栏高度） */
         left: -1em;
@@ -2990,7 +3016,7 @@ pre[class*="language-"].line-numbers {
     }
 
     /* 子菜单上方的三角形箭头（伪元素模拟） */
-    .head-menu .sub-menu:before {
+    html:not(.nav-collapsed) .head-menu .sub-menu:before {
         left: 2em;                  /* 三角形距左侧距离，影响箭头位置 */
         top: -.5em;
         width: 1em;
@@ -3020,152 +3046,161 @@ pre[class*="language-"].line-numbers {
     }
 }
 
+/* -- 收起式导航：放不下顶栏四个按钮时（含手机端）收进汉堡菜单，由 header.ejs 实测后给 html 挂 .nav-collapsed */
+
+/* 导航卡片：点击汉堡菜单后从按钮处展开，与设置面板同一套毛玻璃语言 */
+html.nav-collapsed .head-menu {
+    position: fixed;
+    top: 3.7rem;                /* 与设置面板顶边对齐：两者字号不同，位置统一用 rem */
+    left: 0.6rem;
+    right: auto;
+    width: min(17em, calc(100vw - 1.2em)); /* 卡片宽度 */
+    max-height: 75vh;           /* 菜单最大高度（防止溢出屏幕） */
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 两列磁贴 */
+    gap: 0.5em;                 /* 磁贴间距 */
+    padding: 0.9em;
+    margin: 0;
+    border-radius: var(--glass-radius);
+    corner-shape: squircle;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    color: #333;
+    z-index: 100002;
+    opacity: 0;                 /* 默认隐藏 */
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.96);
+    transform-origin: 1.4em -0.6em; /* 从汉堡按钮处展开 */
+    transition: opacity 0.2s var(--ease-exit), transform 0.25s var(--ease-exit); /* 收起：快速利落 */
+}
+
+/* 卡片标题，与设置面板「阅读设置」同款 */
+html.nav-collapsed .head-menu:before {
+    content: "导航";
+    grid-column: 1 / -1;
+    padding: 0 0.15em 0.1em;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+/* 手机端导航卡片展开：先快后缓 */
+html.nav-collapsed .head-menu.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    transition: opacity 0.3s var(--ease-spring), transform 0.55s var(--ease-spring);
+}
+
+/* 导航磁贴：图标在上、文字在下，居中排布 */
+html.nav-collapsed .head-menu a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45em;
+    padding: 0.85em 0.4em 0.75em;
+    border-radius: calc(var(--glass-radius) - 0.5em);
+    corner-shape: squircle;
+    background: var(--glass-tile);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
+    font-size: 0.85rem;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+    opacity: 0;                 /* 磁贴随卡片依次浮现 */
+    transform: translateY(6px);
+    transition: opacity 0.15s var(--ease-exit), transform 0.15s var(--ease-exit),
+                background-color 0.25s, color 0.25s;
+}
+html.nav-collapsed .head-menu.active a {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.35s var(--ease-spring), transform 0.5s var(--ease-spring),
+                background-color 0.25s, color 0.25s;
+}
+html.nav-collapsed .head-menu.active a:nth-of-type(2) { transition-delay: 40ms; }
+html.nav-collapsed .head-menu.active a:nth-of-type(3) { transition-delay: 80ms; }
+html.nav-collapsed .head-menu.active a:nth-of-type(4) { transition-delay: 120ms; }
+html.nav-collapsed .head-menu.active a:nth-of-type(n+5) { transition-delay: 160ms; }
+
+html.nav-collapsed .head-menu a:hover { color: var(--blue); }
+
+/* 按下：轻微回缩 */
+html.nav-collapsed .head-menu.active a:active {
+    transform: scale(0.95);
+    transition-delay: 0s;
+    transition-duration: 0.12s;
+}
+
+/* 磁贴图标：圆形浅蓝底 */
+html.nav-collapsed .head-menu a .fa {
+    display: grid;
+    place-items: center;
+    width: 2.4em;
+    height: 2.4em;
+    border-radius: 50%;
+    font-size: 1.05rem;
+    color: var(--blue);
+    background: rgba(111, 159, 199, 0.15);
+    transition: background-color 0.25s, color 0.25s;
+}
+
+/* 当前所在页面：磁贴染上主题蓝，图标反白 */
+html.nav-collapsed .head-menu a.current { color: var(--blue); background: rgba(111, 159, 199, 0.16); }
+html.nav-collapsed .head-menu a.current .fa { color: #fff; background: var(--blue); }
+
+/* 菜单展开时，汉堡按钮变为关闭图标 */
+html.nav-collapsed .toggle-btn:before { transition: transform 0.45s var(--ease-spring); }
+html.nav-collapsed body:has(.head-menu.active) .toggle-btn { background-color: rgba(0, 0, 0, .05); }
+html.nav-collapsed body:has(.head-menu.active) .toggle-btn:before {
+    content: "\f00d";
+    transform: rotate(90deg);
+}
+
+/* 手机端子菜单：左侧缩进 */
+html.nav-collapsed .head-menu .sub-menu { margin-left: 1.5em; }
+
+/* 手机端子菜单链接：列表项样式（小圆点） */
+html.nav-collapsed .head-menu .sub-menu a {
+    display: list-item;
+    list-style-type: circle;
+}
+
+/* 手机端导航菜单内部滚动条 */
+html.nav-collapsed .head-menu::-webkit-scrollbar { width: 8px; height: 8px; }
+html.nav-collapsed .head-menu::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background: rgba(0, 0, 0, .1); /* 滚动条颜色（菜单内部） */
+}
+
+/* 夜间模式手机端菜单 */
+html.nav-collapsed .dark-theme .head-menu { color: #ddd; } /* 毛玻璃底色与投影由 --glass-* 变量统一控制 */
+html.nav-collapsed .dark-theme .head-menu a { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04); }
+html.nav-collapsed .dark-theme .head-menu a .fa { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
+html.nav-collapsed .dark-theme .head-menu a.current { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
+html.nav-collapsed .dark-theme .head-menu a.current .fa { color: #1e1e20; background: #8bb4e0; }
+html.nav-collapsed .dark-theme .head-menu a:hover { color: #8bb4e0; }
+html.nav-collapsed body.dark-theme:has(.head-menu.active) .toggle-btn { background-color: rgba(255, 255, 255, .06); }
+
+/* 收起式导航在桌面端：汉堡按钮占据最左侧，Logo 右移让位 */
+html.nav-collapsed .header-logo { left: 3em; }
+
+/* 导航切换展开 / 收起形态的那一帧不做过渡，避免闪现一段动画 */
+html.nav-switching .head-menu, html.nav-switching .head-menu *,
+html.nav-switching .header-logo, html.nav-switching .toggle-btn:before { transition: none !important; }
+
 /* -- 手机端 (< 600px)：汉堡菜单与收起式搜索框 */
 @media screen and (max-width: 599px) {
     /* 手机端隐藏 Logo（空间不足） */
     .header-logo {
         display: none;
     }
-
-    /* 手机端导航卡片：点击汉堡菜单后从按钮处展开，与设置面板同一套毛玻璃语言 */
-    .head-menu {
-        position: fixed;
-        top: 3.7rem;                /* 与手机端设置面板对齐：两者字号不同，位置统一用 rem */
-        left: 0.6rem;
-        right: auto;
-        width: min(17em, calc(100vw - 1.2em)); /* 卡片宽度 */
-        max-height: 75vh;           /* 菜单最大高度（防止溢出屏幕） */
-        overflow-y: auto;
-        display: grid;
-        grid-template-columns: 1fr 1fr; /* 两列磁贴 */
-        gap: 0.5em;                 /* 磁贴间距 */
-        padding: 0.9em;
-        margin: 0;
-        border-radius: var(--glass-radius);
-        corner-shape: squircle;
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        box-shadow: var(--glass-shadow);
-        backdrop-filter: var(--glass-filter);
-        -webkit-backdrop-filter: var(--glass-filter);
-        color: #333;
-        z-index: 100002;
-        opacity: 0;                 /* 默认隐藏 */
-        pointer-events: none;
-        transform: translateY(-8px) scale(0.96);
-        transform-origin: 1.4em -0.6em; /* 从汉堡按钮处展开 */
-        transition: opacity 0.2s var(--ease-exit), transform 0.25s var(--ease-exit); /* 收起：快速利落 */
-    }
-
-    /* 卡片标题，与设置面板「阅读设置」同款 */
-    .head-menu:before {
-        content: "导航";
-        grid-column: 1 / -1;
-        padding: 0 0.15em 0.1em;
-        font-size: 0.95rem;
-        font-weight: 600;
-        line-height: 1.4;
-    }
-
-    /* 手机端导航卡片展开：先快后缓 */
-    .head-menu.active {
-        opacity: 1;
-        pointer-events: auto;
-        transform: none;
-        transition: opacity 0.3s var(--ease-spring), transform 0.55s var(--ease-spring);
-    }
-
-    /* 导航磁贴：图标在上、文字在下，居中排布 */
-    .head-menu a {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 0.45em;
-        padding: 0.85em 0.4em 0.75em;
-        border-radius: calc(var(--glass-radius) - 0.5em);
-        corner-shape: squircle;
-        background: var(--glass-tile);
-        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
-        font-size: 0.85rem;
-        line-height: 1.2;
-        letter-spacing: 0.05em;
-        text-align: center;
-        -webkit-tap-highlight-color: transparent;
-        opacity: 0;                 /* 磁贴随卡片依次浮现 */
-        transform: translateY(6px);
-        transition: opacity 0.15s var(--ease-exit), transform 0.15s var(--ease-exit),
-                    background-color 0.25s, color 0.25s;
-    }
-    .head-menu.active a {
-        opacity: 1;
-        transform: none;
-        transition: opacity 0.35s var(--ease-spring), transform 0.5s var(--ease-spring),
-                    background-color 0.25s, color 0.25s;
-    }
-    .head-menu.active a:nth-of-type(2) { transition-delay: 40ms; }
-    .head-menu.active a:nth-of-type(3) { transition-delay: 80ms; }
-    .head-menu.active a:nth-of-type(4) { transition-delay: 120ms; }
-    .head-menu.active a:nth-of-type(n+5) { transition-delay: 160ms; }
-
-    .head-menu a:hover { color: var(--blue); }
-
-    /* 按下：轻微回缩 */
-    .head-menu.active a:active {
-        transform: scale(0.95);
-        transition-delay: 0s;
-        transition-duration: 0.12s;
-    }
-
-    /* 磁贴图标：圆形浅蓝底 */
-    .head-menu a .fa {
-        display: grid;
-        place-items: center;
-        width: 2.4em;
-        height: 2.4em;
-        border-radius: 50%;
-        font-size: 1.05rem;
-        color: var(--blue);
-        background: rgba(111, 159, 199, 0.15);
-        transition: background-color 0.25s, color 0.25s;
-    }
-
-    /* 当前所在页面：磁贴染上主题蓝，图标反白 */
-    .head-menu a.current { color: var(--blue); background: rgba(111, 159, 199, 0.16); }
-    .head-menu a.current .fa { color: #fff; background: var(--blue); }
-
-    /* 菜单展开时，汉堡按钮变为关闭图标 */
-    .toggle-btn:before { transition: transform 0.45s var(--ease-spring); }
-    body:has(.head-menu.active) .toggle-btn { background-color: rgba(0, 0, 0, .05); }
-    body:has(.head-menu.active) .toggle-btn:before {
-        content: "\f00d";
-        transform: rotate(90deg);
-    }
-
-    /* 手机端子菜单：左侧缩进 */
-    .head-menu .sub-menu { margin-left: 1.5em; }
-
-    /* 手机端子菜单链接：列表项样式（小圆点） */
-    .head-menu .sub-menu a {
-        display: list-item;
-        list-style-type: circle;
-    }
-
-    /* 手机端导航菜单内部滚动条 */
-    .head-menu::-webkit-scrollbar { width: 8px; height: 8px; }
-    .head-menu::-webkit-scrollbar-thumb {
-        border-radius: 5px;
-        background: rgba(0, 0, 0, .1); /* 滚动条颜色（菜单内部） */
-    }
-
-    /* 夜间模式手机端菜单 */
-    .dark-theme .head-menu { color: #ddd; } /* 毛玻璃底色与投影由 --glass-* 变量统一控制 */
-    .dark-theme .head-menu a { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04); }
-    .dark-theme .head-menu a .fa { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
-    .dark-theme .head-menu a.current { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
-    .dark-theme .head-menu a.current .fa { color: #1e1e20; background: #8bb4e0; }
-    .dark-theme .head-menu a:hover { color: #8bb4e0; }
-    body.dark-theme:has(.head-menu.active) .toggle-btn { background-color: rgba(255, 255, 255, .06); }
 
     /* 手机端显示搜索图标按钮 */
     .search-btn { display: block; }

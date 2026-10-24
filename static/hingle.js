@@ -176,7 +176,22 @@ var Paul_Hingle = function (config) {
         if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
         if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
         if (hideTodoInput) hideTodoInput.checked = !!currentSettings.hideTodo;
-        if (fontFamilyInput) fontFamilyInput.value = currentSettings.fontFamily || defaultSettings.fontFamily;
+        // 字体二选一按钮：data-value 驱动滑块位置，各按钮文字用对应字体显示以便预览
+        function setFontSegment(value) {
+            fontFamilyInput.setAttribute("data-value", value);
+            var opts = fontFamilyInput.querySelectorAll("button");
+            for (var i = 0; i < opts.length; i++) {
+                opts[i].setAttribute("aria-checked", String(opts[i].getAttribute("data-value") === value));
+            }
+        }
+        if (fontFamilyInput) {
+            var fontOpts = fontFamilyInput.querySelectorAll("button");
+            for (var fi = 0; fi < fontOpts.length; fi++) {
+                fontOpts[fi].style.fontFamily = fontOpts[fi].getAttribute("data-value") === "noto-sans-sc"
+                    ? SOURCE_HAN_FONT_STACK : SYSTEM_FONT_STACK;
+            }
+            setFontSegment(currentSettings.fontFamily || defaultSettings.fontFamily);
+        }
         if (weightInput) weightInput.value = getLevelFromWeight(currentSettings.fontWeight);
         if (letterInput) letterInput.value = currentSettings.letterSpacing;
         if (sizeInput) sizeInput.value = currentSettings.fontSize;
@@ -230,8 +245,13 @@ var Paul_Hingle = function (config) {
         }
 
         if (fontFamilyInput) {
-            fontFamilyInput.addEventListener("change", function () {
-                currentSettings.fontFamily = this.value;
+            fontFamilyInput.addEventListener("click", function (e) {
+                var opt = e.target.closest("button[data-value]");
+                if (!opt) return;
+                var value = opt.getAttribute("data-value");
+                if (value === currentSettings.fontFamily) return;
+                setFontSegment(value);
+                currentSettings.fontFamily = value;
                 persistSettings();
                 applyReadingSettings();
             });
@@ -313,7 +333,7 @@ var Paul_Hingle = function (config) {
                 if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
                 if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
                 if (hideTodoInput) hideTodoInput.checked = !!currentSettings.hideTodo;
-                if (fontFamilyInput) fontFamilyInput.value = currentSettings.fontFamily;
+                if (fontFamilyInput) setFontSegment(currentSettings.fontFamily);
                 if (weightInput) weightInput.value = getLevelFromWeight(currentSettings.fontWeight);
                 if (letterInput) letterInput.value = currentSettings.letterSpacing;
                 if (sizeInput) sizeInput.value = currentSettings.fontSize;
