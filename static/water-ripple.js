@@ -9,14 +9,18 @@
  *     静水时画面与 CSS 背景完全一致，水波平息后再无缝隐藏
  *   - 画布 z-index:-1，紧跟 body:before 之后绘制，只覆盖背景，不遮挡任何内容
  *   - 物理按固定 60Hz 步进，高刷屏下波速不变；不支持 WebGL2 / 偏好减少动画时直接不启用
+ *   - 物理通道用 texelFetch 精确取相邻格（不经线性过滤），系数低于稳定极限且高度/速度钳位，
+ *     避免个别 GPU 上误差累积成高频发散（满屏泛白）
  */
 (function () {
     "use strict";
 
     /* ── 配置参数 ─────────────────────────────────────────── */
     var CFG = {
-        simLongSide:    512,    // 物理网格长边格数（越大波纹越细腻）
+        simLongSide:    512,    // 物理网格长边格数上限（越大波纹越细腻）
+        minCell:        3.5,    // 单格最小边长（CSS px）：手机上不再加密网格，波速与水滴大小和桌面一致
         stepsPerTick:   2,      // 每个 60Hz 节拍的物理步数（影响波速）
+        stiffness:      1.8,    // 波动方程系数，须 < 2（显式格式稳定极限），留余量防止高频发散
         damping:        0.992,  // 每步速度衰减（越接近 1 余波越久）
         maxPixelRatio:  2,      // 渲染分辨率上限（设备像素比）
         maxPixels:      4.2e6,  // 渲染像素总数上限，超出时降低像素比
@@ -54,20 +58,21 @@
         "#version 300 es",
         "precision highp float;",
         "uniform sampler2D uState;",
-        "uniform vec2 uTexel;",
         "uniform float uDamp;",
-        "in vec2 vUv;",
+        "uniform float uK;",
+        "uniform float uMaxH;",
         "out vec4 o;",
+        "float h(ivec2 p, ivec2 m) { return texelFetch(uState, clamp(p, ivec2(0), m), 0).r; }",
         "void main() {",
-        "    vec4 s = texture(uState, vUv);",
-        "    float avg = (texture(uState, vUv + vec2(uTexel.x, 0.0)).r",
-        "               + texture(uState, vUv - vec2(uTexel.x, 0.0)).r",
-        "               + texture(uState, vUv + vec2(0.0, uTexel.y)).r",
-        "               + texture(uState, vUv - vec2(0.0, uTexel.y)).r) * 0.25;",
-        "    s.g += (avg - s.r) * 2.0;",
-        "    s.g *= uDamp;",
+        "    ivec2 p = ivec2(gl_FragCoord.xy);",
+        "    ivec2 m = textureSize(uState, 0) - 1;",
+        "    vec4 s = texelFetch(uState, p, 0);",
+        "    float avg = (h(p + ivec2(1, 0), m) + h(p - ivec2(1, 0), m)",
+        "               + h(p + ivec2(0, 1), m) + h(p - ivec2(0, 1), m)) * 0.25;",
+        "    s.g += (avg - s.r) * uK;",
+        "    s.g = clamp(s.g * uDamp, -uMaxH, uMaxH);",
         "    s.r += s.g;",
-        "    s.r *= 0.9995;", // 缓慢回落到静水面，避免能量累积成整体抬升
+        "    s.r = clamp(s.r * 0.9995, -uMaxH, uMaxH);", // 缓慢回落到静水面，避免能量累积成整体抬升
         "    o = s;",
         "}"
     ].join("\n");
@@ -86,7 +91,7 @@
         "in vec2 vUv;",
         "out vec4 o;",
         "void main() {",
-        "    vec4 s = texture(uState, vUv);",
+        "    vec4 s = texelFetch(uState, ivec2(gl_FragCoord.xy), 0);",
         "    vec2 p = vUv * uRes;",
         "    vec2 ab = uB - uA;",
         "    float t = clamp(dot(p - uA, ab) / max(dot(ab, ab), 1e-4), 0.0, 1.0);",
@@ -235,9 +240,9 @@
         canvas.width  = Math.round(vw * dpr);
         canvas.height = Math.round(vh * dpr);
 
-        var s = CFG.simLongSide / Math.max(vw, vh);
-        simW = Math.max(2, Math.round(vw * s));
-        simH = Math.max(2, Math.round(vh * s));
+        var cell = Math.max(Math.max(vw, vh) / CFG.simLongSide, CFG.minCell);
+        simW = Math.max(2, Math.round(vw / cell));
+        simH = Math.max(2, Math.round(vh / cell));
 
         state.forEach(function (st) {
             gl.deleteTexture(st.tex);
@@ -340,8 +345,9 @@
 
     function stepSim() {
         pass(progUpdate, function (u) {
-            gl.uniform2f(u.uTexel, 1 / simW, 1 / simH);
             gl.uniform1f(u.uDamp, CFG.damping);
+            gl.uniform1f(u.uK, CFG.stiffness);
+            gl.uniform1f(u.uMaxH, CFG.maxHeight);
         });
         amp *= CFG.damping;
     }

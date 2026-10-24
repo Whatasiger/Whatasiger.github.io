@@ -533,15 +533,18 @@ main { position: relative; z-index: 1; }
     position: relative;
     text-align: center;
     margin-bottom: 14vh;
+    container-type: inline-size;
 }
-/* 标题附近的残响（cw.js 绘制），随页面滚走；略宽出正文栏，窄屏时由 body 的 overflow-x 裁掉 */
+/* 标题附近的残响（cw.js 绘制），随页面滚走；左右各宽出正文栏至多 90px，窄屏时以视口边为限
+   （body 的 overflow-x 裁不住视口滚动，手机上宽出部分会在正文右侧留出空白） */
 .cw-dust {
+    --bleed: min(90px, (100vw - 100%) / 2);
     position: absolute;
-    left: -90px;
-    right: -90px;
+    left: calc(-1 * var(--bleed));
+    right: calc(-1 * var(--bleed));
     top: -70px;
     bottom: -50px;
-    width: calc(100% + 180px);
+    width: calc(100% + 2 * var(--bleed));
     height: calc(100% + 120px);
     z-index: -1;
     pointer-events: none;
@@ -559,7 +562,7 @@ main { position: relative; z-index: 1; }
     margin: .32em 0 .62em;
     font-family: var(--latin);
     font-weight: 300;
-    font-size: clamp(40px, 7.4vw, 78px);
+    font-size: min(clamp(40px, 7.4vw, 78px), 200cqi / var(--len, 1)); /* --len 为字数（含序号折算），长标题按栏宽缩小，篇名与序号保持一行居中 */
     line-height: 1.05;
     letter-spacing: .01em;
     color: var(--ink);
@@ -860,6 +863,7 @@ html.cw-from-home::view-transition-new(root) {
 
 @media (max-width: 640px) {
     .cw-corner, .cw-tuner { top: 18px; left: 20px; right: 20px; font-size: 14px; }
+    .cw-title { font-size: clamp(32px, 10vw, 46px); } /* 原下限 46px 在手机上几乎撑满屏宽 */
     .cw-tuner { left: auto; }
     .cw-list { padding: 14vh 20px 4vh; }
     .cw-track-link {
