@@ -2694,11 +2694,6 @@ html {
                 0 0 0 4px rgba(139, 180, 224, 0.1);
 }
 
-/* RTL 方向：水平翻转 */
-.settings-row-range-rtl input[type="range"] {
-    transform: scaleX(-1);
-}
-
 /* 夜间模式设置面板样式 */
 .dark-theme .settings-panel {
     color: #ddd;                    /* 毛玻璃底色与投影由 --glass-* 变量统一控制 */
@@ -3035,8 +3030,8 @@ pre[class*="language-"].line-numbers {
     /* 手机端导航卡片：点击汉堡菜单后从按钮处展开，与设置面板同一套毛玻璃语言 */
     .head-menu {
         position: fixed;
-        top: 3.7em;                 /* 与手机端设置面板顶部对齐 */
-        left: 0.6em;
+        top: 3.7rem;                /* 与手机端设置面板对齐：两者字号不同，位置统一用 rem */
+        left: 0.6rem;
         right: auto;
         width: min(17em, calc(100vw - 1.2em)); /* 卡片宽度 */
         max-height: 75vh;           /* 菜单最大高度（防止溢出屏幕） */
@@ -3357,10 +3352,11 @@ article sup a[data-footnote-ref] {
 /* 宽度小于等于 600px：设置面板宽度自适应 */
 @media screen and (max-width: 600px) {
     .settings-panel {
-        top: 3.7em;                 /* 手机端面板顶部距离（略小于桌面端） */
-        right: 0.6em;               /* 面板右边距 */
-        left: 0.6em;                /* 面板左边距（两端对称，宽度自适应） */
+        top: 3.7rem;                /* 与手机端导航卡片对齐：面板字号为 0.9rem，位置须用 rem 而非 em */
+        right: 0.6rem;              /* 面板右边距 */
+        left: 0.6rem;               /* 面板左边距（两端对称，宽度自适应） */
         width: auto;
+        max-width: none;            /* 取消桌面端的 92vw 上限，否则右边距会比左边距宽 */
     }
 }
 
