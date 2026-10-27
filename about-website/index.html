@@ -96,7 +96,8 @@
     
 <meta name="generator" content="Hexo 8.1.1"></head>
 
-  <body class="dark-theme post-page">
+  
+  <body class="dark-theme post-page has-trees">
     <script>
     (function() {
         // 核心修复：把普通的博客文章 (is_post) 和独立页面 (is_page) 都视为"阅读界面"
@@ -1402,7 +1403,20 @@
 
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
-<script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script>
+    (function () {
+        function load() {
+            var s = document.createElement('script');
+            s.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
+            s.async = true;
+            document.body.appendChild(s);
+        }
+        if (document.prerendering) document.addEventListener('prerenderingchange', load, { once: true });
+        else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
+        else load();
+    })();
+</script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const searchBox = document.querySelector('.head-search');

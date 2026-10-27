@@ -275,9 +275,11 @@ var Glint = function (config) {
             timer = setTimeout(bake, delay || 0);
         }
 
+        // 预渲染中（首页悬停文章卡片时）还没有过渡要让路，立即烤；点进来时背景已是烤好的图
         if (!adopted) {
-            if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { schedule(1000); });
-            else schedule(1000);
+            var wait = document.prerendering ? 0 : 1000;
+            if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { schedule(wait); });
+            else schedule(wait);
         }
         window.addEventListener("resize", function () {
             if (window.innerWidth === lastWidth) return; // 只理会宽度变化（地址栏伸缩只改高度）
@@ -926,7 +928,9 @@ var Glint = function (config) {
         const wrap = ks.select(".wrap");
         const headings = content.querySelectorAll("h1:not(.footnotes *), h2:not(.footnotes *), h3:not(.footnotes *), h4:not(.footnotes *), h5:not(.footnotes *), h6:not(.footnotes *)");
 
+        // has-trees 一般已由 layout.ejs 在服务端挂上（首帧即是最终版面），这里以实际标题为准
         if (headings.length === 0) {
+            body.classList.remove("has-trees");
             return;
         }
 
@@ -1305,6 +1309,7 @@ var Glint = function (config) {
     setupCardBlur();
     setupBgPrebake();
 
+    if(!content) body.classList.remove("has-trees");
     if(content){
         this.tree();
         this.links();

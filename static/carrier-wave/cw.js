@@ -211,8 +211,10 @@
         this.pull.target = near ? clamp((p.y - this.baseY) * .4, -26, 26) : 0;
         this.pull.step(dt);
 
-        if (this.hold && this.held) return;
-        this.held = this.hold;
+        // 定格中只在载波位置 / 缩放变了（过渡途中滚动）时按同一时刻重画一帧，跟上新位置
+        var key = this.hold && Math.round(this.baseY) + '|' + this.scale.toFixed(3);
+        if (key && this.held === key) return;
+        this.held = key;
 
         var ctx = this.ctx;
         ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -587,14 +589,27 @@
                 nextPulse = carrier.time + 9 + Math.random() * 8;
                 if (!document.hidden) carrier.emit(0, 1);
             }
-            var raw = axisTop - window.scrollY;
-            carrier.baseY = Math.max(stuckY, raw);
-            carrier.scale = .55 + .45 * clamp((raw - stuckY) / 260, 0, 1);
-            var s = raw <= stuckY + 2;
+            var l = line();
+            carrier.baseY = l.y;
+            carrier.scale = l.scale;
+            var s = l.raw <= stuckY + 2;
             if (s !== stuck) {
                 stuck = s;
                 body.classList.toggle('is-stuck', s);
             }
+        };
+
+        // 载波此刻的中线与缩放：随轴线滚动，滚到顶部后吸住（stuckY），越接近吸顶振幅越小
+        function line() {
+            var raw = axisTop - window.scrollY;
+            return { raw: raw, y: Math.max(stuckY, raw), scale: .55 + .45 * clamp((raw - stuckY) / 260, 0, 1) };
+        }
+        // 画布上载波此刻在屏幕上的样子（轴线的宽、按振幅缩放的高）：从首页卡片进来时，卡片载波按它定终点（carrier-wave-head.ejs）
+        window.cwCarrierRect = function () {
+            var r = axis.getBoundingClientRect();
+            var l = line();
+            var h = r.height * l.scale;
+            return { left: r.left, top: l.y - h / 2, width: r.width, height: h };
         };
 
         measure();

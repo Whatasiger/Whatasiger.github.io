@@ -195,112 +195,215 @@
         function cover(w, h, a) { return w / h > a ? [w, w / a] : [h * a, h]; }
         function px(n) { return Math.round(n * 1000) / 1000; }
 
-        function flip(name, spec) {
+        // 准备一个组：读出起点、终点、缓动、时长等不变量，返回 build(终点矩形, 终点宽, 终点高) → 一组动画，读不到数据时返回 null
+        function prepare(name, spec) {
             var gp = '::view-transition-group(' + name + ')';
             var group = find(gp);
-            if (!group) return;
+            if (!group) return null;
             var kf = group.effect.getKeyframes();
             var from = kf[0], to = kf[kf.length - 1];
-            if (kf.length !== 2 || !from.width || !to.width || from.transform === undefined) return;
+            if (kf.length !== 2 || !from.width || !to.width || from.transform === undefined) return null;
             var ease = easing(from.easing);
-            if (!ease) return;
-            var gcs = getComputedStyle(root, gp);
-            var gf = originFrac(gcs);
+            if (!ease) return null;
+            var gf = originFrac(getComputedStyle(root, gp));
             var w0 = parseFloat(from.width), h0 = parseFloat(from.height);
             var W = parseFloat(to.width), H = parseFloat(to.height);
-            if (!(w0 > 0 && h0 > 0 && W > 0 && H > 0)) return;
+            if (!(w0 > 0 && h0 > 0 && W > 0 && H > 0)) return null;
             var A = rectOf(from.transform, w0, h0, gf[0], gf[1]);
             var Z = rectOf(to.transform, W, H, gf[0], gf[1]);
             var timing = group.effect.getTiming();
             var dur = +timing.duration;
-            if (!(dur > 0)) return;
+            if (!(dur > 0)) return null;
             var n = Math.max(12, Math.ceil(dur / 11));
+            var opts = { duration: dur, delay: +timing.delay || 0, fill: 'both' };
+            var eases = [];
+            for (var i = 0; i <= n; i++) eases.push(ease(i / n));
 
-            // 逐帧：组的矩形 B，由此得组的缩放与各快照的反向缩放
-            var frames = [];
-            for (var i = 0; i <= n; i++) {
-                var p = ease(i / n);
-                var b = {
-                    x: A.x + (Z.x - A.x) * p, y: A.y + (Z.y - A.y) * p,
-                    w: Math.max(A.w + (Z.w - A.w) * p, .01), h: Math.max(A.h + (Z.h - A.h) * p, .01)
-                };
-                b.sx = b.w / W;
-                b.sy = b.h / H;
-                frames.push(b);
-            }
-            var gox = gf[0] * W, goy = gf[1] * H;
-            var groupFrames = frames.map(function (b, i) {
-                // 盒子左上角落到 (b.x, b.y)：绕原点缩放后再平移
-                return {
-                    offset: i / n,
-                    transform: 'matrix(' + px(b.sx) + ',0,0,' + px(b.sy) + ',' + px(b.x - gox + b.sx * gox) + ',' + px(b.y - goy + b.sy * goy) + ')'
-                };
-            });
-
-            // 快照：盒子尺寸按模式直接推出（auto 宽同组、高按比例；cover 铺满组），不必等组改写后再量
-            var opts = { duration: dur, delay: +timing.delay || 0, fill: 'both', pseudoElement: '' };
-            var anims = [];
+            // 快照：只需记下模式与变换原点占盒子的比例，盒子尺寸随终点尺寸推出（auto 宽同组、高按比例；cover 铺满组）
+            var sides = [];
             ['old', 'new'].forEach(function (side) {
                 var mode = spec[side];
                 if (mode !== 'auto' && mode !== 'cover') return;
                 var ip = '::view-transition-' + side + '(' + name + ')';
                 var ics = getComputedStyle(root, ip);
                 if (ics.display === 'none') return;
-                var aspect = side === 'old' ? w0 / h0 : W / H;
-                var iw = W, ih = mode === 'auto' ? W / aspect : H;
-                var f = originFrac(ics), ox = f[0] * iw, oy = f[1] * ih;
-                var local = cover(iw, ih, aspect);
-                anims.push([ip, frames.map(function (b, i) {
-                    var kx, ky, tx, ty;
-                    if (mode === 'auto') {
-                        // 宽度随组、高度按快照比例：纵向补偿 sx / sy，顶端不动
-                        kx = 1; ky = b.sx / b.sy;
-                        tx = 0; ty = ky * oy - oy;
-                    } else {
-                        // 屏幕上应有的裁切铺满尺寸 ÷ 盒子里实际铺满尺寸 ÷ 组的缩放；以盒子中心为不动点
-                        var s = cover(b.w, b.h, aspect);
-                        kx = s[0] / (local[0] * b.sx); ky = s[1] / (local[1] * b.sy);
-                        tx = (kx - 1) * (ox - iw / 2); ty = (ky - 1) * (oy - ih / 2);
-                    }
-                    return { offset: i / n, transform: 'matrix(' + px(kx) + ',0,0,' + px(ky) + ',' + px(tx) + ',' + px(ty) + ')' };
-                })]);
+                sides.push({ ip: ip, mode: mode, side: side, f: originFrac(ics) });
             });
 
             // 圆角：CSS 写在 image-pair 上（屏幕上的半径），改成按组的缩放分别折算的椭圆半径
-            var pairFrames = null, pair = null, pp = '::view-transition-image-pair(' + name + ')';
+            var pp = '::view-transition-image-pair(' + name + ')';
+            var pair = null, radii = null;
             if (spec.radius) {
                 pair = find(pp);
                 var pt = pair && pair.effect.getTiming();
                 var pe = pair && easing(pair.effect.getKeyframes()[0].easing);
                 if (pair && pe && +pt.duration === dur && (+pt.delay || 0) === opts.delay) {
-                    pairFrames = frames.map(function (b, i) {
-                        var r = spec.radius * (1 - pe(i / n));
-                        return { offset: i / n, borderRadius: px(r / b.sx) + 'px / ' + px(r / b.sy) + 'px' };
-                    });
+                    radii = [];
+                    for (var j = 0; j <= n; j++) radii.push(spec.radius * (1 - pe(j / n)));
+                } else {
+                    pair = null;
                 }
             }
 
-            // 全部算好再一起换上：原有的组动画（及圆角动画）取消，换成新建的动画，与快照的动画同一刻创建、同步起跑
-            // 不用 setKeyframes 原地改：合成动画在等合成线程启动的那几帧里，浏览器会沿用改之前取样的样式，
-            // 组的盒子停在旧尺寸上，与已生效的快照动画错位
-            group.cancel();
-            anims.unshift([gp, groupFrames]);
-            if (pairFrames) {
-                pair.cancel();
-                anims.push([pp, pairFrames]);
+            // 逐帧：组在屏幕上的矩形
+            function track(Z) {
+                return eases.map(function (p) {
+                    return {
+                        x: A.x + (Z.x - A.x) * p, y: A.y + (Z.y - A.y) * p,
+                        w: Math.max(A.w + (Z.w - A.w) * p, .01), h: Math.max(A.h + (Z.h - A.h) * p, .01)
+                    };
+                });
             }
-            anims.forEach(function (a) {
-                opts.pseudoElement = a[0];
-                root.animate(a[1], opts);
-            });
+
+            function build(Z, W, H) {
+                // 由组的矩形得组的缩放与各快照的反向缩放
+                var frames = track(Z).map(function (b) {
+                    b.sx = b.w / W;
+                    b.sy = b.h / H;
+                    return b;
+                });
+                var gox = gf[0] * W, goy = gf[1] * H;
+                var list = [[gp, frames.map(function (b, i) {
+                    // 盒子左上角落到 (b.x, b.y)：绕原点缩放后再平移
+                    return {
+                        offset: i / n,
+                        transform: 'matrix(' + px(b.sx) + ',0,0,' + px(b.sy) + ',' + px(b.x - gox + b.sx * gox) + ',' + px(b.y - goy + b.sy * goy) + ')'
+                    };
+                })]];
+                sides.forEach(function (sd) {
+                    var aspect = sd.side === 'old' ? w0 / h0 : W / H;
+                    var iw = W, ih = sd.mode === 'auto' ? W / aspect : H;
+                    var ox = sd.f[0] * iw, oy = sd.f[1] * ih;
+                    var local = cover(iw, ih, aspect);
+                    list.push([sd.ip, frames.map(function (b, i) {
+                        var kx, ky, tx, ty;
+                        if (sd.mode === 'auto') {
+                            // 宽度随组、高度按快照比例：纵向补偿 sx / sy，顶端不动
+                            kx = 1; ky = b.sx / b.sy;
+                            tx = 0; ty = ky * oy - oy;
+                        } else {
+                            // 屏幕上应有的裁切铺满尺寸 ÷ 盒子里实际铺满尺寸 ÷ 组的缩放；以盒子中心为不动点
+                            var c = cover(b.w, b.h, aspect);
+                            kx = c[0] / (local[0] * b.sx); ky = c[1] / (local[1] * b.sy);
+                            tx = (kx - 1) * (ox - iw / 2); ty = (ky - 1) * (oy - ih / 2);
+                        }
+                        return { offset: i / n, transform: 'matrix(' + px(kx) + ',0,0,' + px(ky) + ',' + px(tx) + ',' + px(ty) + ')' };
+                    })]);
+                });
+                if (radii) {
+                    list.push([pp, frames.map(function (b, i) {
+                        return { offset: i / n, borderRadius: px(radii[i] / b.sx) + 'px / ' + px(radii[i] / b.sy) + 'px' };
+                    })]);
+                }
+                return list.map(function (a) {
+                    return root.animate(a[1], { duration: opts.duration, delay: opts.delay, fill: opts.fill, pseudoElement: a[0] });
+                });
+            }
+
+            return { group: group, pair: pair, build: build, track: track, A: A, Z: Z, W: W, H: H, opts: opts };
+        }
+
+        // 换上：原有的组动画（及圆角动画）取消，换成新建的动画，与快照的动画同一刻创建、同步起跑
+        // 不用 setKeyframes 原地改：合成动画在等合成线程启动的那几帧里，浏览器会沿用改之前取样的样式，
+        // 组的盒子停在旧尺寸上，与已生效的快照动画错位
+        function flip(name, spec, done) {
+            var g = prepare(name, spec);
+            if (!g) return null;
+            done[name] = g;
+            var anims = g.build(g.Z, g.W, g.H);
+            g.group.cancel();
+            if (g.pair) g.pair.cancel();
+            var visual = typeof spec.el === 'function';
+            var measure = visual ? spec.el : (function (el) {
+                return el && function () { return el.getBoundingClientRect(); };
+            })(spec.el && document.querySelector(spec.el));
+            var r0 = measure && measure();
+            if (!r0) return null;
+            if (visual) r0 = { left: g.Z.x, top: g.Z.y, width: g.Z.w, height: g.Z.h }; // 起跑时就对不上（如已吸顶）也照样校正
+            // 逐帧检查：元素动了就把终点平移 / 改尺寸，按原规则重建动画并接上当前进度
+            return function () {
+                var r = measure();
+                if (!r) return;
+                var dx = r.left - r0.left, dy = r.top - r0.top, dw = r.width - r0.width, dh = r.height - r0.height;
+                if (Math.abs(dx) < .5 && Math.abs(dy) < .5 && Math.abs(dw) < .5 && Math.abs(dh) < .5) return;
+                r0 = r;
+                if (visual) {
+                    g.Z = { x: g.Z.x + dx, y: g.Z.y + dy, w: Math.max(g.Z.w + dw, .01), h: Math.max(g.Z.h + dh, .01) };
+                } else {
+                    g.W = Math.max(g.W + dw, .01);
+                    g.H = Math.max(g.H + dh, .01);
+                    g.Z = { x: g.Z.x + dx, y: g.Z.y + dy, w: g.W, h: g.H };
+                }
+                // 接上进度：沿用旧动画的起点时刻，不用 currentTime——新动画等合成线程启动的那几帧会停在原处，
+                // 元素连续几帧都在动时一次次重建，就会被越拖越慢
+                var start = anims[0].startTime, t = anims[0].currentTime;
+                var next = g.build(g.Z, g.W, g.H);
+                next.forEach(function (a) {
+                    if (start !== null) a.startTime = start;
+                    else a.currentTime = t;
+                });
+                anims.forEach(function (a) { a.cancel(); });
+                anims = next;
+            };
+        }
+
+        // 跟随：只有旧页一侧的组（没有对应的新元素，浏览器让它原地不动）沿着另一个组的轨迹一起走，用同样的时长与缓动
+        //   box     —— 跟着组的盒子一起非等比伸缩（投影、细边这类贴着盒子边缘的层）
+        //   content —— 中心跟着盒子走，按盒子较小一向的倍数等比缩放（卡片上的文字：不被拉扁，也不冲出盒子）
+        // 只按领头组起跑时的终点算一次：领头的应是不会移动的组（如铺满视口的封面）
+        function follow(name, spec, g) {
+            var gp = '::view-transition-group(' + name + ')';
+            var cs = getComputedStyle(root, gp);
+            var w = parseFloat(cs.width), h = parseFloat(cs.height);
+            if (!g || !(w > 0 && h > 0)) return;
+            var gf = originFrac(cs);
+            var F = rectOf(cs.transform, w, h, gf[0], gf[1]);
+            var A = g.A;
+            var frames = g.track(g.Z);
+            var gox = gf[0] * w, goy = gf[1] * h;
+            root.animate(frames.map(function (b, i) {
+                var r;
+                var kx = b.w / A.w, ky = b.h / A.h;
+                if (spec.how === 'content') {
+                    var k = Math.min(kx, ky);
+                    r = { w: F.w * k, h: F.h * k };
+                    r.x = b.x + (F.x + F.w / 2 - A.x) * kx - r.w / 2;
+                    r.y = b.y + (F.y + F.h / 2 - A.y) * ky - r.h / 2;
+                } else {
+                    r = { x: b.x + (F.x - A.x) * kx, y: b.y + (F.y - A.y) * ky, w: F.w * kx, h: F.h * ky };
+                }
+                var sx = r.w / w, sy = r.h / h;
+                return {
+                    offset: i / (frames.length - 1),
+                    transform: 'matrix(' + px(sx) + ',0,0,' + px(sy) + ',' + px(r.x - gox + sx * gox) + ',' + px(r.y - goy + sy * goy) + ')'
+                };
+            }), { duration: g.opts.duration, delay: g.opts.delay, fill: 'both', pseudoElement: gp });
         }
 
         return function (vt, specs) {
             if (!vt || !window.DOMMatrix || !document.getAnimations) return;
             vt.ready.then(function () {
-                for (var name in specs) {
-                    try { flip(name, specs[name]); } catch (err) {}
+                var checks = [], done = {}, name;
+                for (name in specs) {
+                    if (specs[name].follow) continue;
+                    try {
+                        var check = flip(name, specs[name], done);
+                        if (check) checks.push(check);
+                    } catch (err) {}
                 }
+                for (name in specs) {
+                    if (!specs[name].follow) continue;
+                    try { follow(name, specs[name], done[specs[name].follow]); } catch (err) {}
+                }
+                if (!checks.length) return;
+                // 过渡期间每帧量一次带名元素的位置（只读布局，本就要排版），结束即停
+                var done = false;
+                vt.finished.finally(function () { done = true; });
+                (function tick() {
+                    if (done) return;
+                    checks.forEach(function (c) { try { c(); } catch (err) {} });
+                    requestAnimationFrame(tick);
+                })();
             }, function () {});
         };
     })();
@@ -346,7 +449,10 @@
             // 封面与标题的形变只动 transform，交给合成线程：文章页正在加载时主线程再忙也不掉帧（见 _partial/vt-flip.ejs）
             vtFlip(e.viewTransition, {
                 'post-cover': { old: 'cover' },
-                'post-title': { old: 'auto', new: 'auto' }
+                'post-shadow': { follow: 'post-cover', how: 'box' },
+                'post-light': { follow: 'post-cover', how: 'box' },
+                'post-info': { follow: 'post-cover', how: 'content' },
+                'post-title': { old: 'auto', new: 'auto', el: '#vt-post-title' }
             });
             e.viewTransition.finished.finally(function () { root.classList.remove('vt-from-card'); });
         });
@@ -478,6 +584,7 @@
     
 <meta name="generator" content="Hexo 8.1.1"></head>
 
+  
   <body class="dark-theme post-page">
     <script>
     (function() {
@@ -1491,7 +1598,20 @@
 
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
-<script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script>
+    (function () {
+        function load() {
+            var s = document.createElement('script');
+            s.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
+            s.async = true;
+            document.body.appendChild(s);
+        }
+        if (document.prerendering) document.addEventListener('prerenderingchange', load, { once: true });
+        else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
+        else load();
+    })();
+</script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const searchBox = document.querySelector('.head-search');

@@ -1344,9 +1344,12 @@ main img {
     translate: 0 -8px;              /* 悬停上移距离，调整可改变上浮幅度 */
 }
 
-/* 两套投影：静止的画在 ::before，悬停的画在 ::after，悬停时交叉淡化 */
-.post-item.card-style::before,
-.post-item.card-style::after {
+/* 两套投影：静止的画在 ::before，悬停的画在 ::after，悬停时交叉淡化
+   CW 卡片画在卡片自身的伪元素上；文章卡片画在单独的 .post-card-shadow 上（一镜到底时它自成一层，跟着卡片放大、渐隐） */
+.post-item.cw-card::before,
+.post-item.cw-card::after,
+.post-card-shadow::before,
+.post-card-shadow::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -1355,10 +1358,21 @@ main img {
     pointer-events: none;
     transition: opacity 1.2s var(--ease-spring);
 }
-.post-item.card-style::before { box-shadow: var(--card-shadow); }
-.post-item.card-style::after { box-shadow: var(--card-shadow-hover); opacity: 0; }
-.post-item.card-style:hover::before { opacity: 0; }
-.post-item.card-style:hover::after { opacity: 1; }
+.post-item.cw-card::before,
+.post-card-shadow::before { box-shadow: var(--card-shadow); }
+.post-item.cw-card::after,
+.post-card-shadow::after { box-shadow: var(--card-shadow-hover); opacity: 0; }
+.post-item.cw-card:hover::before,
+.post-item.card-style:hover .post-card-shadow::before { opacity: 0; }
+.post-item.cw-card:hover::after,
+.post-item.card-style:hover .post-card-shadow::after { opacity: 1; }
+.post-card-shadow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+}
 
 /* 「CARRiER WAVE.」卡片的投影；夜间更深（封面卡片另有分层投影，见下） */
 .post-item.cw-card {
@@ -1372,7 +1386,7 @@ main img {
 
 /* 封面卡片的层次：分层投影 + 上亮下暗的细边 + 悬停时跟随指针的高光与轻微倾斜
    - 投影分三层：贴地的接触影（定住卡片的「底」）、中距离的主投影、大而淡的环境影；悬停时接触影变淡、远处两层拉长，像卡片离开桌面
-   - 细边画在遮罩层的 ::after，用 mask 挖空只留 1px，顶边最亮、往下渐暗，模拟光从上方照在卡片边沿
+   - 细边画在 .post-card-light 的 ::after，用 mask 挖空只留 1px，顶边最亮、往下渐暗，模拟光从上方照在卡片边沿
    - 高光：.post-card-sheen 的背景是顶部一抹天光，指针处的柔光是其中一枚光斑 .post-card-spot（glint.js 创建），
      只用 transform 移到指针处、按到最远角的距离缩放（等同原先 radial-gradient 的 farthest-corner），不逐帧重画渐变
    - 倾斜（内联 transform）与光斑位置由 glint.js setupCardFloat() 写入；触屏 / 减少动效时不写，停在默认值
@@ -1400,8 +1414,17 @@ main img {
     translate: 0 -10px;             /* 上浮距离 */
 }
 
+/* 高光与细边的容器：自带圆角裁切（一镜到底时它单独成一层，截图不带祖先的裁切） */
+.post-card-light {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+}
 /* 细边：上亮下暗的 1px 渐变描边 */
-.post-item.card-style:not(.cw-card) .post-card-overlay::after {
+.post-card-light::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -1417,7 +1440,7 @@ main img {
     opacity: .85;
     transition: opacity 0.8s var(--ease-spring);
 }
-.post-item.card-style:not(.cw-card):hover .post-card-overlay::after { opacity: 1; }
+.post-item.card-style:not(.cw-card):hover .post-card-light::after { opacity: 1; }
 .post-item.card-style:not(.cw-card):focus-visible {
     outline: 2px solid var(--tc-main);
     outline-offset: 3px;
@@ -1520,7 +1543,7 @@ main img {
     padding: 2em;                   /* 卡片内容与边缘的距离 */
     box-sizing: border-box;
     border-radius: inherit;
-    overflow: hidden;               /* 裁住光斑 */
+    overflow: hidden;
 }
 
 /* 卡片标题容器，悬停时向上位移 */
@@ -1774,16 +1797,24 @@ html.cw-back::view-transition-new(root) {
    - 文章页 pagereveal（_partial/post-vt.ejs）确认来自首页后挂 vt-from-card：全屏的空层 .vt-cover（post.ejs）接 post-cover，正文标题接 post-title
    - 封面全程只用离场时那张「悬停态」的卡片快照（模糊 + 压暗）：一张静态位图放大，不在新页实时重绘大图，开销小；
      模糊的图放大也看不出糊，且与文章页的模糊背景同一调子，不会「模糊 → 清晰 → 模糊」来回跳。末段淡出，露出 root 里的最终背景
-   - 标题挂在文字本身（行内块）上，两端的盒子都只包住文字，形变时字号按比例过渡，新旧快照几乎重合；新标题早早接手，落定时是清晰的实物 */
-/* 离场快照前：卡片一律定格在悬停态（触屏没有悬停，也补上模糊）；摘要、高光、细边不进快照 */
+   - 标题挂在文字本身（行内块）上，两端的盒子都只包住文字，形变时字号按比例过渡，新旧快照几乎重合；新标题早早接手，落定时是清晰的实物
+   - 投影、高光与细边、摘要信息各成一层（post-shadow / post-light / post-info），离场时保持原样，
+     由 vtFlip 的 follow 跟着封面一起放大（前两者随盒子伸缩，摘要等比缩放、留在盒子里），在前段渐隐
+   - 文章页由首页预渲染（head.ejs 的 speculation rules），点击后过渡立即开始；不蒜子等页面真正打开才计数（footer.ejs） */
+/* 按下即有回应：卡片微沉；触屏没有悬停，按下时就开始放大、模糊（离场快照会从这里接续） */
+.post-item.card-style:not(.cw-card).is-pressed {
+    translate: 0 -4px;
+    scale: .985;
+    transition: translate .5s var(--ease-spring), scale .5s var(--ease-spring);
+}
+.post-item.card-style:not(.cw-card).is-pressed .post-card-zoom { transform: scale(1.45); }
+.post-item.card-style:not(.cw-card).is-pressed .post-card-blur { opacity: 1; }
+/* 离场快照前：封面一律定格在悬停态（模糊放大），未走完的过渡直接到位 */
 html.post-leaving .post-item.vt-active .post-card-zoom { transform: scale(1.45); transition: none; }
 html.post-leaving .post-item.vt-active .post-card-blur { opacity: 1; transition: none; }
-html.post-leaving .post-item.vt-active .post-card-info { opacity: 0; transition: none; }
-/* 投影本就被裁在形变框外，连同高光、细边一起不进快照，快照只有卡片本身大小 */
-html.post-leaving .post-item.vt-active::before,
-html.post-leaving .post-item.vt-active::after,
-html.post-leaving .post-item.vt-active .post-card-sheen,
-html.post-leaving .post-item.vt-active .post-card-overlay::after { opacity: 0; transition: none; }
+html.post-leaving .post-item.vt-active .post-card-shadow { view-transition-name: post-shadow; }
+html.post-leaving .post-item.vt-active .post-card-light { view-transition-name: post-light; }
+html.post-leaving .post-item.vt-active .post-card-info { view-transition-name: post-info; }
 
 .vt-cover { display: none; }
 html.vt-from-card .vt-cover {
@@ -1813,6 +1844,10 @@ html.vt-from-card::view-transition-old(post-cover) {
     animation: post-vt-out .4s ease-in .4s both;
 }
 html.vt-from-card::view-transition-new(post-cover) { animation: none; opacity: 0; }
+/* 投影、高光与细边、摘要：跟着封面放大（_partial/post-vt.ejs 的 follow），前段渐隐；摘要最先退场 */
+html.vt-from-card::view-transition-old(post-shadow),
+html.vt-from-card::view-transition-old(post-light) { animation: post-vt-out .35s ease-out both; }
+html.vt-from-card::view-transition-old(post-info) { animation: post-vt-out .25s ease-out both; }
 /* 标题：叠在封面上；旧的（卡片里的小字）很快淡出，新的（正文标题）早早接手，形变后半程看到的都是缩放到位的新标题 */
 html.vt-from-card::view-transition-group(post-title) {
     z-index: 1;
