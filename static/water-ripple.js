@@ -8,6 +8,7 @@
  *   - 画布平时隐藏；激发时把「底色 + 背景图（同透明度 / 模糊）」合成为一张纹理，
  *     静水时画面与 CSS 背景完全一致，水波平息后再无缝隐藏
  *   - 画布 z-index:-1，紧跟 body:before 之后绘制，只覆盖背景，不遮挡任何内容
+ *   - 触摸：轻点激发、按住 300ms 后才进入长按 / 拖拽；一滑动即视为滚动、不激发（手机滚动时不跑模拟）
  *   - 物理按固定 60Hz 步进，高刷屏下波速不变；不支持 WebGL2 / 偏好减少动画时直接不启用
  *   - 物理通道用 texelFetch 精确取相邻格（不经线性过滤），系数低于稳定极限且高度/速度钳位，
  *     避免个别 GPU 上误差累积成高频发散（满屏泛白）
@@ -505,17 +506,53 @@
         document.addEventListener("pointerup",     function (e) { onUp("p" + e.pointerId); }, { passive: true });
         document.addEventListener("pointercancel", function (e) { onUp("p" + e.pointerId); }, { passive: true });
 
+        // 触摸：按下时先不激发，免得手指一滑动页面就在滚动的同时跑水波模拟
+        //   - 移动超过 TOUCH_SLOP 视为滚动，这次触摸作废
+        //   - 轻点（没移动就抬起）激发一滴；按住不动 TOUCH_HOLD 后才进入长按 / 拖拽尾流
+        var TOUCH_SLOP = 10;    // px
+        var TOUCH_HOLD = 300;   // ms
+        var pendingTouches = {};
         function eachTouch(e, fn) {
             for (var i = 0; i < e.changedTouches.length; i++) fn(e.changedTouches[i]);
         }
+        function dropPending(id) {
+            var pt = pendingTouches[id];
+            if (!pt) return null;
+            clearTimeout(pt.timer);
+            delete pendingTouches[id];
+            return pt;
+        }
         document.addEventListener("touchstart", function (e) {
-            eachTouch(e, function (t) { onDown("t" + t.identifier, t.clientX, t.clientY, t.target); });
+            eachTouch(e, function (t) {
+                var id = t.identifier;
+                if (!gl || isContentTarget(t.target)) return;
+                dropPending(id);
+                var pt = { x: t.clientX, y: t.clientY, target: t.target };
+                pt.timer = setTimeout(function () {
+                    if (pendingTouches[id] !== pt) return;
+                    delete pendingTouches[id];
+                    onDown("t" + id, pt.x, pt.y, pt.target);
+                }, TOUCH_HOLD);
+                pendingTouches[id] = pt;
+            });
         }, { passive: true });
         document.addEventListener("touchmove", function (e) {
-            eachTouch(e, function (t) { onMove("t" + t.identifier, t.clientX, t.clientY); });
+            eachTouch(e, function (t) {
+                var pt = pendingTouches[t.identifier];
+                if (pt) {
+                    var dx = t.clientX - pt.x, dy = t.clientY - pt.y;
+                    if (dx * dx + dy * dy > TOUCH_SLOP * TOUCH_SLOP) dropPending(t.identifier);
+                    return;
+                }
+                onMove("t" + t.identifier, t.clientX, t.clientY);
+            });
         }, { passive: true });
         function touchEnd(e) {
-            eachTouch(e, function (t) { onUp("t" + t.identifier); });
+            eachTouch(e, function (t) {
+                var pt = dropPending(t.identifier);
+                if (pt && e.type === "touchend") queueDrop(pt.x, pt.y, pt.x, pt.y, CFG.dropRadius, CFG.dropStrength);
+                onUp("t" + t.identifier);
+            });
         }
         document.addEventListener("touchend",    touchEnd, { passive: true });
         document.addEventListener("touchcancel", touchEnd, { passive: true });

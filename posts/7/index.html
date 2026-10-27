@@ -68,7 +68,7 @@
     <!-- 主题样式 -->
     
 <link rel="stylesheet" href="/static/kico.css">
-<link rel="stylesheet" href="/static/hingle.css">
+<link rel="stylesheet" href="/static/glint.css">
 
     
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -124,7 +124,7 @@
         }
 
         // 0.1 背景可见度：与设置面板共用唯一数据源 whatasiger_reader_settings.bgOpacity
-        var targetBgOpacity = 0.50; // 与 hingle.js defaultSettings.bgOpacity=35 对应
+        var targetBgOpacity = 0.50; // 与 glint.js defaultSettings.bgOpacity=35 对应
         var defaultBgOpacityValue = 50; // 默认档位（0~100），用于“从文章回首页”时重置
         try {
             var readerSettings = JSON.parse(localStorage.getItem("whatasiger_reader_settings"));
@@ -246,19 +246,9 @@
                     </div>
                 </div>
                 <label class="settings-row">
-                    <i class="fa fa-arrow-up"></i>
-                    <span>显示「回到顶部」</span>
-                    <input type="checkbox" id="setting-show-top">
-                </label>
-                <label class="settings-row">
                     <i class="fa fa-expand"></i>
                     <span>沉浸模式</span>
                     <input type="checkbox" id="setting-immersive">
-                </label>
-                <label class="settings-row">
-                    <i class="fa fa-picture-o"></i>
-                    <span>隐藏背景图片</span>
-                    <input type="checkbox" id="setting-hide-bg">
                 </label>
                 <label class="settings-row">
                     <i class="fa fa-list-ul"></i>
@@ -351,7 +341,7 @@
         var nav = document.querySelector(".head-menu");
         var ctx = document.createElement("canvas").getContext("2d");
         var GAP = 24; // 与两侧元素至少留出的间距（px）
-        var PAD = 0.85, SPACE = 0.15; // 与 hingle.css 中 .head-menu > a 的左右 padding / margin-right 一致（em）
+        var PAD = 0.85, SPACE = 0.15; // 与 glint.css 中 .head-menu > a 的左右 padding / margin-right 一致（em）
 
         function update() {
             var collapse = window.innerWidth < 600; // 手机端始终收起
@@ -1130,33 +1120,21 @@
             </div>
         </section>
         <section class="sub-footer">
-            <p>© 2026 <a href="/">Whatasiger</a>. All Rights Reserved. Theme By <a href="https://github.com/Dreamer-Paul/Hingle" target="_blank" rel="nofollow">Hingle</a>.</p>
+            <p>© 2026 <a href="/">Whatasiger</a>. All Rights Reserved. Theme Glint, based on <a href="https://github.com/Dreamer-Paul/Hingle" target="_blank" rel="nofollow">Hingle</a>.</p>
         </section>
     </div>
 </footer>
 
-<div class="buttons">
-    <button class="to-top" href="#"></button>
-</div>
+
+<div class="buttons"></div>
 
 
 <script src="/static/kico.js"></script>
-<script src="/static/hingle.js"></script>
+<script src="/static/glint.js"></script>
 
 
-<script>var hingle = new Paul_Hingle({"copyright":false,"night":true});</script>
+<script>var glint = new Glint({"copyright":false,"night":true});</script>
 <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const toTopBtn = document.querySelector('.to-top');
-        if (toTopBtn) {
-          toTopBtn.addEventListener('click', function(e) {
-            e.preventDefault(); // 阻止默认行为
-            window.scrollTo({ top: 0, behavior: 'smooth' }); // 平滑滚动到顶部
-          });
-        }
-      });
-    </script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const searchBox = document.querySelector('.head-search');

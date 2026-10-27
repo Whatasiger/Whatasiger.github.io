@@ -851,7 +851,7 @@ html.cw-from-home::view-transition-new(root) {
 /* 从阅读页回到目录：视口内曲目直接就位（须在「行入场」规则之后） */
 .cw-returning .cw-track.is-in { transition: none; }
 
-/* ---------- 一镜到底：回到博客首页（过渡动画写在首页的 hingle.css） ---------- */
+/* ---------- 一镜到底：回到博客首页（过渡动画写在首页的 glint.css） ---------- */
 
 .cw-to-home .cw-stage { view-transition-name: cw-stage; }
 .cw-to-home .cw-axis { view-transition-name: cw-hero-wave; }

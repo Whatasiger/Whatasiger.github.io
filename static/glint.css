@@ -1,7 +1,7 @@
 @charset "UTF-8";
 
 /* ----
-# Hingle Theme (Refactored by Whatasiger)
+# Glint Theme (based on Hingle, refactored by Whatasiger)
 # Original By: Dreamer-Paul
 # Refactored By: Whatasiger
 # Original Release: 2024.9.2
@@ -108,10 +108,10 @@ body {
     --bg-blur: 8px;                      /* 背景图模糊程度，值越大背景越模糊 */
 }
 
-/* 防止页面水平滚动条出现 */
-html, body {
-    overflow-x: hidden !important;
-}
+/* 防止页面水平滚动条出现：html 的 hidden 交给视口；body 用 clip，不会变成独立的滚动盒
+   （html、body 同时 hidden 时 body 自成滚动盒，iOS 上会拖慢 / 打断惯性滚动） */
+html { overflow-x: hidden; }
+body { overflow-x: clip; }
 
 /* 全局背景图伪元素，固定铺满全屏、模糊处理，不影响页面交互 */
 body:before {
@@ -146,10 +146,8 @@ body.bg-faded:before {
     opacity: calc(var(--bg-opacity) * 0.2) !important;
 }
 
-/* 无背景图状态：强制隐藏背景图 */
-body.no-bg-image:before {
-    background-image: none !important;
-}
+/* 手机端背景模糊已由 glint.js 烤进图片（bgBake），不再挂模糊滤镜；白天的提亮 / 饱和见第 8 节 */
+body.bg-baked:before { filter: none; }
 
 /* 禁用背景图过渡动画，用于需要立即切换背景的场景 */
 body.no-bg-transition:before {
@@ -656,7 +654,7 @@ header:before {
     to   { opacity: 1; }
 }
 
-/* 沉浸模式（设置面板开关，body.immersive）：向下滚动时 hingle.js 给 html 挂 .header-hidden，
+/* 沉浸模式（设置面板开关，body.immersive）：向下滚动时 glint.js 给 html 挂 .header-hidden，
    顶栏连同桌面横排导航（它在 header 之外）一起向上收起；唤出时弹性落下，收起时干脆利落 */
 body.immersive header,
 html:not(.nav-collapsed) body.immersive .head-menu {
@@ -834,7 +832,7 @@ body:has(.settings-panel.open) .settings-btn:before { transform: rotate(135deg);
 .search-btn:before { content: "\f002"; }    /* 搜索图标 */
 .settings-btn:before { content: "\f013"; }  /* 齿轮/设置图标 */
 
-/* 切换日夜时图标转入（hingle.js 的 night() 挂 .is-flipping，动画结束后摘掉） */
+/* 切换日夜时图标转入（glint.js 的 night() 挂 .is-flipping，动画结束后摘掉） */
 .light-btn.is-flipping:before { animation: light-flip .7s var(--ease-spring); }
 @keyframes light-flip {
     from { opacity: 0; transform: rotate(-140deg) scale(.4); }
@@ -1209,10 +1207,13 @@ main img {
 .home-social.no-glide .home-social-pill,
 .home-social.no-glide .home-social-tip { transition: opacity .25s ease, scale .5s var(--ease-glide); }
 
-/* 手机端：内边距与 ID 字号收小 */
+/* 手机端：内边距与 ID 字号收小，座右铭略小，社交图标排得更紧 */
 @media screen and (max-width: 599px) {
     .home-hero { padding: 1.8em 1.2em 1.4em; }
     .home-title.home-hero .home-name { font-size: 1.7em; }
+    .home-motto { font-size: .85em; }           /* 座右铭字号 */
+    .home-social { gap: 0; }                     /* 图标之间的空隙 */
+    .home-social a { width: 2.2em; }             /* 图标按钮宽度（强调框随之变窄） */
 }
 
 /* 社交图标：SVG 作为遮罩、底色取 currentColor，图标颜色随主题与悬停变化（图形数据见下方各条） */
@@ -1691,13 +1692,13 @@ body.post-page main .post-comments { animation: none; }
 body.post-page main .post-comments > * { animation: fade-in-top .3s .4s backwards; }
 
 @media screen and (max-width: 599px) {
-    /* 手机端：玻璃离屏幕两侧各留一点缝，圆角收小 */
-    body.post-page main > .wrap { padding: 0 .5em; }
+    /* 手机端不用玻璃底板（两侧的描边贴着正文，干扰阅读）：正文与评论直接铺在背景上，
+       左右留白交还给 .wrap（kico.css 默认 1.25em） */
     body.post-page .reading-sheet,
-    body.post-page main .post-comments { padding: 1.6em .9em 1.8em; }
-    body.post-page main .post-comments { margin-top: 1.25em; }
+    body.post-page main .post-comments { padding: 0; }
+    body.post-page main .post-comments { margin-top: 2em; }
     body.post-page .reading-sheet:before,
-    body.post-page main .post-comments:before { border-radius: 18px; }
+    body.post-page main .post-comments:before { display: none; }
 }
 
 /* 文章属性（发布时间/分类/标签等）条：横向滚动，隐藏滚动条 */
@@ -1741,6 +1742,17 @@ body.post-page main .post-comments > * { animation: fade-in-top .3s .4s backward
 .post-meta .view:before { content: "\f080"; }        /* 统计图标（阅读量） */
 .post-meta .word-count:before { content: "\f040"; }  /* 铅笔图标（字数） */
 .post-meta .read-time:before { content: "\f017"; }   /* 时钟图标（阅读时间） */
+
+/* 手机端：一行放不下时整项换到下一行，不再横向滚动被截断（单项内部不拆行） */
+@media screen and (max-width: 599px) {
+    .post-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .35em .8em;            /* 行距 / 项间距（取代各项的 margin-right） */
+        overflow: visible;
+    }
+    .post-meta > span, .post-meta > time { margin-right: 0; white-space: nowrap; }
+}
 
 /* 文章/页面顶部标题区域：带下边框分隔与淡入动画 */
 /* - 阅读页标题 */
@@ -2458,91 +2470,8 @@ footer .sub-footer p { font-size: .8em; letter-spacing: .03em; /* 版权信息�
 footer .sub-footer a { transition: color .3s ease; }
 footer .sub-footer a:hover { color: var(--footer-accent); }
 
-/* 右下角悬浮按钮组（回到顶部 + 目录切换） */
-/* - 悬浮按钮 */
-.buttons {
-    right: 1.5em;                   /* 按钮组距右边缘距离 */
-    bottom: 5em;                    /* 按钮组距底部距离 */
-    z-index: 100000;
-    position: fixed;
-}
-
-/* 回到顶部与目录切换按钮的共用样式 */
-.buttons .to-top, .buttons .toggle-list {
-    padding: 0.6em;                 /* 按钮内边距，影响按钮点击区域大小 */
-    display: block;
-    cursor: pointer;
-    color: var(--blue);             /* 按钮图标颜色 */
-    background-color: var(--light-background); /* 按钮背景色 */
-    border-radius: 8px;             /* 按钮圆角 */
-    border: 1px solid var(--border);
-    transform: translateX(8em);     /* 默认偏移到视口右侧外，通过 JS 控制显示 */
-    transition: all 0.4s var(--ease-spring);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 按钮投影 */
-}
-
-/* 回到顶部按钮：默认透明隐藏，通过 JS 添加 .active 显示 */
-.buttons .to-top {
-    transform: translateX(0);
-    opacity: 0;                     /* 初始透明，不可见 */
-    pointer-events: none;           /* 隐藏时禁止交互 */
-    transition: opacity 0.18s cubic-bezier(0.4, 0, 1, 1),
-                background-color 0.35s var(--ease-spring),
-                color 0.35s var(--ease-spring),
-                transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* 目录切换按钮：默认隐藏（桌面端通过媒体查询显示） */
-.buttons .toggle-list {
-    display: none;
-    margin-top: 0.8em;              /* 两个按钮之间的间距 */
-}
-
-/* 悬浮按钮图标样式 */
-.buttons .to-top:before, .buttons .toggle-list:before {
-    width: 1.5em;
-    display: block;
-    text-align: center;
-    font-family: "FontAwesome";
-    font-size: 1.1em;               /* 按钮图标字号，影响图标大小 */
-}
-
-/* 各悬浮按钮对应图标 */
-.buttons .to-top:before { content: "\f062"; }      /* 向上箭头（回到顶部） */
-.buttons .toggle-list:before { content: '\f00b'; } /* 列表图标（目录切换） */
-
-/* 回到顶部按钮激活状态：显示并可交互 */
-.buttons .to-top.active {
-    transform: translateX(0);
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* 悬浮按钮悬停：主题蓝背景 + 白色图标 + 轻微放大 */
-.buttons .to-top:hover, .buttons .toggle-list:hover {
-    background-color: var(--blue);  /* 悬停背景色 */
-    color: #fff;
-    transform: scale(1.05);         /* 悬停放大倍数 */
-}
-
-/* 夜间模式悬浮按钮样式 */
-.dark-theme .buttons .to-top, .dark-theme .buttons .toggle-list {
-    background-color: rgba(40, 40, 40, 0.85); /* 夜间按钮背景透明度 */
-    border-color: rgba(255, 255, 255, 0.08);
-    color: var(--tc-soft);                            /* 夜间按钮图标颜色 */
-    backdrop-filter: blur(5px);                /* 夜间按钮毛玻璃效果 */
-}
-
-/* 夜间模式悬浮按钮悬停颜色 */
-.dark-theme .buttons .to-top:hover, .dark-theme .buttons .toggle-list:hover {
-    background-color: var(--tc-soft);      /* 夜间悬停背景色 */
-    color: #111;                    /* 夜间悬停图标颜色 */
-}
-
-/* 强制隐藏回到顶部按钮（通过 JS 添加 .hide-to-top 类） */
-body.hide-to-top .buttons .to-top {
-    display: none !important;
-}
+/* 右下角悬浮按钮组：只剩 glint.js 插入的目录开关 .toggle-list，现已不再显示（「回到顶部」已删除） */
+.buttons { display: none; }
 
 /* =========================================
    6 - 附加组件
@@ -2630,7 +2559,7 @@ body {
     font-weight: 700;
 }
 
-/* 有子章节的目录项：点击即展开 / 收起子章节（hingle.js），不另加箭头 */
+/* 有子章节的目录项：点击即展开 / 收起子章节（glint.js），不另加箭头 */
 .article-list a.has-toc-children { cursor: pointer; }
 
 /* 子章节：缩进成自己的一段轨道；默认收起，所属章节激活或被点开时展开 */
@@ -2673,7 +2602,7 @@ body {
 }
 
 /* 迷你目录：目录收起后缩成右上角的这枚小玻璃块，几道短横线代表各章节，当前章节那道亮起；点击即展开
-   短横线由 hingle.js 生成（最多 8 道），手机端不显示 */
+   短横线由 glint.js 生成（最多 8 道），手机端不显示 */
 .toc-mini {
     position: fixed;
     z-index: 2;
@@ -2913,7 +2842,7 @@ html {
     transition: opacity 0.3s var(--ease-spring), transform 0.55s var(--ease-spring); /* 展开：先快后缓 */
 }
 
-/* 设置面板与手机端导航卡片同时打开时，后打开的那个在上（由 hingle.js 挂 .on-top） */
+/* 设置面板与手机端导航卡片同时打开时，后打开的那个在上（由 glint.js 挂 .on-top） */
 .settings-panel.on-top, html.nav-collapsed .head-menu.on-top { z-index: 100003; } /* 选择器须压过 html.nav-collapsed .head-menu */
 
 /* 设置面板内容容器 */
@@ -3404,12 +3333,31 @@ pre[class*="language-"].line-numbers {
    7 - 响应式
    ========================================= */
 
+/* -- 手机端滚动性能 (< 600px) */
+/* 滚动时常驻屏上的毛玻璃（顶栏、迷你目录、首页博主卡、底栏）模糊半径减半、去掉提饱和：
+   手机 GPU 每帧都要重算这些模糊，开销大致随半径增长。只在打开时出现的浮层不改 */
+@media screen and (max-width: 599px) {
+    header,
+    .toc-mini {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    .home-hero {
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    footer {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+}
+
 /* -- 桌面端 (>= 800px) */
 /* 桌面端：页面右移为目录让出空间 */
 @media screen and (min-width: 800px) {
     /* 有目录时正文区右侧让出目录卡片：卡片宽 + 两侧各 1em 间距
        只给 main 留白、不再整个 body 右移：顶栏与底栏仍铺满整宽，目录卡片浮在底栏之上
-       （body 设了 overflow-x: hidden，任何伸出 body 的做法都会被裁掉） */
+       （body 设了 overflow-x: clip，任何伸出 body 的做法都会被裁掉） */
     body.has-trees main,
     body.has-trees footer {
         padding-right: calc(17.5em + 2em); /* 目录卡片宽 + 两侧间距；底栏背景照样铺满，只是内容与正文同一中线，不钻到目录卡片下面 */
@@ -3419,11 +3367,7 @@ pre[class*="language-"].line-numbers {
     body.has-trees.toc-collapsed main,
     body.has-trees.toc-collapsed footer { padding-right: 0; }
 
-    /* 桌面端不显示右下角的目录开关（收起后由右上角的迷你目录展开）；
-       目录展开时「回到顶部」（若开启）收到右下角、与卡片右缘对齐，卡片底部相应让出它的位置 */
-    body.has-trees .buttons { transition: right 0.5s var(--ease-spring), bottom 0.5s var(--ease-spring); }
-    body.has-trees:not(.toc-collapsed):not(.hide-to-top) .buttons { right: 1em; bottom: 1em; }
-    body.has-trees:not(.hide-to-top) .article-list { max-height: calc(100vh - 3.2em - 2em - 4em); } /* 4em = 回到顶部按钮高 + 间距 */
+    /* 桌面端不显示右下角的目录开关（收起后由右上角的迷你目录展开；.buttons 整组已隐藏，见第 5 节末） */
 
     /* 桌面端目录：右侧悬浮卡片，高度随内容，最高到视口底部留 1em */
     .article-list {
@@ -3487,7 +3431,7 @@ pre[class*="language-"].line-numbers {
         transform: none;
         transition: opacity .25s ease .1s, transform .5s var(--ease-spring) .06s, top .5s var(--ease-spring);
     }
-    /* 向下滚动时半隐到屏幕右缘、半透明（hingle.js 挂 .is-docked），向上滚动再完整露出 */
+    /* 向下滚动时半隐到屏幕右缘、半透明（glint.js 挂 .is-docked），向上滚动再完整露出 */
     .toc-mini.is-docked {
         transform: translateX(calc(50% + .6em));
         opacity: .45;
@@ -4002,28 +3946,6 @@ article sup a[data-footnote-ref] {
     }
 }
 
-/* 手机端（< 600px）悬浮按钮特殊行为 */
-@media screen and (max-width: 599px) {
-    /* 手机端回到顶部按钮激活状态 */
-    body .buttons .to-top.active {
-        display: block;
-        transform: translateX(0);
-        opacity: 1;
-        will-change: transform, opacity;
-        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-                    opacity 0.45s var(--ease-spring),
-                    background-color 0.35s var(--ease-spring),
-                    color 0.35s var(--ease-spring);
-    }
-
-    /* 手机端回到顶部按钮停靠状态（滚动到底部附近时半透明收到右侧） */
-    body .buttons .to-top.active.to-top-docked {
-        transform: translateX(calc(50% + 1.5em)); /* 收起时的横向位移（移到屏幕右侧外） */
-        opacity: 0.45;                             /* 收起时的透明度 */
-    }
-
-}
-
 /* =========================================
    TO DO 侧边栏（首页左侧抽屉：Bangumi 在看 + 网易云周榜）
    ========================================= */
@@ -4312,12 +4234,14 @@ body:not(.dark-theme) {
 body:not(.dark-theme):before {
     filter: blur(var(--bg-blur)) saturate(1.25) brightness(1.07);
 }
+body.bg-baked:not(.dark-theme):before { filter: saturate(1.25) brightness(1.07); } /* 模糊已烤进图片 */
 
 /* 白天模式阅读页（背景淡化时）：进一步提亮封面色，只留一层淡淡的色调，避免深色封面把页面染灰 */
 body.bg-faded:not(.dark-theme):before {
     opacity: calc(var(--bg-opacity) * 0.14) !important; /* 白天阅读页背景图透明度，比夜间更淡 */
     filter: blur(var(--bg-blur)) saturate(1.5) brightness(1.5);
 }
+body.bg-baked.bg-faded:not(.dark-theme):before { filter: saturate(1.5) brightness(1.5); }
 
 /* 白天模式 body 滚动条轨道 */
 body:not(.dark-theme)::-webkit-scrollbar {

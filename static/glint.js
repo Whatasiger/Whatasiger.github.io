@@ -1,20 +1,20 @@
 /* ----
 
-# Hingle Theme
-# By: Dreamer-Paul
-# Last Update: 2024.9.2
+# Glint Theme (based on Hingle, refactored by Whatasiger)
+# Original By: Dreamer-Paul（Hingle，Last Update: 2024.9.2）
+# Refactored By: Whatasiger
 
-一个简洁大气，含夜间模式的 Hexo 博客模板。
+基于 Hingle 改写的 Hexo 博客主题。
 
-本代码为奇趣保罗原创，并遵守 MIT 开源协议。欢迎访问我的博客：https://paugram.com
+Hingle 为奇趣保罗原创，并遵守 MIT 开源协议。欢迎访问原作者的博客：https://paugram.com
 
 ---- */
 
-var Paul_Hingle = function (config) {
+var Glint = function (config) {
     var body = document.body;
     var content = ks.select(".post-content:not(.is-special), .page-content:not(.is-special)");
 
-    // 全局阅读设置（保存在 localStorage，控制回到顶部 / 字体 / 背景）
+    // 全局阅读设置（保存在 localStorage，控制字体 / 背景等）
     var SETTINGS_KEY = "whatasiger_reader_settings";
     // 字重档位映射表：1~5 档映射到更分明的 CSS 字重
     var FONT_WEIGHT_LEVELS = [300, 400, 500, 600, 700];
@@ -44,9 +44,7 @@ var Paul_Hingle = function (config) {
     var SYSTEM_FONT_STACK = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
 
     var defaultSettings = {
-        showToTop: false,      // 默认隐藏「回到顶部」
         immersive: false,      // 沉浸模式：下滑收起顶栏，快速上滑才重新出现
-        hideBackground: false, // 是否隐藏背景图片
         hideTodo: false,       // 是否关闭首页 TODO 侧边栏
         fontFamily: "noto-sans-sc", // 字体：noto-sans-sc（思源黑体）或 system-default（系统默认）
         fontWeight: getWeightFromLevel(3), // 正文字重第三档
@@ -54,13 +52,15 @@ var Paul_Hingle = function (config) {
         fontSize: 100,         // 字号第三档（90起步，第3heo个=110）
         bgOpacity: 55,         // 背景可见度第八档（0起步step5，第8个=35）
         bgBlur: 8,             // 背景模糊度（0~20px），文章页默认8px
-        accent: "blue"         // 主题色：blue（天青）/ lavender / sakura / mikan / wakakusa / mint，见 hingle.css 第 0 节
+        accent: "blue"         // 主题色：blue（天青）/ lavender / sakura / mikan / wakakusa / mint，见 glint.css 第 0 节
     };
 
     var currentSettings = (function () {
         try {
             var saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
             if (saved && typeof saved === "object") {
+                delete saved.showToTop;      // 已移除的开关
+                delete saved.hideBackground;
                 return Object.assign({}, defaultSettings, saved);
             }
         } catch (e) {
@@ -76,6 +76,155 @@ var Paul_Hingle = function (config) {
             // ignore
         }
     }
+
+    // 滚动统一走一个监听：每帧最多跑一次，各处用 onScrollFrame(fn) 登记
+    var scrollHandlers = [];
+    var scrollTicking = false;
+    function onScrollFrame(fn) { scrollHandlers.push(fn); }
+    window.addEventListener("scroll", function () {
+        if (scrollTicking) return;
+        scrollTicking = true;
+        window.requestAnimationFrame(function () {
+            scrollTicking = false;
+            for (var i = 0; i < scrollHandlers.length; i++) scrollHandlers[i]();
+        });
+    }, { passive: true });
+
+    // 手机端：把背景图的模糊「烤」成一张静态图（canvas 模糊一次），body:before 不再挂 filter: blur
+    // 全屏固定层带模糊滤镜、上面再叠毛玻璃时，手机 GPU 每帧滚动都要重算，是卡顿的主因
+    // 模糊度要变（拖设置滑块）时先退回 CSS 模糊实时预览，松手后再重新烘焙；水波纹读到的是烤好的图 + 无模糊，结果一致
+    var bgBake = (function () {
+        var media = window.matchMedia("(max-width: 599px)");
+        var seq = 0;                // 每次烘焙 / 撤销都加一，过期的异步结果直接丢弃
+        var timer = null;
+        var bakedUrl = "";          // 当前在用的 blob 地址
+        var rawInline = null;       // 烘焙前 body 上 --page-bg-image 的内联值（"" 表示来自样式表）
+        var lastWidth = window.innerWidth;
+
+        // 换图 / 换滤镜的那一帧不要过渡（否则会从模糊动画到清晰再变回来）
+        function withoutTransition(fn) {
+            body.classList.add("no-bg-transition");
+            fn();
+            getComputedStyle(body, "::before").filter; // 强制先按无过渡生效
+            requestAnimationFrame(function () { body.classList.remove("no-bg-transition"); });
+        }
+
+        function setImage(url) {
+            if (url) {
+                if (rawInline === null) rawInline = body.style.getPropertyValue("--page-bg-image");
+                body.style.setProperty("--page-bg-image", 'url("' + url + '")');
+            } else if (rawInline !== null) {
+                if (rawInline) body.style.setProperty("--page-bg-image", rawInline);
+                else body.style.removeProperty("--page-bg-image");
+                rawInline = null;
+            }
+            if (bakedUrl && bakedUrl !== url) URL.revokeObjectURL(bakedUrl);
+            bakedUrl = url || "";
+        }
+
+        function unbake() {
+            seq++;
+            clearTimeout(timer);
+            if (!body.classList.contains("bg-baked")) return;
+            withoutTransition(function () {
+                setImage(null);
+                body.classList.remove("bg-baked");
+            });
+        }
+
+        function bake() {
+            var my = ++seq;
+            if (!media.matches) { unbake(); return; }
+            var blur = parseFloat(getComputedStyle(body).getPropertyValue("--bg-blur")) || 0;
+            // 已烘焙时要从原图重新烤，不能拿烤过的图再模糊一遍
+            var raw;
+            if (rawInline === null) {
+                raw = getComputedStyle(body).getPropertyValue("--page-bg-image");
+            } else if (rawInline) {
+                raw = rawInline;
+            } else {
+                // 原值来自样式表（head.ejs）：临时撤掉内联值读一次
+                var cur = body.style.getPropertyValue("--page-bg-image");
+                body.style.removeProperty("--page-bg-image");
+                raw = getComputedStyle(body).getPropertyValue("--page-bg-image");
+                body.style.setProperty("--page-bg-image", cur);
+            }
+            var m = raw.match(/url\(\s*["']?([^"')]+)["']?\s*\)/);
+            if (!m) return;
+
+            if (blur <= 0) {        // 不需要模糊：只撤掉滤镜
+                withoutTransition(function () {
+                    setImage(null);
+                    body.classList.add("bg-baked");
+                });
+                return;
+            }
+
+            var img = new Image();
+            img.onload = function () {
+                if (my !== seq) return;
+                try {
+                    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+                    var cover = Math.max(window.innerWidth / img.naturalWidth, window.innerHeight / img.naturalHeight); // 原图 1px 显示成多少 CSS px
+                    var k = Math.min(1, cover * dpr);           // 画布相对原图的缩放：够屏幕清晰度即可
+                    var w = Math.max(1, Math.round(img.naturalWidth * k));
+                    var h = Math.max(1, Math.round(img.naturalHeight * k));
+                    var r = blur * k / cover;                    // CSS 模糊半径换算成画布像素
+                    var c = document.createElement("canvas");
+                    c.width = w;
+                    c.height = h;
+                    var ctx = c.getContext("2d");
+                    ctx.filter = "blur(" + r + "px)";
+                    if (ctx.filter && ctx.filter.indexOf("blur") !== -1) {
+                        ctx.drawImage(img, 0, 0, w, h);
+                    } else {
+                        // 不支持 canvas 滤镜（旧版 Safari）：先缩小再放大，近似模糊
+                        var f = Math.max(1, r * 1.5);
+                        var s = document.createElement("canvas");
+                        s.width = Math.max(1, Math.round(w / f));
+                        s.height = Math.max(1, Math.round(h / f));
+                        var sctx = s.getContext("2d");
+                        sctx.imageSmoothingQuality = "high";
+                        sctx.drawImage(img, 0, 0, s.width, s.height);
+                        ctx.imageSmoothingQuality = "high";
+                        ctx.drawImage(s, 0, 0, w, h);
+                    }
+                    c.toBlob(function (blob) {
+                        if (my !== seq || !blob) return;
+                        var url = URL.createObjectURL(blob);
+                        var pre = new Image();
+                        pre.src = url;
+                        (pre.decode ? pre.decode() : Promise.resolve()).then(function () {
+                            if (my !== seq) { URL.revokeObjectURL(url); return; }
+                            withoutTransition(function () {
+                                setImage(url);
+                                body.classList.add("bg-baked");
+                            });
+                        }, function () { URL.revokeObjectURL(url); });
+                    }, "image/webp", 0.9);
+                } catch (e) {
+                    // 跨域图片等无法导出时，保持 CSS 模糊
+                }
+            };
+            img.src = m[1];
+        }
+
+        // DOM 就绪（文章封面已换上，见 post.ejs）后等切页过渡（模糊 0.8s）走完再烤；不等 load，外部脚本慢时也不耽误
+        function schedule(delay) {
+            clearTimeout(timer);
+            timer = setTimeout(bake, delay || 0);
+        }
+
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { schedule(1000); });
+        else schedule(1000);
+        window.addEventListener("resize", function () {
+            if (window.innerWidth === lastWidth) return; // 只理会宽度变化（地址栏伸缩只改高度）
+            lastWidth = window.innerWidth;
+            schedule(300);
+        });
+
+        return { schedule: schedule, unbake: unbake };
+    })();
 
     function applyReadingSettings() {
         // 背景可见度（统一映射到 CSS 变量）
@@ -108,20 +257,6 @@ var Paul_Hingle = function (config) {
         // 沉浸模式：开启时由 setupImmersive() 根据滚动收起 / 唤出顶栏；关闭时立即复位
         body.classList.toggle("immersive", !!currentSettings.immersive);
         if (!currentSettings.immersive) document.documentElement.classList.remove("header-hidden");
-
-        // 回到顶部按钮：通过类控制 + JS 逻辑双保险
-        if (currentSettings.showToTop) {
-            body.classList.remove("hide-to-top");
-        } else {
-            body.classList.add("hide-to-top");
-        }
-
-        // 背景图片显示 / 隐藏
-        if (currentSettings.hideBackground) {
-            body.classList.add("no-bg-image");
-        } else {
-            body.classList.remove("no-bg-image");
-        }
 
         // 首页 TODO 侧边栏显示 / 隐藏
         if (currentSettings.hideTodo) {
@@ -173,9 +308,7 @@ var Paul_Hingle = function (config) {
 
         if (!panel || !btn) return;
 
-        var showTopInput = document.getElementById("setting-show-top");
         var immersiveInput = document.getElementById("setting-immersive");
-        var hideBgInput = document.getElementById("setting-hide-bg");
         var hideTodoInput = document.getElementById("setting-hide-todo");
         var fontFamilyInput = document.getElementById("setting-font-family");
         var weightInput = document.getElementById("setting-font-weight");
@@ -188,9 +321,7 @@ var Paul_Hingle = function (config) {
         var accentName = document.getElementById("setting-accent-name");
 
         // 初始化表单值
-        if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
         if (immersiveInput) immersiveInput.checked = !!currentSettings.immersive;
-        if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
         if (hideTodoInput) hideTodoInput.checked = !!currentSettings.hideTodo;
         // 字体二选一按钮：data-value 驱动滑块位置，各按钮文字用对应字体显示以便预览
         function setFontSegment(value) {
@@ -246,25 +377,9 @@ var Paul_Hingle = function (config) {
         });
 
         // 绑定设置变更
-        if (showTopInput) {
-            showTopInput.addEventListener("change", function () {
-                currentSettings.showToTop = !!this.checked;
-                persistSettings();
-                applyReadingSettings();
-            });
-        }
-
         if (immersiveInput) {
             immersiveInput.addEventListener("change", function () {
                 currentSettings.immersive = !!this.checked;
-                persistSettings();
-                applyReadingSettings();
-            });
-        }
-
-        if (hideBgInput) {
-            hideBgInput.addEventListener("change", function () {
-                currentSettings.hideBackground = !!this.checked;
                 persistSettings();
                 applyReadingSettings();
             });
@@ -376,6 +491,7 @@ var Paul_Hingle = function (config) {
                 var v = parseInt(this.value, 10);
                 if (isNaN(v) || v < 0) v = 0;
                 if (v > 20) v = 20;
+                bgBake.unbake(); // 拖动中用 CSS 模糊实时预览
                 body.style.setProperty("--bg-blur", v + "px");
                 if (isPostPage) {
                     currentSettings.bgBlur = v;
@@ -383,13 +499,12 @@ var Paul_Hingle = function (config) {
                 }
                 updateSliderFill(this);
             });
+            bgBlurInput.addEventListener("change", function () { bgBake.schedule(); }); // 松手后重新烘焙
         }
 
         if (resetBtn) {
             resetBtn.addEventListener("click", function () {
-                currentSettings.showToTop = defaultSettings.showToTop;
                 currentSettings.immersive = defaultSettings.immersive;
-                currentSettings.hideBackground = defaultSettings.hideBackground;
                 currentSettings.hideTodo = defaultSettings.hideTodo;
                 currentSettings.fontFamily = defaultSettings.fontFamily;
                 currentSettings.fontWeight = defaultSettings.fontWeight;
@@ -403,11 +518,11 @@ var Paul_Hingle = function (config) {
                 applyReadingSettings();
 
                 var resetBlur = isPostPage ? defaultSettings.bgBlur : 0;
+                bgBake.unbake();
                 body.style.setProperty("--bg-blur", resetBlur + "px");
+                bgBake.schedule(900); // 等模糊过渡走完
 
-                if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
                 if (immersiveInput) immersiveInput.checked = !!currentSettings.immersive;
-                if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
                 if (hideTodoInput) hideTodoInput.checked = !!currentSettings.hideTodo;
                 if (fontFamilyInput) setFontSegment(currentSettings.fontFamily);
                 if (accentInput) setAccentSwatch(currentSettings.accent);
@@ -475,7 +590,6 @@ var Paul_Hingle = function (config) {
         var TOP_ZONE = 64;          // 离页顶这么近时始终显示顶栏
         var samples = [];           // 最近的 { t, y }
         var lastY = window.pageYOffset || 0;
-        var ticking = false;
 
         // 有浮层打开或正在搜索时不收起，免得面板没了依托
         function busy() {
@@ -484,7 +598,6 @@ var Paul_Hingle = function (config) {
         }
 
         function update() {
-            ticking = false;
             var y = window.pageYOffset || 0;
             var now = performance.now();
             var dy = y - lastY;
@@ -516,11 +629,7 @@ var Paul_Hingle = function (config) {
             if (samples[0].y - y >= REVEAL_DISTANCE) root.classList.remove("header-hidden");
         }
 
-        window.addEventListener("scroll", function () {
-            if (ticking) return;
-            ticking = true;
-            window.requestAnimationFrame(update);
-        }, { passive: true });
+        onScrollFrame(update);
     }
 
     // 关灯切换 (使用 sessionStorage 记忆单次会话)
@@ -646,30 +755,11 @@ var Paul_Hingle = function (config) {
         btn.addEventListener("click", (e) => {
             e.stopPropagation();
 
-            var shouldForceOpenToc = false;
-
-            // 手机端：目录按钮处于“半隐藏”时，点击后按钮先弹出，并且直接打开目录
-            if (window.innerWidth < 600 && btn.classList.contains("toc-toggle-docked")) {
-                btn.classList.remove("toc-toggle-docked");
-                shouldForceOpenToc = true;
-
-                // 与目录按钮保持同步：同时让“回到顶部”按钮弹出
-                var toTopBtn = document.getElementsByClassName("to-top")[0];
-                if (toTopBtn) {
-                    toTopBtn.classList.remove("to-top-docked");
-                }
-            }
-
             if (window.innerWidth >= 800) {
                 // 电脑端：悬浮目录按钮直接切换收起/展开，让阅读区更清爽
                 body.classList.toggle("toc-collapsed");
             } else {
-                // 如果是手机端，半隐藏状态点击后直接打开目录，否则维持切换逻辑
-                if (shouldForceOpenToc) {
-                    trees.classList.add("active");
-                } else {
-                    trees.classList.toggle("active");
-                }
+                trees.classList.toggle("active");
             }
         });
 
@@ -687,37 +777,6 @@ var Paul_Hingle = function (config) {
             if (trees.contains(e.target) || btn.contains(e.target)) return;
             trees.classList.remove("active");
         });
-
-        // 手机端目录按钮：下滑半隐藏，上滑恢复
-        const mobileMedia = window.matchMedia("(max-width: 599px)");
-        let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
-
-        function updateMobileTocButtonState() {
-            if (!btn) return;
-
-            // 非手机端或目录抽屉已展开时，按钮始终保持正常位置
-            if (!mobileMedia.matches || trees.classList.contains("active")) {
-                btn.classList.remove("toc-toggle-docked");
-                lastScrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
-                return;
-            }
-
-            const currentTop = window.pageYOffset || document.documentElement.scrollTop || 0;
-            const delta = currentTop - lastScrollTop;
-
-            // 设定小阈值，避免轻微抖动导致频繁触发动画
-            if (delta > 6 && currentTop > 24) {
-                btn.classList.add("toc-toggle-docked");
-            } else if (delta < -4) {
-                btn.classList.remove("toc-toggle-docked");
-            }
-
-            lastScrollTop = currentTop;
-        }
-
-        window.addEventListener("scroll", updateMobileTocButtonState, { passive: true });
-        window.addEventListener("resize", updateMobileTocButtonState);
-        updateMobileTocButtonState();
 
         // ===== Scrollspy：高亮当前阅读到的章节 =====
         var tocLinks = Array.prototype.slice.call(trees.querySelectorAll("a"));
@@ -770,7 +829,7 @@ var Paul_Hingle = function (config) {
             }
             miniLastTop = top;
         }
-        window.addEventListener("scroll", updateMiniDock, { passive: true });
+        onScrollFrame(updateMiniDock);
         window.addEventListener("resize", updateMiniDock);
 
         function updateMini(activeIdx) {
@@ -851,7 +910,6 @@ var Paul_Hingle = function (config) {
         })();
 
         if (tocLinks.length > 0 && headingArr.length === tocLinks.length) {
-            var spyTicking = false;
             var lastActive = -1;
             // 点击目录跳转后 smooth scroll 期间短暂锁住高亮，防止误高亮上一项。
             // 时间窗口短 + 用户主动滚动方向反转时立即解锁，保证跟随灵敏。
@@ -860,8 +918,21 @@ var Paul_Hingle = function (config) {
             var pinnedScrollDir = 0;
             var prevScrollY = window.pageYOffset || 0;
 
+            // 每个标题是否已越过阅读线（视口顶部往下 80px）；由 IntersectionObserver 在越线时更新，滚动时不必逐个量位置
+            var SPY_LINE = 80;
+            var passed = headingArr.map(function (h) { return h.getBoundingClientRect().top - SPY_LINE <= 0; });
+            if (window.IntersectionObserver) {
+                // 根区域 = 阅读线以下（向下放得足够远）：标题完全在线下时比例为 1，顶端一越线就降到 1 以下
+                var spyObserver = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (en) {
+                        passed[headingArr.indexOf(en.target)] = en.intersectionRatio < 1 && en.boundingClientRect.top - SPY_LINE <= 0;
+                    });
+                    updateScrollSpy();
+                }, { rootMargin: -SPY_LINE + "px 0px 100000px 0px", threshold: 1 });
+                headingArr.forEach(function (h) { spyObserver.observe(h); });
+            }
+
             function updateScrollSpy() {
-                spyTicking = false;
                 var curY = window.pageYOffset || 0;
 
                 if (pinnedIdx !== -1) {
@@ -890,29 +961,20 @@ var Paul_Hingle = function (config) {
                 }
 
                 prevScrollY = curY;
-                var threshold = 80;
+                if (!window.IntersectionObserver) {
+                    for (var hi = 0; hi < headingArr.length; hi++) passed[hi] = headingArr[hi].getBoundingClientRect().top - SPY_LINE <= 0;
+                }
                 var activeIdx = -1;
-
-                for (var i = 0; i < headingArr.length; i++) {
-                    var rect = headingArr[i].getBoundingClientRect();
-                    if (rect.top - threshold <= 0) {
-                        activeIdx = i;
-                    } else {
-                        break;
-                    }
+                for (var i = 0; i < passed.length; i++) {
+                    if (passed[i]) activeIdx = i;
+                    else break;
                 }
                 if (activeIdx === -1) activeIdx = 0;
                 setActiveTocItem(activeIdx);
             }
 
-            function requestScrollSpy() {
-                if (spyTicking) return;
-                spyTicking = true;
-                window.requestAnimationFrame(updateScrollSpy);
-            }
-
-            window.addEventListener("scroll", requestScrollSpy, { passive: true });
-            window.addEventListener("resize", requestScrollSpy);
+            // 点目录跳转后的锁定 / 反向滚动解锁仍要逐帧判断方向
+            onScrollFrame(updateScrollSpy);
             tocLinks.forEach(function (link, index) {
                 link.addEventListener("click", function () {
                     var headingEl = headingArr[index];
@@ -924,7 +986,7 @@ var Paul_Hingle = function (config) {
                     setActiveTocItem(index);
                 });
             });
-            requestScrollSpy();
+            updateScrollSpy();
         }
     };
 
@@ -969,58 +1031,6 @@ var Paul_Hingle = function (config) {
         });
     };
 
-    // 返回页首
-    var toTopMobileMedia = window.matchMedia("(max-width: 599px)");
-    var lastToTopScrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
-
-    this.to_top = function () {
-        var btn = document.getElementsByClassName("to-top")[0];
-        var scroll = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-
-        if (!btn) return;
-
-        // 用户主动关闭回到顶部时，强制保持隐藏
-        if (!currentSettings.showToTop) {
-            btn.classList.remove("active");
-            btn.classList.remove("to-top-docked");
-            lastToTopScrollTop = scroll;
-            return;
-        }
-
-        if (scroll >= window.innerHeight / 2) {
-            btn.classList.add("active");
-        } else {
-            btn.classList.remove("active");
-            btn.classList.remove("to-top-docked");
-            lastToTopScrollTop = scroll;
-            return;
-        }
-
-        // 与目录按钮保持一致：移动端下滑半隐藏、上滑弹出
-        if (!toTopMobileMedia.matches) {
-            btn.classList.remove("to-top-docked");
-            lastToTopScrollTop = scroll;
-            return;
-        }
-
-        // 移动端目录展开时，回到顶部按钮保持弹出，不参与半隐藏逻辑
-        var activeToc = document.querySelector(".article-list.active");
-        if (activeToc) {
-            btn.classList.remove("to-top-docked");
-            lastToTopScrollTop = scroll;
-            return;
-        }
-
-        var delta = scroll - lastToTopScrollTop;
-        if (delta > 6 && scroll > 24) {
-            btn.classList.add("to-top-docked");
-        } else if (delta < -4) {
-            btn.classList.remove("to-top-docked");
-        }
-
-        lastToTopScrollTop = scroll;
-    };
-
     this.header();
     setupImmersive();
 
@@ -1029,9 +1039,6 @@ var Paul_Hingle = function (config) {
         this.links();
         this.comment_list();
     }
-
-    // 返回页首
-    window.addEventListener("scroll", this.to_top);
 
     // 首次应用阅读设置（在夜间模式与其它初始化之前执行）
     applyReadingSettings();
@@ -1265,5 +1272,5 @@ ks.image(CONTENT_IMG_SEL);
 
 // 请保留版权说明
 if(window.console && window.console.log){
-    console.log("%c Hingle %c https://paugram.com ","color: #fff; margin: 1em 0; padding: 5px 0; background: #6f9fc7;","margin: 1em 0; padding: 5px 0; background: #efefef;");
+    console.log("%c Glint %c based on Hingle · https://paugram.com ","color: #fff; margin: 1em 0; padding: 5px 0; background: #6f9fc7;","margin: 1em 0; padding: 5px 0; background: #efefef;");
 }}
