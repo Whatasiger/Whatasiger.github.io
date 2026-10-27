@@ -45,6 +45,7 @@ var Paul_Hingle = function (config) {
 
     var defaultSettings = {
         showToTop: false,      // 默认隐藏「回到顶部」
+        immersive: false,      // 沉浸模式：下滑收起顶栏，快速上滑才重新出现
         hideBackground: false, // 是否隐藏背景图片
         hideTodo: false,       // 是否关闭首页 TODO 侧边栏
         fontFamily: "noto-sans-sc", // 字体：noto-sans-sc（思源黑体）或 system-default（系统默认）
@@ -52,7 +53,8 @@ var Paul_Hingle = function (config) {
         letterSpacing: 3,      // 字间距第六档（-2起步，第6个=3）
         fontSize: 100,         // 字号第三档（90起步，第3heo个=110）
         bgOpacity: 55,         // 背景可见度第八档（0起步step5，第8个=35）
-        bgBlur: 8              // 背景模糊度（0~20px），文章页默认8px
+        bgBlur: 8,             // 背景模糊度（0~20px），文章页默认8px
+        accent: "blue"         // 主题色：blue（天青）/ lavender / sakura / mikan / wakakusa / mint，见 hingle.css 第 0 节
     };
 
     var currentSettings = (function () {
@@ -103,6 +105,10 @@ var Paul_Hingle = function (config) {
             body.style.fontFamily = SYSTEM_FONT_STACK;
         }
 
+        // 沉浸模式：开启时由 setupImmersive() 根据滚动收起 / 唤出顶栏；关闭时立即复位
+        body.classList.toggle("immersive", !!currentSettings.immersive);
+        if (!currentSettings.immersive) document.documentElement.classList.remove("header-hidden");
+
         // 回到顶部按钮：通过类控制 + JS 逻辑双保险
         if (currentSettings.showToTop) {
             body.classList.remove("hide-to-top");
@@ -124,6 +130,11 @@ var Paul_Hingle = function (config) {
             body.classList.remove("hide-todo");
         }
 
+        // 主题色：默认天青不挂属性，其余挂 html[data-accent]
+        var accent = currentSettings.accent || defaultSettings.accent;
+        if (accent === "blue") document.documentElement.removeAttribute("data-accent");
+        else document.documentElement.setAttribute("data-accent", accent);
+
         // 文章阅读排版（仅在阅读页生效）
         if (body.classList.contains("post-page")) {
             body.style.setProperty("--reader-font-weight", String(currentSettings.fontWeight));
@@ -138,7 +149,8 @@ var Paul_Hingle = function (config) {
         var val = parseFloat(input.value) || 0;
         var pct = ((val - min) / (max - min)) * 100;
         var isDark = body.classList.contains("dark-theme");
-        var fill = isDark ? "rgba(139,180,224,0.5)" : "rgba(111,159,199,0.55)";
+        // 进度色取主题色阶（随主题色切换）：夜间用柔和一级，白天用主色一级
+        var fill = isDark ? "color-mix(in srgb, var(--tc-soft) 50%, transparent)" : "color-mix(in srgb, var(--tc-main) 55%, transparent)";
         var track = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)";
         input.style.backgroundImage = "linear-gradient(90deg, " + fill + " " + pct + "%, " + track + " " + pct + "%)";
     }
@@ -162,6 +174,7 @@ var Paul_Hingle = function (config) {
         if (!panel || !btn) return;
 
         var showTopInput = document.getElementById("setting-show-top");
+        var immersiveInput = document.getElementById("setting-immersive");
         var hideBgInput = document.getElementById("setting-hide-bg");
         var hideTodoInput = document.getElementById("setting-hide-todo");
         var fontFamilyInput = document.getElementById("setting-font-family");
@@ -171,9 +184,12 @@ var Paul_Hingle = function (config) {
         var bgInput = document.getElementById("setting-bg-opacity");
         var bgBlurInput = document.getElementById("setting-bg-blur");
         var resetBtn = document.getElementById("setting-reset-btn");
+        var accentInput = document.getElementById("setting-accent");
+        var accentName = document.getElementById("setting-accent-name");
 
         // 初始化表单值
         if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
+        if (immersiveInput) immersiveInput.checked = !!currentSettings.immersive;
         if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
         if (hideTodoInput) hideTodoInput.checked = !!currentSettings.hideTodo;
         // 字体二选一按钮：data-value 驱动滑块位置，各按钮文字用对应字体显示以便预览
@@ -192,6 +208,16 @@ var Paul_Hingle = function (config) {
             }
             setFontSegment(currentSettings.fontFamily || defaultSettings.fontFamily);
         }
+        // 主题色色块：选中项挂 aria-checked，分组标题右侧显示名称
+        function setAccentSwatch(value) {
+            var opts = accentInput.querySelectorAll("button");
+            for (var i = 0; i < opts.length; i++) {
+                var on = opts[i].getAttribute("data-value") === value;
+                opts[i].setAttribute("aria-checked", String(on));
+                if (on && accentName) accentName.textContent = opts[i].getAttribute("data-name");
+            }
+        }
+        if (accentInput) setAccentSwatch(currentSettings.accent || defaultSettings.accent);
         if (weightInput) weightInput.value = getLevelFromWeight(currentSettings.fontWeight);
         if (letterInput) letterInput.value = currentSettings.letterSpacing;
         if (sizeInput) sizeInput.value = currentSettings.fontSize;
@@ -228,6 +254,14 @@ var Paul_Hingle = function (config) {
             });
         }
 
+        if (immersiveInput) {
+            immersiveInput.addEventListener("change", function () {
+                currentSettings.immersive = !!this.checked;
+                persistSettings();
+                applyReadingSettings();
+            });
+        }
+
         if (hideBgInput) {
             hideBgInput.addEventListener("change", function () {
                 currentSettings.hideBackground = !!this.checked;
@@ -254,6 +288,45 @@ var Paul_Hingle = function (config) {
                 currentSettings.fontFamily = value;
                 persistSettings();
                 applyReadingSettings();
+            });
+        }
+
+        // 界面主题（Glint / Origin）：滑块先滑过去，再跳到另一套界面的同一页（window.switchUI 见 _partial/ui-switch.ejs）
+        var uiInput = document.getElementById("setting-ui");
+        if (uiInput) {
+            uiInput.addEventListener("click", function (e) {
+                var opt = e.target.closest("button[data-value]");
+                if (!opt || opt.getAttribute("aria-checked") === "true") return;
+                var value = opt.getAttribute("data-value");
+                uiInput.setAttribute("data-value", value);
+                var opts = uiInput.querySelectorAll("button");
+                for (var i = 0; i < opts.length; i++) opts[i].setAttribute("aria-checked", String(opts[i] === opt));
+                setTimeout(function () { if (window.switchUI) window.switchUI(value); }, 280);
+            });
+        }
+
+        // 切换主题色：支持时用一次视图过渡，让全站颜色整体淡入新色，而不是各处按自己的过渡时长先后变色
+        function switchAccent(value) {
+            function apply() {
+                setAccentSwatch(value);
+                currentSettings.accent = value;
+                persistSettings();
+                applyReadingSettings();
+                updateAllSliderFills();
+            }
+            if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                document.startViewTransition(apply);
+            } else {
+                apply();
+            }
+        }
+        if (accentInput) {
+            accentInput.addEventListener("click", function (e) {
+                var opt = e.target.closest("button[data-value]");
+                if (!opt) return;
+                var value = opt.getAttribute("data-value");
+                if (value === (currentSettings.accent || defaultSettings.accent)) return;
+                switchAccent(value);
             });
         }
 
@@ -315,6 +388,7 @@ var Paul_Hingle = function (config) {
         if (resetBtn) {
             resetBtn.addEventListener("click", function () {
                 currentSettings.showToTop = defaultSettings.showToTop;
+                currentSettings.immersive = defaultSettings.immersive;
                 currentSettings.hideBackground = defaultSettings.hideBackground;
                 currentSettings.hideTodo = defaultSettings.hideTodo;
                 currentSettings.fontFamily = defaultSettings.fontFamily;
@@ -323,6 +397,7 @@ var Paul_Hingle = function (config) {
                 currentSettings.fontSize = defaultSettings.fontSize;
                 currentSettings.bgOpacity = defaultSettings.bgOpacity;
                 currentSettings.bgBlur = defaultSettings.bgBlur;
+                currentSettings.accent = defaultSettings.accent;
 
                 persistSettings();
                 applyReadingSettings();
@@ -331,9 +406,11 @@ var Paul_Hingle = function (config) {
                 body.style.setProperty("--bg-blur", resetBlur + "px");
 
                 if (showTopInput) showTopInput.checked = !!currentSettings.showToTop;
+                if (immersiveInput) immersiveInput.checked = !!currentSettings.immersive;
                 if (hideBgInput) hideBgInput.checked = !!currentSettings.hideBackground;
                 if (hideTodoInput) hideTodoInput.checked = !!currentSettings.hideTodo;
                 if (fontFamilyInput) setFontSegment(currentSettings.fontFamily);
+                if (accentInput) setAccentSwatch(currentSettings.accent);
                 if (weightInput) weightInput.value = getLevelFromWeight(currentSettings.fontWeight);
                 if (letterInput) letterInput.value = currentSettings.letterSpacing;
                 if (sizeInput) sizeInput.value = currentSettings.fontSize;
@@ -389,6 +466,63 @@ var Paul_Hingle = function (config) {
         setupSettingsPanel();
     };
 
+    // 沉浸模式：向下滚动即收起顶栏；向上滚动要够快才唤出（慢慢往回翻不会打扰阅读）
+    // 「够快」= 最近 450ms 内向上滚过的距离达到 250px（约 0.55px/ms）：滚轮拨一两格不会触发，连拨到 250px 以上 / 快速上滑才会
+    function setupImmersive() {
+        var root = document.documentElement;
+        var REVEAL_WINDOW = 450;    // ms：只统计这段时间内的上滑距离（一次连拨滚轮通常在这之内）
+        var REVEAL_DISTANCE = 500;  // px：上滑达到这个距离才唤出顶栏
+        var TOP_ZONE = 64;          // 离页顶这么近时始终显示顶栏
+        var samples = [];           // 最近的 { t, y }
+        var lastY = window.pageYOffset || 0;
+        var ticking = false;
+
+        // 有浮层打开或正在搜索时不收起，免得面板没了依托
+        function busy() {
+            return !!document.querySelector(".settings-panel.open, .head-menu.active, .head-search.active") ||
+                (document.activeElement && document.activeElement.id === "local-search-input");
+        }
+
+        function update() {
+            ticking = false;
+            var y = window.pageYOffset || 0;
+            var now = performance.now();
+            var dy = y - lastY;
+            lastY = y;
+
+            if (!body.classList.contains("immersive")) { samples.length = 0; return; }
+
+            if (y <= TOP_ZONE || busy()) {
+                root.classList.remove("header-hidden");
+                samples.length = 0;
+                return;
+            }
+
+            if (dy > 0) {
+                // 向下：收起，并清掉上滑记录
+                root.classList.add("header-hidden");
+                samples.length = 0;
+                return;
+            }
+            if (dy === 0) return;
+
+            // 向上：只看最近一小段时间内滚过的距离
+            // 刚开始上滑、或距上次滚动已隔了一阵（慢慢往上翻）时，以这一步的起点重新计；一次跳很远（如 PageUp）也算快
+            if (!samples.length || now - samples[samples.length - 1].t > REVEAL_WINDOW) {
+                samples = [{ t: now, y: y - dy }];
+            }
+            samples.push({ t: now, y: y });
+            while (samples.length > 1 && now - samples[0].t > REVEAL_WINDOW) samples.shift();
+            if (samples[0].y - y >= REVEAL_DISTANCE) root.classList.remove("header-hidden");
+        }
+
+        window.addEventListener("scroll", function () {
+            if (ticking) return;
+            ticking = true;
+            window.requestAnimationFrame(update);
+        }, { passive: true });
+    }
+
     // 关灯切换 (使用 sessionStorage 记忆单次会话)
     this.night = function () {
         if(body.classList.contains("dark-theme")){
@@ -398,6 +532,14 @@ var Paul_Hingle = function (config) {
         else{
             body.classList.add("dark-theme");
             sessionStorage.setItem("theme", "dark");
+        }
+        // 日月图标转入：先摘掉再强制回流，连点时动画也能重新开始
+        var btn = ks.select(".light-btn");
+        if (btn) {
+            btn.classList.remove("is-flipping");
+            void btn.offsetWidth;
+            btn.classList.add("is-flipping");
+            btn.addEventListener("animationend", function () { btn.classList.remove("is-flipping"); }, { once: true });
         }
         updateAllSliderFills();
     };
@@ -429,10 +571,12 @@ var Paul_Hingle = function (config) {
             firstLevel = 3;
         }
 
+        // 目录卡片：固定的标题栏 + 单独滚动的列表（标题栏不随列表滚走）
         const trees = ks.create("section", {
             class: "article-list",
-            html: `<h4><span class="title">目录</span><button id="close-toc-btn" type="button" title="收起目录" aria-label="收起目录"></button></h4>`
+            html: `<h4 class="article-list-head"><i class="fa fa-list-ul" aria-hidden="true"></i><span class="title">目录</span><button id="close-toc-btn" type="button" title="收起目录" aria-label="收起目录"></button></h4><nav class="article-list-body" aria-label="文章目录"></nav>`
         });
+        const tocBody = trees.querySelector(".article-list-body");
 
         ks.each(headings, (t, index) => {
             const text = t.innerText;
@@ -442,7 +586,7 @@ var Paul_Hingle = function (config) {
             const level = Number(t.tagName.substring(1)) - firstLevel + 1;
             const className = `item-${level}`;
 
-            trees.appendChild(ks.create("a", { class: className, text, href: `#title-${index}` }));
+            tocBody.appendChild(ks.create("a", { class: className, text, href: `#title-${index}` }));
         });
 
         wrap.appendChild(trees);
@@ -463,25 +607,29 @@ var Paul_Hingle = function (config) {
                     }
                 }
 
-                // 让当前激活项尽量出现在 TOC 视口里（仅滚动 TOC 容器内部）
+                // 让当前激活项尽量出现在 TOC 视口里（仅滚动目录列表内部）
                 var activeLink = tocLinks[activeIdx];
-                if (activeLink && trees.scrollHeight > trees.clientHeight) {
+                if (activeLink && tocBody.scrollHeight > tocBody.clientHeight) {
                     var linkRect = activeLink.getBoundingClientRect();
-                    var listRect = trees.getBoundingClientRect();
+                    var listRect = tocBody.getBoundingClientRect();
                     if (linkRect.top < listRect.top + 16 || linkRect.bottom > listRect.bottom - 16) {
-                        trees.scrollTop += linkRect.top - listRect.top - listRect.height / 2;
+                        tocBody.scrollTop += linkRect.top - listRect.top - listRect.height / 2;
                     }
                 }
             }
 
             syncActiveGroup(activeIdx);
+            updateMini(activeIdx);
         }
 
         // ★修改点 2：给右上角的“收起”按钮绑定事件
         const closeBtn = document.getElementById("close-toc-btn");
         if(closeBtn) {
-            closeBtn.addEventListener("click", () => {
-                body.classList.add("toc-collapsed"); // 给 body 挂上“收起状态”
+            closeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                // 桌面端：卡片缩回右上角的迷你目录；手机端：关掉展开的目录卡片（同样缩回迷你目录）
+                if (window.innerWidth >= 800) body.classList.add("toc-collapsed");
+                else trees.classList.remove("active");
             });
         }
 
@@ -525,6 +673,13 @@ var Paul_Hingle = function (config) {
             }
         });
 
+        // 手机端：点了某个章节（有子章节的父项只是展开子项，不算）就收起卡片，让出正文
+        tocBody.addEventListener("click", function (e) {
+            if (window.innerWidth >= 800) return;
+            var link = e.target.closest("a");
+            if (link && !link.classList.contains("has-toc-children")) trees.classList.remove("active");
+        });
+
         // 移动端：目录展开后，点击目录外区域自动收起
         document.addEventListener("click", function (e) {
             if (window.innerWidth >= 800) return;
@@ -566,6 +721,69 @@ var Paul_Hingle = function (config) {
 
         // ===== Scrollspy：高亮当前阅读到的章节 =====
         var tocLinks = Array.prototype.slice.call(trees.querySelectorAll("a"));
+
+        // ===== 迷你目录：桌面端目录收起后、手机端平时，右上角的小块，点击即展开 =====
+        // 每道短横线代表一个一级章节（超过 8 个时按比例折算），当前章节那道亮起，是整个目录的缩略
+        var level1Idx = [];
+        tocLinks.forEach(function (link, i) {
+            if (/(?:^|\s)item-1(?:\s|$)/.test(link.className)) level1Idx.push(i);
+        });
+        var mini = ks.create("button", {
+            class: "toc-mini",
+            attr: [
+                {name: "type", value: "button"},
+                {name: "title", value: "展开目录"},
+                {name: "aria-label", value: "展开目录"},
+            ],
+        });
+        var MINI_WIDTHS = [100, 72, 88, 64, 94, 78, 84, 68]; // 长短错落，像一列标题
+        var miniBars = [];
+        for (var bi = 0; bi < Math.min(Math.max(level1Idx.length, 1), MINI_WIDTHS.length); bi++) {
+            var bar = document.createElement("span");
+            bar.style.width = MINI_WIDTHS[bi] + "%";
+            mini.appendChild(bar);
+            miniBars.push(bar);
+        }
+        body.appendChild(mini);
+        mini.addEventListener("click", function (e) {
+            e.stopPropagation();
+            // 桌面端撤掉收起状态；手机端展开目录卡片（点卡片外会自动收起）
+            if (window.innerWidth >= 800) body.classList.remove("toc-collapsed");
+            else {
+                mini.classList.remove("is-docked"); // 半隐状态下点它也直接展开
+                trees.classList.add("active");
+            }
+        });
+
+        // 手机端：向下滚动时迷你目录半隐到屏幕右缘（不挡正文），向上滚动再完整露出；与原先右下角按钮的停靠手感一致
+        var miniMedia = window.matchMedia("(max-width: 799px)");
+        var miniLastTop = window.pageYOffset || 0;
+        function updateMiniDock() {
+            var top = window.pageYOffset || 0;
+            if (!miniMedia.matches || trees.classList.contains("active")) {
+                mini.classList.remove("is-docked");
+            } else {
+                var delta = top - miniLastTop;
+                // 小阈值，避免轻微抖动导致频繁触发
+                if (delta > 6 && top > 24) mini.classList.add("is-docked");
+                else if (delta < -4) mini.classList.remove("is-docked");
+            }
+            miniLastTop = top;
+        }
+        window.addEventListener("scroll", updateMiniDock, { passive: true });
+        window.addEventListener("resize", updateMiniDock);
+
+        function updateMini(activeIdx) {
+            if (!miniBars || !miniBars.length) return;
+            var pos = 0;
+            for (var k = 0; k < level1Idx.length; k++) {
+                if (level1Idx[k] <= activeIdx) pos = k;
+            }
+            var lit = level1Idx.length > miniBars.length
+                ? Math.round(pos * (miniBars.length - 1) / (level1Idx.length - 1))
+                : pos;
+            for (var m = 0; m < miniBars.length; m++) miniBars[m].classList.toggle("is-active", m === lit);
+        }
         var headingArr = Array.prototype.slice.call(headings);
 
         // ===== 目录次级层级折叠（默认收起，滚动进入或点击箭头时展开） =====
@@ -803,54 +1021,14 @@ var Paul_Hingle = function (config) {
         lastToTopScrollTop = scroll;
     };
 
-    // 文章阅读进度条（仅文章页）
-    this.reading_progress = function () {
-        if (!body.classList.contains("post-page")) return;
-
-        var article = document.querySelector(".post-content");
-        if (!article) return;
-
-        var bar = document.createElement("div");
-        bar.className = "reading-progress";
-        body.appendChild(bar);
-
-        var ticking = false;
-        var doc = document.documentElement;
-
-        function update() {
-            var scrollTop = window.pageYOffset || doc.scrollTop || body.scrollTop || 0;
-            var articleTop = article.getBoundingClientRect().top + scrollTop;
-            var articleBottom = articleTop + article.offsetHeight;
-            var ratio = (scrollTop - articleTop) / Math.max(1, articleBottom - articleTop);
-
-            if (ratio < 0) ratio = 0;
-            if (ratio > 1) ratio = 1;
-
-            bar.style.transform = "scaleX(" + ratio + ")";
-            ticking = false;
-        }
-
-        function requestUpdate() {
-            if (ticking) return;
-            ticking = true;
-            window.requestAnimationFrame(update);
-        }
-
-        window.addEventListener("scroll", requestUpdate, { passive: true });
-        window.addEventListener("resize", requestUpdate);
-        window.addEventListener("load", requestUpdate);
-        requestUpdate();
-    };
-
     this.header();
+    setupImmersive();
 
     if(content){
         this.tree();
         this.links();
         this.comment_list();
     }
-
-    this.reading_progress();
 
     // 返回页首
     window.addEventListener("scroll", this.to_top);

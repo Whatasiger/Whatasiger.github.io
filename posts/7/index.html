@@ -2,6 +2,26 @@
 <html lang="zh-CN">
   <head>
     
+<script>
+    (function () {
+        var CURRENT = "glint"; // 本套界面
+        var KEY = "whatasiger_ui";
+        function target(to) {
+            var path = location.pathname.replace(/^\/origin(?=\/|$)/, "") || "/";
+            return (to === "origin" ? "/origin" + path : path) + location.search + location.hash;
+        }
+        // 设置面板调用：记下选择并跳到另一套界面的同一页（会重新加载）
+        window.switchUI = function (to) {
+            try { localStorage.setItem(KEY, to); } catch (e) {}
+            if (to !== CURRENT) location.assign(target(to));
+        };
+        var want = null;
+        try { want = localStorage.getItem(KEY); } catch (e) {}
+        if ((want === "glint" || want === "origin") && want !== CURRENT) location.replace(target(want));
+    })();
+</script>
+
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>1月14日：失败了 - Whatasiger</title>
@@ -95,6 +115,10 @@
             var systemFontStack = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
             document.body.style.fontFamily = fontChoice === "noto-sans-sc" ? sourceHanFontStack : systemFontStack;
             if (savedSettings && savedSettings.hideTodo) document.body.classList.add("hide-todo");
+            // 主题色：首帧前挂到 html 上，避免先闪一下默认的蓝
+            if (savedSettings && savedSettings.accent && savedSettings.accent !== "blue") {
+                document.documentElement.setAttribute("data-accent", savedSettings.accent);
+            }
         } catch (e) {
             document.body.style.fontFamily = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
         }
@@ -188,7 +212,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - GA 2.2</a>
+    <a href="/" class="header-logo"><span class="header-logo-name">Whatasiger</span><span class="header-logo-ver">Ciel</span></a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -212,10 +236,24 @@
         </div>
         <div class="settings-panel-body">
             <div class="settings-group">
+                
+                <div class="settings-row">
+                    <i class="fa fa-desktop"></i>
+                    <span>界面</span>
+                    <div class="settings-segment" id="setting-ui" data-value="glint" role="radiogroup" aria-label="界面">
+                        <button type="button" role="radio" data-value="glint" aria-checked="true">Glint</button>
+                        <button type="button" role="radio" data-value="origin" aria-checked="false">Origin</button>
+                    </div>
+                </div>
                 <label class="settings-row">
                     <i class="fa fa-arrow-up"></i>
                     <span>显示「回到顶部」</span>
                     <input type="checkbox" id="setting-show-top">
+                </label>
+                <label class="settings-row">
+                    <i class="fa fa-expand"></i>
+                    <span>沉浸模式</span>
+                    <input type="checkbox" id="setting-immersive">
                 </label>
                 <label class="settings-row">
                     <i class="fa fa-picture-o"></i>
@@ -267,6 +305,26 @@
                     <input type="range" id="setting-bg-blur" min="0" max="20" step="1">
                 </label>
             </div>
+            
+            
+            <div class="settings-group-title">主题色<small id="setting-accent-name">天青</small></div>
+            <div class="settings-group">
+                <div class="settings-accent" id="setting-accent" role="radiogroup" aria-label="主题色">
+                    
+                        <button type="button" role="radio" data-value="blue" data-name="天青" aria-label="天青" title="天青" style="--sw: #8bb4e0"></button>
+                    
+                        <button type="button" role="radio" data-value="lavender" data-name="藤紫" aria-label="藤紫" title="藤紫" style="--sw: oklch(0.756 0.078 300)"></button>
+                    
+                        <button type="button" role="radio" data-value="sakura" data-name="樱粉" aria-label="樱粉" title="樱粉" style="--sw: oklch(0.756 0.078 355)"></button>
+                    
+                        <button type="button" role="radio" data-value="mikan" data-name="蜜柑" aria-label="蜜柑" title="蜜柑" style="--sw: oklch(0.756 0.078 62)"></button>
+                    
+                        <button type="button" role="radio" data-value="wakakusa" data-name="若草" aria-label="若草" title="若草" style="--sw: oklch(0.756 0.078 135)"></button>
+                    
+                        <button type="button" role="radio" data-value="mint" data-name="薄荷" aria-label="薄荷" title="薄荷" style="--sw: oklch(0.756 0.078 185)"></button>
+                    
+                </div>
+            </div>
         </div>
         <div class="settings-panel-footer">
             <button id="setting-reset-btn" class="settings-reset-btn"><i class="fa fa-undo"></i>恢复默认</button>
@@ -275,6 +333,7 @@
 </div>
 
 <nav class="head-menu">
+    <span class="head-menu-pill" aria-hidden="true"></span>
     <a href="/"><i class="fa fa-home"></i><span>首页</span></a>
     
         <a href="/about-me"><i class="fa fa-user"></i><span>关于我</span></a>
@@ -292,16 +351,17 @@
         var nav = document.querySelector(".head-menu");
         var ctx = document.createElement("canvas").getContext("2d");
         var GAP = 24; // 与两侧元素至少留出的间距（px）
+        var PAD = 0.85, SPACE = 0.15; // 与 hingle.css 中 .head-menu > a 的左右 padding / margin-right 一致（em）
 
         function update() {
             var collapse = window.innerWidth < 600; // 手机端始终收起
             if (!collapse) {
-                // 桌面端导航宽度：各按钮文字宽 + 按钮间距（.head-menu > a 的 margin-right: 1em）
+                // 桌面端导航宽度：各按钮文字宽 + 胶囊左右留白 + 按钮间距
                 var cs = getComputedStyle(nav);
                 var fontSize = parseFloat(cs.fontSize);
                 ctx.font = "600 " + cs.fontSize + " " + cs.fontFamily;
                 var labels = nav.querySelectorAll("a span");
-                var width = (labels.length - 1) * fontSize;
+                var width = (labels.length * PAD * 2 + (labels.length - 1) * SPACE) * fontSize;
                 for (var i = 0; i < labels.length; i++) width += ctx.measureText(labels[i].textContent).width;
 
                 var vw = root.clientWidth;
@@ -329,7 +389,47 @@
                     requestAnimationFrame(function () { root.classList.remove("nav-switching"); });
                 });
             }
+            // 布局或字体变了：强调框直接跳到位，不播放滑动
+            if (!collapse) place(target, true);
         }
+
+        // 桌面端导航强调框：平时停在当前页，悬停 / 聚焦时滑到所指项，离开后滑回（无当前页则淡出）
+        var pill = nav.querySelector(".head-menu-pill");
+        var current = nav.querySelector(":scope > a.current");
+        var target = current;
+        var leaveTimer = 0;
+
+        function place(a, instant) {
+            target = a;
+            if (!a) { pill.classList.remove("is-on"); return; }
+            // 从隐藏状态出现时原地浮现，不从上一次的位置滑过来
+            if (instant || !pill.classList.contains("is-on")) {
+                pill.classList.add("no-glide");
+                instant = true;
+            }
+            pill.style.setProperty("--pill-x", a.offsetLeft + "px");
+            pill.style.setProperty("--pill-w", a.offsetWidth + "px");
+            pill.classList.toggle("is-current", a === current);
+            pill.classList.add("is-on");
+            if (instant) {
+                void pill.offsetWidth;
+                pill.classList.remove("no-glide");
+            }
+        }
+
+        [].forEach.call(nav.querySelectorAll(":scope > a"), function (a) {
+            a.addEventListener("pointerenter", function () {
+                clearTimeout(leaveTimer);
+                place(a);
+            });
+            // 两项之间有空隙，稍等一下再滑回，免得划过空隙时先回到当前页再折返
+            a.addEventListener("pointerleave", function () {
+                clearTimeout(leaveTimer);
+                leaveTimer = setTimeout(function () { place(current); }, 90);
+            });
+            a.addEventListener("focus", function () { place(a); });
+            a.addEventListener("blur", function () { place(current); });
+        });
 
         update();
         window.addEventListener("resize", update);
@@ -344,6 +444,8 @@
 
     <main>
     <div class="wrap min">
+        
+        <div class="reading-sheet">
         <section class="post-title">
             <h2>1月14日：失败了</h2>
             <div class="post-meta">
@@ -381,19 +483,7 @@
             <a class="-none-link" href="/tags/%E9%9A%8F%E7%AC%94/" rel="tag">随笔</a>
             </section>
         
-    
-        <section class="post-author">
-        
-            <figure class="author-avatar">
-                <img src="/images/webp/40df5751567c0aeb.webp" alt="Whatasiger" />
-            </figure>
-        
-            <div class="author-info">
-                <h4>Whatasiger</h4>
-                <p>本站未注明转载的文章均为原创，并采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="nofollow">CC BY-NC-SA 4.0</a> 授权协议，<span style="color: #E91E63">转载请注明来源</span>。</p>
-            </div>
-        </section>
-    
+        </div>
     
 
 <section class="post-comments">
@@ -1023,18 +1113,19 @@
     <footer>
     <div class="wrap min">
         <section class="widget">
-            <div class="row">
-                <div class="col-m-4">
-                    <h3 class="title-recent">最新文章：</h3>
+            <div class="footer-grid">
+                <div class="footer-card">
+                    <h3 class="footer-card-title title-recent">最新文章<span class="footer-card-sub">Recent</span></h3>
                     <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/posts/12/">在纸页的内侧消失——《Q君与世界的外侧》评析</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/11/">「主播女孩重度依赖」动画分集浅读</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/10/">2026-02 ~ 2026-04 随笔</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/8/">2026-02-16 除夕</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/7/">1月14日：失败了</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/6/">我们的时间从什么时候起停下来了</a></li></ul>
                 </div>
-                <div class="col-m-4">
-                    <h3 class="title-date">时光机：</h3>
-                    <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/06/">六月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/04/">四月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/02/">二月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/01/">一月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/12/">十二月 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/01/">一月 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/07/">七月 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">十月 2023</a></li></ul>
+                <div class="footer-card">
+                    <h3 class="footer-card-title title-date">时光机<span class="footer-card-sub">Archive</span></h3>
+                    <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/06/">2026 年 6 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/04/">2026 年 4 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/02/">2026 年 2 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/01/">2026 年 1 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/12/">2025 年 12 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/01/">2025 年 1 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/07/">2024 年 7 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">2023 年 10 月</a></li></ul>
                 </div>
-                <div class="col-m-4">
-                    <h3 class="title-tags">标签云：</h3>
-                    <a href="/tags/%E5%B0%8F%E8%AF%B4/" style="font-size: 16.67px;">小说</a> <a href="/tags/%E7%89%B9%E6%AE%8A/" style="font-size: 10px;">特殊</a> <a href="/tags/%E8%AF%84%E6%9E%90/" style="font-size: 13.33px;">评析</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 20px;">随笔</a>
+                <div class="footer-card">
+                    <h3 class="footer-card-title title-tags">标签云<span class="footer-card-sub">Tags</span></h3>
+                    <div class="footer-tags"><a href="/tags/%E5%B0%8F%E8%AF%B4/" style="font-size: 15.67px;">小说</a> <a href="/tags/%E7%89%B9%E6%AE%8A/" style="font-size: 13px;">特殊</a> <a href="/tags/%E8%AF%84%E6%9E%90/" style="font-size: 14.33px;">评析</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 17px;">随笔</a></div>
+                    <p class="footer-card-note">共 11 篇文章 · 4 个标签</p>
                 </div>
             </div>
         </section>

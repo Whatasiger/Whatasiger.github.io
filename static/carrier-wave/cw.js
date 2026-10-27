@@ -140,10 +140,12 @@
             var dx = (xx - this.pointer.x) / 120;
             y += this.pull.x * Math.exp(-dx * dx) * s.scale;
         }
-        for (var i = 0; i < this.pulses.length; i++) {
+        // 信号的起伏随载波振幅收放：载波被拉直（flat）时，驶过的只剩那粒亮点
+        var carry = clamp(this.amp.x, 0, 1);
+        for (var i = 0; i < this.pulses.length && carry > .001; i++) {
             var p = this.pulses[i];
             var d = (xx - p.cx) / p.width;
-            if (d > -3 && d < 3) y += p.amp * p.fade * s.scale * this.scale * Math.exp(-d * d) * Math.sin(d * 5.2 + s.phase * .6);
+            if (d > -3 && d < 3) y += carry * p.amp * p.fade * s.scale * this.scale * Math.exp(-d * d) * Math.sin(d * 5.2 + s.phase * .6);
         }
         return y;
     };

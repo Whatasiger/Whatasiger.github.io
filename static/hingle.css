@@ -15,8 +15,8 @@
 
 /* 全局 CSS 变量定义，修改这里可统一调整主题色、边框色、圆角等 */
 :root {
-    --blue: #6f9fc7;             /* 主题蓝色，用于链接、按钮、强调元素的主色调 */
-    --light-blue: #9fcff7;       /* 浅蓝色，用于悬停态的高亮色 */
+    --blue: var(--tc-main);             /* 主题蓝色，用于链接、按钮、强调元素的主色调 */
+    --light-blue: var(--tc-glow);       /* 浅蓝色，用于悬停态的高亮色 */
     --border: #ddd;              /* 标准边框颜色，用于分隔线、输入框等 */
     --light-border: #eee;        /* 较浅的边框颜色，用于次要分隔 */
     --light-background: #fff;    /* 浅色背景，用于卡片、输入框等元素 */
@@ -25,6 +25,7 @@
     --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);      /* 弹性缓动曲线，用于有弹跳感的动画 */
     --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* 平滑缓动曲线，用于柔和过渡的动画 */
     --ease-exit: cubic-bezier(0.4, 0, 1, 1);           /* 离场缓动曲线：由慢到快，用于浮层收起 */
+    --ease-glide: var(--ease-spring);                   /* 滑动缓动：支持 linear() 时换成带回弹的弹簧，见下方 @supports */
 
     /* 浮层卡片（设置面板 / 手机端导航）统一的毛玻璃设计语言 */
     --glass-radius: 16px;                                /* 卡片圆角；支持 squircle 时见下方 @supports */
@@ -41,6 +42,52 @@
 @supports (corner-shape: squircle) {
     :root { --glass-radius: 26px; }
 }
+
+/* 弹簧曲线（阻尼比 0.8，过冲约 1.5%）：用于顶栏导航强调框滑动，到位时轻轻回弹 */
+@supports (transition-timing-function: linear(0, 1)) {
+    :root {
+        --ease-glide: linear(0, 0.081, 0.253, 0.443, 0.616, 0.755, 0.857, 0.927, 0.972, 0.997, 1.01, 1.015,
+                             1.015, 1.013, 1.01, 1.007, 1.005, 1.003, 1.002, 1.001, 1, 1, 1);
+    }
+}
+
+/* 主题色阶：全站的强调色都取自这一组，按明度从浅到深排列，各处按用途取不同的级
+   （正文链接 / 强调 / 发光 / 图标 / 标题……深浅各不相同）。默认「天青」即原先的一组蓝，数值原样保留；
+   设置面板选了别的主题色时，html 挂 data-accent，整组按相同的明度与彩度（OKLCH）只换色相，深浅关系不变 */
+:root {
+    --tc-ice: #cfe5fb;          /* 最浅：夜间目录展开箭头的高亮 */
+    --tc-pale: #c9dcee;         /* 浅而灰：夜间页脚条目文字 */
+    --tc-light: #a6cff5;        /* 亮强调：顶栏当前页、版本号、首页卡片、页脚等的强调色 */
+    --tc-glow: #9fcff7;         /* 发光：悬停高亮、光晕、浅色描边 */
+    --tc-soft: #8bb4e0;         /* 柔和：夜间的图标、标题、开关等 */
+    --tc-main: #6f9fc7;         /* 主色：滚动条、半透明底色的基色、夜间悬停色 */
+    --tc-dim: #6e8aad;          /* 偏暗：夜间正文链接（--blue）、文章标题 */
+    --tc-deep: #5481ae;         /* 偏深：白天正文链接（--blue）与白天的各种浅底 */
+    --tc-ink: #2d5383;          /* 最深：白天首页 ID */
+    --tc-warm: #e0894c;         /* 白天的暖色点缀（悬停、发光）：天青下是与天空对比的落日橙 */
+    --tc-warm-deep: #d16b34;    /* 白天首页卡片强调色 */
+}
+
+/* 其他主题色：OKLCH 的明度 / 彩度取自上面对应的蓝，只把色相换成 --tc-h
+   白天的暖色点缀也一并换成同色相，不再是落日橙 */
+html[data-accent]:not([data-accent="blue"]) {
+    --tc-ice: oklch(0.912 0.038 var(--tc-h));
+    --tc-pale: oklch(0.886 0.032 var(--tc-h));
+    --tc-light: oklch(0.838 0.069 var(--tc-h));
+    --tc-glow: oklch(0.835 0.076 var(--tc-h));
+    --tc-soft: oklch(0.756 0.078 var(--tc-h));
+    --tc-main: oklch(0.684 0.079 var(--tc-h));
+    --tc-dim: oklch(0.625 0.062 var(--tc-h));
+    --tc-deep: oklch(0.59 0.085 var(--tc-h));
+    --tc-ink: oklch(0.438 0.091 var(--tc-h));
+    --tc-warm: oklch(0.71 0.115 var(--tc-h));
+    --tc-warm-deep: oklch(0.64 0.125 var(--tc-h));
+}
+html[data-accent="lavender"] { --tc-h: 300; } /* 藤紫 */
+html[data-accent="sakura"]   { --tc-h: 355; } /* 樱粉 */
+html[data-accent="mikan"]    { --tc-h: 62; }  /* 蜜柑 */
+html[data-accent="wakakusa"] { --tc-h: 135; } /* 若草 */
+html[data-accent="mint"]     { --tc-h: 185; } /* 薄荷 */
 
 /* 全局 body 样式，定义页面基础字体、颜色与背景图相关变量 */
 body {
@@ -116,10 +163,10 @@ body.no-bg-transition:before {
 }
 
 /* 滚动条滑块颜色：默认使用主题蓝色 */
-::-webkit-scrollbar-thumb { background: #6f9fc7; background: var(--blue); }
+::-webkit-scrollbar-thumb { background: var(--tc-main); background: var(--blue); }
 
 /* 滚动条滑块悬停颜色：使用浅蓝色 */
-::-webkit-scrollbar-thumb:hover { background: #9fcff7; background: var(--light-blue); }
+::-webkit-scrollbar-thumb:hover { background: var(--tc-glow); background: var(--light-blue); }
 
 /* body 竖向滚动条的背景与边框，使页面滚动条更精致 */
 body::-webkit-scrollbar {
@@ -130,13 +177,13 @@ body::-webkit-scrollbar {
 
 /* 全局链接默认颜色：使用主题蓝色 */
 a {
-    color: #6f9fc7;
+    color: var(--tc-main);
     color: var(--blue);
 }
 
 /* 链接悬停颜色：使用浅蓝色 */
 a:hover {
-    color: #9fcff7;
+    color: var(--tc-glow);
     color: var(--light-blue);
 }
 
@@ -148,21 +195,21 @@ hr { border-color: #eee; }
 
 /* 文章正文中 em 斜体元素的背景色（作为高亮标记使用） */
 em {
-    background-color: #6f9fc7;
+    background-color: var(--tc-main);
     background-color: var(--blue);
 }
 
 /* 按钮默认样式：白色文字 + 主题蓝色背景 */
 .btn {
     color: #fff;
-    background-color: #6f9fc7;
+    background-color: var(--tc-main);
     background-color: var(--blue);
 }
 
 /* 按钮悬停样式：背景变为浅蓝色 */
 .btn:hover {
     color: #fff;
-    background: #9fcff7;
+    background: var(--tc-glow);
     background: var(--light-blue);
 }
 
@@ -178,7 +225,7 @@ pre {
 
 /* 引用块（blockquote）样式 */
 blockquote {
-    border-color: #6f9fc7;              /* 引用块左边框颜色，使用主题蓝色 */
+    border-color: var(--tc-main);              /* 引用块左边框颜色，使用主题蓝色 */
     border-radius: .25em;
     border-radius: var(--radius);       /* 引用块圆角，跟随全局圆角变量 */
     background-color: #ecf1f5;          /* 引用块背景色，浅蓝灰色 */
@@ -403,8 +450,8 @@ input, textarea, pre, hr, blockquote {
 .dark-theme {
     color: #bbb;                    /* 夜间模式正文颜色，浅灰色 */
     background-color: #222;         /* 夜间模式页面背景色，深灰色 */
-    --blue: #6e8aad;                /* 夜间模式主题蓝，比亮色模式偏暗，降低刺激感 */
-    --light-blue: #6f9fc7;          /* 夜间模式浅蓝（悬停色），与亮色主题蓝相同 */
+    --blue: var(--tc-dim);                /* 夜间模式主题蓝，比亮色模式偏暗，降低刺激感 */
+    --light-blue: var(--tc-main);          /* 夜间模式浅蓝（悬停色），与亮色主题蓝相同 */
     --border: #444;                 /* 夜间模式边框颜色，深灰 */
     --light-border: #333;           /* 夜间模式浅边框颜色，更深的灰色 */
     --light-background: #333;       /* 夜间模式浅色背景（卡片/输入框），深灰 */
@@ -552,7 +599,26 @@ input, textarea, pre, hr, blockquote {
    2 - 页眉与导航
    ========================================= */
 
-/* 顶部导航栏：固定在顶部，带毛玻璃效果 */
+/* 顶栏配色变量：导航 .head-menu 在 header 之外，所以挂在 body 上；这里是夜间（默认），白天见第 8 节 */
+body {
+    --hd-bg: rgba(22, 22, 26, 0.5);                   /* 页顶时的底色：更透，背景图能透上来 */
+    --hd-bg-solid: rgba(22, 22, 26, 0.8);             /* 滚动后叠上的一层：更实，压住正文 */
+    --hd-shadow: rgba(0, 0, 0, 0.45);                 /* 滚动后的投影 */
+    --hd-line: rgba(255, 255, 255, 0.09);             /* 细描边 / 底边细线 */
+    --hd-glow: var(--tc-light);                       /* 强调光色（底边中段、聚焦光圈、版本号光晕） */
+    --hd-accent: var(--tc-light);                             /* 强调色：当前页、版本号 */
+    --hd-hover: #ffffff;                              /* 导航文字悬停色 */
+    --hd-tile: rgba(255, 255, 255, 0.07);             /* 悬停胶囊 / 圆形按钮底 */
+    --hd-tile-strong: color-mix(in srgb, var(--tc-light) 13%, transparent);      /* 当前页胶囊底 */
+    --hd-current-ring: color-mix(in srgb, var(--tc-light) 22%, transparent);     /* 当前页胶囊描边 */
+    --hd-input: rgba(255, 255, 255, 0.06);            /* 搜索框底 */
+    --hd-input-focus: rgba(255, 255, 255, 0.1);       /* 搜索框聚焦底 */
+    --hd-input-highlight: rgba(255, 255, 255, 0.04);  /* 搜索框顶部内高光 */
+    --hd-ink: #eee;                                   /* 搜索框文字 */
+    --hd-muted: rgba(255, 255, 255, 0.45);            /* 占位符 */
+}
+
+/* 顶部导航栏：固定在顶部的毛玻璃条；页顶时更通透，往下滚动时由 :before 叠上一层更实的玻璃和投影 */
 header {
     position: fixed;
     top: 0;
@@ -560,38 +626,100 @@ header {
     right: 0;
     z-index: 99999;                     /* 层级极高，确保始终位于内容之上 */
     line-height: 1em;
-    background-color: rgba(255, 255, 255, 0.7); /* 导航栏背景半透明度，0=全透明，1=不透明 */
-    backdrop-filter: blur(12px);        /* 导航栏毛玻璃模糊强度，值越大越模糊 */
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid #ddd;
-    border-color: var(--border);
-    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.05); /* 导航栏底部阴影，增加层次感 */
-    transition: border-color .3s, background-color .3s;
+    color: var(--hd-ink);
+    background-color: var(--hd-bg);
+    backdrop-filter: blur(20px) saturate(160%);       /* 毛玻璃：模糊 + 提饱和 */
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    transition: background-color .3s;
 }
 
-/* 夜间模式导航栏：深色背景 + 更重的阴影 */
-.dark-theme header {
-    background-color: rgba(30, 30, 30, 0.7); /* 夜间导航栏背景半透明度 */
-    box-shadow: 0 1px 15px rgba(0, 0, 0, 0.3); /* 夜间导航栏阴影强度 */
+/* 滚动后的实层：支持滚动驱动动画时随前 160px 渐显，否则一直显示 */
+header:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--hd-bg-solid);
+    box-shadow: 0 12px 32px -14px var(--hd-shadow);
+    pointer-events: none;
+    transition: background-color .3s, box-shadow .3s;
+}
+@supports (animation-timeline: scroll()) {
+    header:before {
+        animation: header-settle linear both;
+        animation-timeline: scroll(root);
+        animation-range: 0 160px;
+    }
+}
+@keyframes header-settle {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
-/* 导航栏左侧 Logo/站名 */
+/* 沉浸模式（设置面板开关，body.immersive）：向下滚动时 hingle.js 给 html 挂 .header-hidden，
+   顶栏连同桌面横排导航（它在 header 之外）一起向上收起；唤出时弹性落下，收起时干脆利落 */
+body.immersive header,
+html:not(.nav-collapsed) body.immersive .head-menu {
+    transition: background-color .3s, transform .55s var(--ease-spring);
+}
+html.header-hidden body.immersive header,
+html.header-hidden:not(.nav-collapsed) body.immersive .head-menu {
+    transform: translateY(calc(-100% - 24px));   /* 多收 24px，连投影一起藏掉 */
+    transition: background-color .3s, transform .35s var(--ease-exit);
+}
+
+/* 底边：两端隐去、中段带一点强调光的细线，替代原先的实线边框 */
+header:after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--hd-line) 18%, color-mix(in srgb, var(--hd-glow) 40%, transparent) 50%, var(--hd-line) 82%, transparent);
+    pointer-events: none;
+}
+
+/* 导航栏左侧 Logo：站名 + 版本号胶囊 */
 .header-logo {
     position: absolute;
     top: 0;
     left: 1.5em;                    /* Logo 距左侧距离，调整可改变 Logo 位置 */
-    line-height: 3.2em;             /* Logo 垂直居中高度，应与导航栏高度一致 */
+    display: flex;
+    align-items: center;
+    gap: .55em;
+    height: calc(3.2em / 1.1);      /* 与导航栏同高（3.2em 按自身 1.1em 字号折算） */
     font-size: 1.1em;               /* Logo 字号，影响站名文字大小 */
-    font-weight: 600;               /* Logo 字重，影响站名文字粗细 */
-    letter-spacing: 0.5px;          /* Logo 字间距，影响站名字符间距 */
+    font-weight: 600;
     color: inherit;
     z-index: 10;
-    transition: color 0.3s var(--ease-spring);
 }
-
-/* Logo 悬停：颜色变为主题蓝 */
-.header-logo:hover {
-    color: var(--blue);
+/* 站名与版本号按大写字母高度居中对齐：text-box 把行框裁到 cap-height ~ 基线，
+   两者的盒子中线就是字形中线（不支持 text-box 的浏览器退回按行框居中，偏差很小） */
+.header-logo-name {
+    line-height: 1;
+    letter-spacing: .03em;
+    text-box: trim-both cap alphabetic;
+    transition: color .3s ease;
+}
+.header-logo-ver {
+    padding: .5em .7em;             /* 裁掉行框后内边距即字形到胶囊边缘的距离 */
+    border-radius: 999px;
+    font-size: .72em;               /* 版本号字号（相对站名） */
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: .08em;
+    text-box: trim-both cap alphabetic;
+    color: var(--hd-accent);
+    background: var(--hd-tile);
+    box-shadow: inset 0 0 0 1px var(--hd-line);
+    transition: box-shadow .5s var(--ease-spring);
+}
+.header-logo:hover { color: inherit; }
+.header-logo:hover .header-logo-name { color: var(--hd-accent); }
+.header-logo:hover .header-logo-ver {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hd-glow) 35%, transparent),
+                0 0 14px -2px color-mix(in srgb, var(--hd-glow) 45%, transparent); /* 悬停时版本号原地微微发光，不位移 */
 }
 
 /* 导航栏居中标题（手机端显示），绝对定位覆盖整个导航栏 */
@@ -602,6 +730,7 @@ header {
     position: absolute;
     text-align: center;
 }
+.head-title h4 { letter-spacing: .06em; font-weight: 600; }
 
 /* 导航菜单列表容器：水平排列居中 */
 .head-menu {
@@ -619,13 +748,17 @@ header {
     position: relative;
     line-height: 2.25em;            /* 菜单项行高，影响导航栏垂直占用空间 */
     font-weight: 600;               /* 菜单项字重 */
+    transition: color .3s ease;
 }
 
-/* 菜单链接悬停颜色：橙黄色高亮 */
-.head-menu a:hover { color: #ffa628; /* 导航链接悬停颜色，可改为任意颜色 */ }
+/* 菜单链接悬停颜色 */
+.head-menu a:hover { color: var(--hd-hover); }
 
 /* 菜单图标仅在手机端导航卡片中显示 */
 .head-menu a .fa { display: none; }
+
+/* 导航强调框只在桌面横排导航中出现（样式见第 7 节「桌面端导航」） */
+.head-menu-pill { display: none; }
 
 /* 含子菜单的菜单项，末尾添加向下箭头图标 */
 .head-menu .has-child > a:after {
@@ -641,17 +774,17 @@ header {
     margin-right: .05em;
 }
 
-/* 导航栏按钮组（汉堡菜单、日夜切换、搜索、设置）的通用样式 */
+/* 导航栏圆形图标按钮（汉堡菜单、日夜切换、搜索、设置）：悬停浮出玻璃底，按下回缩 */
 .toggle-btn, .light-btn, .search-btn, .settings-btn {
     z-index: 1;
     float: left;
     width: 2em;                     /* 按钮宽度，影响图标按钮的点击区域大小 */
+    height: 2em;
     margin: .6em;                   /* 按钮外边距，影响按钮与导航栏边缘的距离 */
     cursor: pointer;
     position: relative;
-    border-radius: .25em;
-    border-radius: var(--radius);
-    transition: color .3s, background-color .3s;
+    border-radius: 50%;
+    transition: color .3s, background-color .3s, box-shadow .3s, transform .5s var(--ease-spring);
 }
 
 /* 汉堡菜单按钮（手机端）：不需右边距 */
@@ -666,23 +799,47 @@ header {
 /* 日夜切换按钮：浮动到右侧，左边距略小 */
 .light-btn { float: right; margin-left: 0.5em; }
 
-/* 按钮悬停：浅黑色半透明背景 */
 .toggle-btn:hover, .light-btn:hover, .search-btn:hover, .settings-btn:hover {
-    background-color: rgba(0, 0, 0, .05); /* 按钮悬停背景透明度，影响按钮悬停反馈 */
+    color: var(--hd-accent);
+    background-color: var(--hd-tile);
+    box-shadow: inset 0 0 0 1px var(--hd-line);
+}
+.toggle-btn:active, .light-btn:active, .search-btn:active, .settings-btn:active {
+    transform: scale(.88);
+    transition-duration: .12s;
 }
 
-/* 各按钮图标通用：使用 FontAwesome 字体图标 */
+/* 各按钮图标通用：使用 FontAwesome 字体图标，悬停时各有一个小动作 */
 .toggle-btn:before, .light-btn:before, .search-btn:before, .settings-btn:before {
     display: block;
     text-align: center;
     font: 1em/2em "FontAwesome";    /* 图标字号/行高，影响图标大小与垂直居中 */
+    transition: transform .6s var(--ease-spring);
 }
+.settings-btn:hover:before { transform: rotate(20deg); }          /* 悬停：齿轮小幅转动，按下打开面板时才转足 */
+/* 设置面板打开期间，齿轮按钮保持点亮；点下打开时齿轮转过一大圈，关闭时转回 */
+body:has(.settings-panel.open) .settings-btn {
+    color: var(--hd-accent);
+    background-color: var(--hd-tile);
+    box-shadow: inset 0 0 0 1px var(--hd-line);
+}
+body:has(.settings-panel.open) .settings-btn:before { transform: rotate(135deg); transition-duration: .8s; } /* 135° 是齿距 45° 的整数倍，停下时齿形与静止时一致 */
+.light-btn:hover:before { transform: rotate(-20deg) scale(1.08); } /* 日月侧一下 */
+.search-btn:hover:before { transform: scale(1.12); }
 
 /* 各按钮对应的 FontAwesome 图标代码 */
 .toggle-btn:before { content: "\f0c9"; }    /* 汉堡菜单图标 */
-.light-btn:before { content: "\f0eb"; }     /* 灯泡/日夜切换图标 */
+.light-btn:before { content: "\f185"; }     /* 白天：太阳 */
+.dark-theme .light-btn:before { content: "\f186"; } /* 夜间：月亮 */
 .search-btn:before { content: "\f002"; }    /* 搜索图标 */
 .settings-btn:before { content: "\f013"; }  /* 齿轮/设置图标 */
+
+/* 切换日夜时图标转入（hingle.js 的 night() 挂 .is-flipping，动画结束后摘掉） */
+.light-btn.is-flipping:before { animation: light-flip .7s var(--ease-spring); }
+@keyframes light-flip {
+    from { opacity: 0; transform: rotate(-140deg) scale(.4); }
+    to   { opacity: 1; transform: none; }
+}
 
 /* 搜索框容器：默认隐藏（透明度为0），激活后显示 */
 .head-search {
@@ -702,51 +859,37 @@ header {
     pointer-events: inherit;
 }
 
-/* 搜索输入框样式：圆角、浅灰背景、内嵌搜索图标 */
+/* 搜索输入框：玻璃胶囊，内嵌搜索图标 */
 .head-search input {
     height: 2em;                    /* 输入框高度 */
     min-height: auto;
-    border-radius: 20px;            /* 圆角半径，值越大越圆润 */
-    background-color: #f0f0f0;      /* 输入框默认背景色 */
-    color: #333;                    /* 输入框文字颜色 */
-    border: 1px solid transparent;
-    width: 180px;                   /* 输入框默认宽度 */
+    border-radius: 999px;
+    background-color: var(--hd-input);
+    color: var(--hd-ink);
+    border: 1px solid var(--hd-line);
+    box-shadow: inset 0 1px 0 var(--hd-input-highlight);
+    width: 180px;                   /* 输入框宽度；改动后顶栏导航的收起判断会自动按新宽度计算 */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23888' d='M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center; /* 搜索图标距右侧距离，影响图标位置 */
-    background-size: 16px;          /* 内嵌搜索图标大小 */
+    background-size: 14px;          /* 内嵌搜索图标大小 */
     padding-left: 15px;             /* 输入内容左内边距 */
     padding-right: 35px;            /* 输入内容右内边距（为图标留空间） */
-    transition: all 0.3s var(--ease-spring);
+    transition: background-color .3s ease, border-color .3s ease, box-shadow .6s var(--ease-spring);
 }
 
-/* 夜间模式搜索输入框：深色背景与文字 */
-.dark-theme .head-search input {
-    background-color: #444;         /* 夜间输入框背景色 */
-    color: #eee;                    /* 夜间输入框文字颜色 */
-}
-
-/* 夜间模式占位符文字颜色 */
-.dark-theme .head-search input::-webkit-input-placeholder { color: #bbb; }
-
-/* 搜索框聚焦状态：白色背景 + 红色光晕边框，视觉引导效果 */
+/* 搜索框聚焦：强调色描边 + 外扩一圈柔光 */
 .head-search input:focus {
     outline: none;
-    background-color: #fff;
-    border: 1px solid rgba(255, 100, 100, 0.7);               /* 聚焦边框颜色（红色系） */
-    box-shadow: 0 0 12px rgba(255, 100, 100, 0.4), inset 0 0 6px rgba(255, 100, 100, 0.1); /* 外发光强度 */
-}
-
-/* 夜间模式搜索框聚焦：深色背景 + 更强的红色光晕 */
-.dark-theme .head-search input:focus {
-    background-color: #333;
-    box-shadow: 0 0 12px rgba(255, 100, 100, 0.6), inset 0 0 6px rgba(255, 100, 100, 0.2);
+    background-color: var(--hd-input-focus);
+    border-color: color-mix(in srgb, var(--hd-glow) 55%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--hd-glow) 14%, transparent),
+                0 8px 20px -10px color-mix(in srgb, var(--hd-glow) 55%, transparent);
 }
 
 /* 搜索框占位符文字颜色 */
-.head-search input::-webkit-input-placeholder { color: #999; }
-.head-search input::placeholder { color: #999; }
-.dark-theme .head-search input::placeholder { color: #aaa; } /* 夜间模式占位符色 */
+.head-search input::-webkit-input-placeholder { color: var(--hd-muted); }
+.head-search input::placeholder { color: var(--hd-muted); }
 
 /* =========================================
    3 - 首页与卡片
@@ -758,28 +901,13 @@ main {
     margin-top: 3.2em;              /* 顶部外边距，应与导航栏高度一致，防止内容被遮挡 */
 }
 
-/* 顶部阅读进度条：固定在页面最顶部，随滚动通过 JS 控制 scaleX */
-.reading-progress {
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;                    /* 进度条高度，影响进度条粗细 */
-    z-index: 100001;
-    position: fixed;
-    pointer-events: none;
-    transform: scaleX(0);           /* 初始宽度为 0（通过 JS 动态更新） */
-    will-change: transform;
-    transform-origin: left center;
-    background-color: var(--blue);  /* 进度条颜色，跟随主题蓝色 */
-}
-
 /* 主内容区域图片：高度自适应，带过渡动画 */
 main img {
     height: auto;
     transition: filter .3s;         /* 图片滤镜过渡（如夜间模式亮度变化） */
 }
 
-/* 首页顶部标题区域（博主信息/欢迎语），带淡入动画 */
+/* 页面顶部标题区域（首页博主信息 / 归档等页的标题），带淡入动画 */
 .home-title {
     text-align: center;
     margin-bottom: 3em;             /* 标题区域底部间距，影响与文章列表的距离 */
@@ -787,201 +915,363 @@ main img {
     -webkit-animation: fade-in-bottom .3s both;
 }
 
-/* 首页主标题（博主名）颜色 */
+/* 归档 / 标签等页的标题颜色 */
 .home-title h1 {
-    color: #1a7fd6;                 /* 首页博主名颜色，可修改为自定义颜色 */
+    color: var(--tc-deep);
     margin-bottom: 0.2em;
+    transition: color 0.5s var(--ease-spring);
 }
+.dark-theme .home-title h1 { color: var(--tc-soft); }
 
-/* 首页副标题/个签文字样式 */
-.home-title span {
+/* 归档 / 标签等页标题下的说明文字 */
+.home-title:not(.home-hero) span {
     display: block;
     margin-bottom: 1em;
-    font-style: oblique;            /* 斜体风格，影响个签文字倾斜 */
-    font-weight: 600;               /* 个签字重 */
+    font-style: oblique;
+    font-weight: 600;
 }
 
-/* 博主名颜色过渡动画（亮色/夜间切换时平滑变色） */
-.home-title h1,
-.home-profile-link h1 {
-    transition: color 0.5s var(--ease-spring);
+/* --- 首页博主信息（.home-hero）：一整张毛玻璃大卡片，宽度、圆角、投影与下方文章卡片一致
+       头像在顶端居中，ID / 座右铭 / 社交图标依次居中纵排
+       配色走 --hero-* 变量，这里是夜间（默认），白天见第 8 节 --- */
+.home-hero {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;          /* 各行居中，宽度随内容 */
+    margin-bottom: 2.5em;           /* 与文章卡片之间的间距一致 */
+    padding: 2.2em 2.4em 1.8em;
+    border-radius: 24px;            /* 与 .post-item.card-style 一致 */
+    text-align: center;
+    background: linear-gradient(135deg, var(--hero-sheen), transparent 55%), var(--hero-glass);
+    border: 1px solid var(--hero-border);
+    box-shadow: inset 0 1px 0 var(--hero-highlight),
+                0 10px 30px var(--hero-shadow);    /* 与文章卡片投影一致 */
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    animation: hero-rise .9s var(--ease-spring) both;
+
+    --hero-glass: rgba(16, 18, 24, 0.42);             /* 卡片玻璃底色 */
+    --hero-sheen: rgba(255, 255, 255, 0.08);          /* 左上角斜向的一抹反光 */
+    --hero-border: rgba(255, 255, 255, 0.12);         /* 卡片描边 */
+    --hero-highlight: rgba(255, 255, 255, 0.12);      /* 卡片顶部内高光 */
+    --hero-shadow: rgba(0, 0, 0, 0.5);                /* 卡片投影（同夜间文章卡片） */
+    --hero-name: #f2f5f9;                             /* ID 颜色 */
+    --hero-ink: rgba(240, 243, 247, 0.82);            /* 座右铭文字 */
+    --hero-muted: rgba(240, 243, 247, 0.4);           /* 引号、分隔线 */
+    --hero-line: rgba(255, 255, 255, 0.1);            /* 社交栏上方的分隔线 */
+    --hero-ring: rgba(255, 255, 255, 0.08);           /* 头像环底色 */
+    --hero-icon: #dfe3ea;                             /* 社交图标 */
+    --hero-tile: rgba(255, 255, 255, 0.1);            /* 社交强调框 */
+    --hero-tip-bg: rgba(18, 20, 26, 0.85);            /* 社交名称标签底色 */
+    --hero-accent: var(--tc-light);                           /* 强调色：悬停、光标、头像环上的光点 */
 }
 
-/* 博主头像链接悬停时，博主名变为高亮蓝色 */
-.home-profile-link:hover h1 {
-    color: #1a7fd6;
+/* 头像身后一团淡淡的强调色光晕，给卡片一点纵深 */
+.home-hero:before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    top: -6em;
+    width: 20em;
+    height: 20em;
+    translate: -50% 0;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--hero-accent) 16%, transparent), transparent);
+    pointer-events: none;
 }
 
-/* 夜间模式博主名颜色：偏蓝灰 */
-.dark-theme .home-title h1,
-.dark-theme .home-profile-link:hover h1 {
-    color: #8bb4e0;
+/* 入场：卡片先浮起，里面的内容随后依次浮现 */
+.home-avatar-ring,
+.home-hero .home-name,
+.home-motto,
+.home-hero .home-social {
+    animation: hero-rise .8s var(--ease-spring) both;
+}
+.home-avatar-ring { animation-delay: .08s; }
+.home-hero .home-name { animation-delay: .14s; }
+.home-motto { animation-delay: .2s; }
+.home-hero .home-social { animation-delay: .26s; }
+@keyframes hero-rise {
+    from { opacity: 0; translate: 0 18px; }
+    to   { opacity: 1; translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .home-hero, .home-avatar-ring, .home-hero .home-name, .home-motto, .home-hero .home-social { animation: none !important; }
 }
 
-/* 打字机效果文字容器，带光标闪烁动画 */
-#typewriter-text {
-    margin-bottom: 0.4em;
-    color: #3a3a3a;                 /* 打字机文字颜色（亮色模式） */
-    transition: color 0.5s var(--ease-spring);
-    animation: blink-caret 0.8s step-end infinite; /* 光标闪烁间隔，0.8s 为标准速度 */
-}
-
-/* 夜间模式下打字机文字颜色继承父元素 */
-.dark-theme #typewriter-text {
+/* 左栏：头像链接（ID 也在链接里，但放到右栏第一行） */
+.home-hero .home-profile-link {
+    display: contents;
     color: inherit;
+    text-decoration: none;
 }
 
-/* 光标闪烁关键帧动画：每 0.8s 切换一次边框颜色（模拟文本光标） */
-@keyframes blink-caret {
-    from, to { border-color: transparent; }
-    50% { border-color: var(--blue); } /* 光标显示时的颜色，跟随主题蓝 */
+/* 头像外圈：一圈细环，环上一粒光点缓缓绕行（像载波上驶过的信号）
+   卡片自身已有 backdrop-filter，这里不再嵌套模糊 */
+.home-avatar-ring {
+    position: relative;
+    display: block;
+    margin-bottom: 1.1em;
+    width: 120px;                   /* 头像 108px + 环 */
+    height: 120px;
+    padding: 6px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: var(--hero-ring);
+    box-shadow: inset 0 0 0 1px var(--hero-border),
+                0 12px 28px -12px var(--hero-shadow);
+    transition: box-shadow .7s var(--ease-spring);
+}
+.home-avatar-ring:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0 62%, color-mix(in srgb, var(--hero-accent) 90%, transparent) 80%, transparent 86%);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1px)); /* 只留最外 1.5px 一圈 */
+    opacity: .6;
+    animation: hero-orbit 14s linear infinite;
+    transition: opacity .5s ease;
+    pointer-events: none;
+}
+@keyframes hero-orbit { to { rotate: 1turn; } }
+@media (prefers-reduced-motion: reduce) {
+    .home-avatar-ring:before { animation: none; }
 }
 
-/* 博主头像悬浮动画：缩放放大 */
 .home-avatar {
-    transition: box-shadow 0.5s var(--ease-spring),
-                filter 0.5s var(--ease-spring),
-                transform 0.5s var(--ease-spring);
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    transition: transform .7s var(--ease-spring), filter .5s var(--ease-spring);
 }
+.dark-theme .home-avatar { filter: brightness(85%); } /* 夜间头像略压暗 */
 
-/* 博主头像悬停：轻微放大效果 */
-.home-avatar:hover { transform: scale(1.08); /* 悬停放大倍数，1.0=原始大小 */ }
-
-/* 夜间模式博主头像亮度降低 */
-.dark-theme .home-avatar {
-    filter: brightness(75%);         /* 夜间头像亮度，75% 适合暗色背景 */
-    -webkit-filter: brightness(75%);
+.home-profile-link:hover .home-avatar-ring {
+    box-shadow: inset 0 0 0 1px var(--hero-border),
+                0 12px 28px -12px var(--hero-shadow),
+                0 0 0 4px color-mix(in srgb, var(--hero-accent) 14%, transparent);
 }
+.home-profile-link:hover .home-avatar-ring:before { opacity: 1; }
+.home-profile-link:hover .home-avatar { transform: scale(1.05); }
+.dark-theme .home-profile-link:hover .home-avatar { filter: brightness(95%); }
 
-/* 社交链接胶囊容器：毛玻璃效果，圆角胶囊形 */
-/* - 社交链接胶囊 */
+/* ID */
+.home-title.home-hero .home-name {
+    margin: 0 0 .3em;
+    font-size: 2em;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: .04em;
+    color: var(--hero-name);
+    transition: color .4s ease;
+}
+.home-title.home-hero .home-profile-link:hover .home-name { color: var(--hero-accent); }
+
+/* 右栏第二行：座右铭，左侧一枚淡淡的引号；隐形整句与打字文字叠在同一格，打字时行高不跳 */
+.home-motto {
+    /* 宽度随文字（父级 justify-items: center），只有文字区域可点 */
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: .55em;
+    margin: 0 0 1em;
+    color: var(--hero-ink);
+    font-weight: 500;
+    letter-spacing: .04em;
+    line-height: 1.6;
+}
+.home-motto:before {
+    grid-area: 1 / 1;
+    content: "\f10d";               /* FontAwesome 左引号 */
+    font-family: "FontAwesome";
+    font-size: .75em;
+    color: var(--hero-muted);
+}
+.home-motto-ghost,
+.home-motto-text {
+    grid-area: 1 / 2;
+    text-align: left;               /* 整句居中占好位置，打字从这块的左缘往右填，填满时正好居中 */
+}
+.home-motto-ghost { visibility: hidden; }
+/* 座右铭链接到歌曲：悬停时文字染上强调色，引号换成音符 */
+.home-motto { text-decoration: none; transition: color .3s ease; }
+.home-motto:before { transition: color .3s ease; }
+.home-motto:hover { color: var(--hero-accent); }
+.home-motto:hover:before { content: "\f001"; color: var(--hero-accent); } /* FontAwesome 音符 */
+/* 打字光标：强调色细竖线，打完后继续闪 */
+.home-motto-text:after {
+    content: "";
+    display: inline-block;
+    width: 2px;
+    height: 1.05em;
+    margin-left: 3px;
+    vertical-align: -.15em;
+    border-radius: 1px;
+    background: var(--hero-accent);
+    animation: hero-caret 1s steps(1) infinite;
+}
+@keyframes hero-caret { 50% { opacity: 0; } }
+
+/* 社交图标，上方一道两端渐隐的分隔线；图标之间滑动着一枚强调框，上方浮出名称标签
+   强调框与标签的位置由 social.ejs 写入 --x / --w */
 .home-social {
-    cursor: default;
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: .1em;
+    padding-top: .7em;
     user-select: none;
-    display: inline-block;
-    background-color: rgba(255, 255, 255, 0.65); /* 胶囊背景透明度，影响毛玻璃效果 */
-    border-radius: 40px;             /* 胶囊圆角半径，值越大越圆润 */
-    padding: 12px 18px;              /* 胶囊内边距，影响图标与边缘的距离 */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06); /* 胶囊投影，增加立体感 */
-    backdrop-filter: blur(10px);     /* 胶囊毛玻璃模糊强度 */
-    -webkit-backdrop-filter: blur(10px);
-    transition: background-color 0.5s var(--ease-spring),
-                box-shadow 0.5s var(--ease-spring);
+}
+.home-social:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--hero-line), transparent);
 }
 
-/* 夜间模式社交胶囊：更深的半透明背景与阴影 */
-.dark-theme .home-social {
-    background-color: rgba(255, 255, 255, 0.12); /* 夜间胶囊背景透明度 */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);   /* 夜间胶囊阴影强度 */
-}
-
-/* 社交链接：垂直居中排列的行内元素 */
 .home-social a {
-    display: inline-block;
-    margin: 0 1px;                  /* 图标间距，影响社交图标之间的空隙 */
-    color: inherit;
-    vertical-align: middle;
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.5em;                   /* 图标按钮尺寸 */
+    height: 2.5em;
+    border-radius: 50%;
+    color: var(--hero-icon);
+    transition: color .3s ease;
+}
+.home-social a:hover, .home-social a:focus-visible { color: var(--hero-accent); }
+.home-social a:focus-visible { outline: none; }
+
+/* 图标：悬停时弹性上浮放大，按下回缩 */
+.home-social a > i, .home-social a > svg {
+    transition: transform .6s var(--ease-spring);
+}
+.home-social a:hover > i, .home-social a:hover > svg { transform: translateY(-1px) scale(1.15); }
+.home-social a:active > i, .home-social a:active > svg { transform: scale(.9); transition-duration: .12s; }
+.home-social svg { width: 1.3em; height: 1.3em; fill: currentColor; }
+
+/* 强调框：与顶栏导航强调框同款，滑动用带轻微回弹的 --ease-glide */
+.home-social-pill {
+    position: absolute;
+    top: .7em;
+    left: 0;
+    width: var(--w, 2.5em);
+    height: 2.5em;
+    border-radius: 999px;
+    background: var(--hero-tile);
+    box-shadow: inset 0 0 0 1px var(--hero-border);
+    opacity: 0;
+    scale: .7;
+    translate: var(--x, 0) 0;
+    pointer-events: none;
+    transition: translate .6s var(--ease-glide), opacity .25s ease, scale .5s var(--ease-glide);
+}
+/* 名称标签：浮在所指图标上方的小胶囊，跟着强调框滑动、换字
+   在卡片（自带毛玻璃）里，嵌套的 backdrop-filter 不生效，所以用较实的底色 */
+.home-social-tip {
+    position: absolute;
+    bottom: calc(100% - .1em);
+    left: 0;
+    z-index: 1;
+    padding: .38em .8em;
+    border-radius: 999px;
+    background: var(--hero-tip-bg);
+    border: 1px solid var(--hero-border);
+    box-shadow: 0 8px 18px -10px var(--hero-shadow);
+    color: var(--hero-ink);
+    font-size: .75em;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: .06em;
+    white-space: nowrap;
+    opacity: 0;
+    scale: .85;
+    transform-origin: 50% 100%;
+    translate: calc(var(--x, 0px) + var(--w, 0px) / 2 - 50%) 4px; /* 水平对准所指图标的中线（50% 为标签自身宽度） */
+    pointer-events: none;
+    transition: translate .6s var(--ease-glide), opacity .25s ease, scale .5s var(--ease-glide);
+}
+.home-social.is-pointing .home-social-pill { opacity: 1; scale: 1; }
+.home-social.is-pointing .home-social-tip { opacity: 1; scale: 1; translate: calc(var(--x, 0px) + var(--w, 0px) / 2 - 50%) 0; }
+/* 从隐藏状态出现时原地浮现：只过渡透明度与缩放，不滑动 */
+.home-social.no-glide .home-social-pill,
+.home-social.no-glide .home-social-tip { transition: opacity .25s ease, scale .5s var(--ease-glide); }
+
+/* 手机端：内边距与 ID 字号收小 */
+@media screen and (max-width: 599px) {
+    .home-hero { padding: 1.8em 1.2em 1.4em; }
+    .home-title.home-hero .home-name { font-size: 1.7em; }
 }
 
-/* FontAwesome 图标内边距 */
-.home-social i, .home-social svg { padding: .5em; /* 图标点击区域大小 */ }
-
-/* SVG 图标尺寸 */
-.home-social svg { width: 2em; height: 2em; /* SVG 图标宽高，影响图标显示大小 */ }
-
-/* FontAwesome 图标悬停过渡动画 */
-.home-social a i[class^="fa-"] {
-    transition: background-color 0.5s var(--ease-spring);
+/* 社交图标：SVG 作为遮罩、底色取 currentColor，图标颜色随主题与悬停变化（图形数据见下方各条） */
+.home-social a i[class*="-icon"] {
+    display: block;
+    width: 1.4em;                   /* 图标显示大小 */
+    height: 1.4em;
+    background-color: currentColor;
+    -webkit-mask: center / contain no-repeat;
+    mask: center / contain no-repeat;
 }
 
-/* 夜间模式 FontAwesome 图标背景色（用于 mask 遮罩图标） */
-.dark-theme .home-social a i[class^="fa-"] {
-    background-color: #ddd;
-}
-
-/* 社交图标 SVG 基础布局（小尺寸 SVG 图标） */
-.home-social a i.fa-bilibili-icon,
-.home-social a i.fa-bangumi-icon {
-    display: inline-block;
-    width: 1.2em;                   /* 小图标宽度 */
-    height: 1.2em;                  /* 小图标高度 */
-    background-size: contain;
-    background-repeat: no-repeat;
-    vertical-align: middle;
-}
-
-/* 自定义 SVG 图标（Bangumi/Bilibili/网易云音乐/Steam/GitHub/豆瓣/微信）的基础布局 */
-.home-social a i.fa-bgm-icon,
-.home-social a i.fa-bili-icon,
-.home-social a i.fa-netease-icon,
-.home-social a i.fa-steam-icon,
-.home-social a i.fa-github-icon,
-.home-social a i.fa-douban-icon,
-.home-social a i.fa-wechat-icon,
-.home-social a i.fa-email-icon {
-    display: inline-block;
-    width: 1.5em;                   /* 图标宽度，影响自定义 SVG 图标的显示大小 */
-    height: 1.5em;                  /* 图标高度，影响自定义 SVG 图标的显示大小 */
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    vertical-align: middle;
-    transition: transform 0.3s;     /* 悬停缩放过渡时长 */
-}
-
-/* 自定义 SVG 图标悬停放大效果 */
-.home-social a:hover i.fa-bgm-icon,
-.home-social a:hover i.fa-bili-icon,
-.home-social a:hover i.fa-netease-icon,
-.home-social a:hover i.fa-steam-icon,
-.home-social a:hover i.fa-github-icon,
-.home-social a:hover i.fa-douban-icon,
-.home-social a:hover i.fa-wechat-icon,
-.home-social a:hover i.fa-email-icon {
-    transform: scale(1.2);         /* 悬停放大倍数，1.2 = 放大 20% */
-}
-
-/* Bangumi 图标：内嵌 SVG 数据 URI */
+/* Bangumi 图标：遮罩图形 */
 .home-social a i.fa-bgm-icon {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M228.1 615.4c3.4 3.4 8.2 7.6 11.4 7.6 1.7 0 3.3-.3 4.7-1l147.6-61.9c5.1-2.1 6.3-8.8.3-22.6l-147.6-66.2c-5.9-2.7-12.7 1.8-10.1 22.4l121.7 54.6-121.4 50.9c-5.7 2.4-8.8 9-6.6 16.2zM399 628H239.5c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3H399c6.8 0 12.3-5.5 12.3-12.3S405.8 628 399 628zm0 39.5H239.5c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3H399c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm473.9-190.6l-133.3 58.4c-6.2 2.7-6.4 11.4-.4 22.3l133.3 64.1c1.8.8 3.6 1.2 5.3 1.2 6.8 0 12.3-5.5 12.3-12.3 0-4.4-2.3-8.2-5.3-11.1l-109.2-52.4 107.3-47.6c5.8-2.6 8.3-9.4 10-22.6zM877.9 628h-148.1c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3h148.1c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm0 39.5h-148.1c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3h148.1c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm-233-130.4H482c-6.3 0-11.9 4-10.7 18.3l81.4 145.1c3.2 5.7 12 5.7 15.2 0l81.4-145.1c1.2-14.3-4.4-18.3-10.7-18.3zm-81.4 132.3l-60.4-107.7h120.9l-60.5 107.7z' fill='%23000'/%3E%3Cpath d='M891.4 335H648.4c-6.8-15.1-19.8-28.4-36.9-38L803.1 19.3c3.7-4.2 2.7-10.7-2.1-14-4.8-3.2-11.5-2.2-15.1 2.7l-197.3 278.9c-15.4-4.6-31.5-7-45.4-7-10.7 0-21.4 1.1-31.9 3.4L240 4.7c-4.2-3.7-10.7-2.7-14 2.1-3.2 4.8-2.2 11.5 2.7 15.1l262.7 269.8c-22.1 9.8-39.1 25.1-47.3 43.2H132.5c-50.6 0-91.8 41.2-91.8 91.8v414.4c0 50.6 41.2 91.8 91.8 91.8h268l-19.9 47c-12.6 29.9 22.6 57.1 48.3 37.3l109.5-84.3h352.9c50.6 0 91.8-41.2 91.8-91.8V426.7c0-50.6-41.2-91.8-91.8-91.8zm34.8 463.8c0 33.5-27.2 60.7-60.7 60.7H585.7L487.9 933l-77 57.9 24.4-57.9 31-73.5H198.1c-33.5 0-60.7-27.2-60.7-60.7V440.3c0-33.5 27.2-60.7 60.7-60.7h667.5c33.5 0 60.7 27.2 60.7 60.7v358.5z' fill='%23000'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M228.1 615.4c3.4 3.4 8.2 7.6 11.4 7.6 1.7 0 3.3-.3 4.7-1l147.6-61.9c5.1-2.1 6.3-8.8.3-22.6l-147.6-66.2c-5.9-2.7-12.7 1.8-10.1 22.4l121.7 54.6-121.4 50.9c-5.7 2.4-8.8 9-6.6 16.2zM399 628H239.5c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3H399c6.8 0 12.3-5.5 12.3-12.3S405.8 628 399 628zm0 39.5H239.5c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3H399c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm473.9-190.6l-133.3 58.4c-6.2 2.7-6.4 11.4-.4 22.3l133.3 64.1c1.8.8 3.6 1.2 5.3 1.2 6.8 0 12.3-5.5 12.3-12.3 0-4.4-2.3-8.2-5.3-11.1l-109.2-52.4 107.3-47.6c5.8-2.6 8.3-9.4 10-22.6zM877.9 628h-148.1c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3h148.1c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm0 39.5h-148.1c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3h148.1c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm-233-130.4H482c-6.3 0-11.9 4-10.7 18.3l81.4 145.1c3.2 5.7 12 5.7 15.2 0l81.4-145.1c1.2-14.3-4.4-18.3-10.7-18.3zm-81.4 132.3l-60.4-107.7h120.9l-60.5 107.7z' fill='%23000'/%3E%3Cpath d='M891.4 335H648.4c-6.8-15.1-19.8-28.4-36.9-38L803.1 19.3c3.7-4.2 2.7-10.7-2.1-14-4.8-3.2-11.5-2.2-15.1 2.7l-197.3 278.9c-15.4-4.6-31.5-7-45.4-7-10.7 0-21.4 1.1-31.9 3.4L240 4.7c-4.2-3.7-10.7-2.7-14 2.1-3.2 4.8-2.2 11.5 2.7 15.1l262.7 269.8c-22.1 9.8-39.1 25.1-47.3 43.2H132.5c-50.6 0-91.8 41.2-91.8 91.8v414.4c0 50.6 41.2 91.8 91.8 91.8h268l-19.9 47c-12.6 29.9 22.6 57.1 48.3 37.3l109.5-84.3h352.9c50.6 0 91.8-41.2 91.8-91.8V426.7c0-50.6-41.2-91.8-91.8-91.8zm34.8 463.8c0 33.5-27.2 60.7-60.7 60.7H585.7L487.9 933l-77 57.9 24.4-57.9 31-73.5H198.1c-33.5 0-60.7-27.2-60.7-60.7V440.3c0-33.5 27.2-60.7 60.7-60.7h667.5c33.5 0 60.7 27.2 60.7 60.7v358.5z' fill='%23000'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M228.1 615.4c3.4 3.4 8.2 7.6 11.4 7.6 1.7 0 3.3-.3 4.7-1l147.6-61.9c5.1-2.1 6.3-8.8.3-22.6l-147.6-66.2c-5.9-2.7-12.7 1.8-10.1 22.4l121.7 54.6-121.4 50.9c-5.7 2.4-8.8 9-6.6 16.2zM399 628H239.5c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3H399c6.8 0 12.3-5.5 12.3-12.3S405.8 628 399 628zm0 39.5H239.5c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3H399c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm473.9-190.6l-133.3 58.4c-6.2 2.7-6.4 11.4-.4 22.3l133.3 64.1c1.8.8 3.6 1.2 5.3 1.2 6.8 0 12.3-5.5 12.3-12.3 0-4.4-2.3-8.2-5.3-11.1l-109.2-52.4 107.3-47.6c5.8-2.6 8.3-9.4 10-22.6zM877.9 628h-148.1c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3h148.1c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm0 39.5h-148.1c-6.8 0-12.3 5.5-12.3 12.3s5.5 12.3 12.3 12.3h148.1c6.8 0 12.3-5.5 12.3-12.3s-5.5-12.3-12.3-12.3zm-233-130.4H482c-6.3 0-11.9 4-10.7 18.3l81.4 145.1c3.2 5.7 12 5.7 15.2 0l81.4-145.1c1.2-14.3-4.4-18.3-10.7-18.3zm-81.4 132.3l-60.4-107.7h120.9l-60.5 107.7z' fill='%23000'/%3E%3Cpath d='M891.4 335H648.4c-6.8-15.1-19.8-28.4-36.9-38L803.1 19.3c3.7-4.2 2.7-10.7-2.1-14-4.8-3.2-11.5-2.2-15.1 2.7l-197.3 278.9c-15.4-4.6-31.5-7-45.4-7-10.7 0-21.4 1.1-31.9 3.4L240 4.7c-4.2-3.7-10.7-2.7-14 2.1-3.2 4.8-2.2 11.5 2.7 15.1l262.7 269.8c-22.1 9.8-39.1 25.1-47.3 43.2H132.5c-50.6 0-91.8 41.2-91.8 91.8v414.4c0 50.6 41.2 91.8 91.8 91.8h268l-19.9 47c-12.6 29.9 22.6 57.1 48.3 37.3l109.5-84.3h352.9c50.6 0 91.8-41.2 91.8-91.8V426.7c0-50.6-41.2-91.8-91.8-91.8zm34.8 463.8c0 33.5-27.2 60.7-60.7 60.7H585.7L487.9 933l-77 57.9 24.4-57.9 31-73.5H198.1c-33.5 0-60.7-27.2-60.7-60.7V440.3c0-33.5 27.2-60.7 60.7-60.7h667.5c33.5 0 60.7 27.2 60.7 60.7v358.5z' fill='%23000'/%3E%3C/svg%3E");
 }
 
-/* Bilibili 图标：内嵌 SVG 数据 URI */
+/* Bilibili 图标：遮罩图形 */
 .home-social a i.fa-bili-icon {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M977.2 208.2c33.4 36.2 48.8 79.4 46.6 131.4v404.8c-.8 52.8-18.4 96.2-53 130.2-34.4 34-78.2 51.8-131 53.4H184.04c-52.9-1.6-96.42-19.6-130.56-54.4C19.36 838.8 1.53 793 0 736.4V339.6c1.53-52 19.36-95.2 53.48-131.4 34.14-32.7 77.66-50.66 130.56-52.2h58.76L192.1 104.38c-11.5-11.46-17.26-26-17.26-43.58 0-17.6 5.76-32.12 17.26-43.59C203.6 5.74 218.2 0 235.8 0s32.2 5.74 43.8 17.21L426.2 156h176l149-138.79C763.4 5.74 778.4 0 796 0c17.6 0 32.2 5.74 43.8 17.21 11.4 11.47 17.2 25.99 17.2 43.59 0 17.58-5.8 32.12-17.2 43.58L789.2 156h58.6c52.8 1.54 96 19.5 129.4 52.2zM899.6 347.6c-.8-19.2-7.4-34.8-21.4-47-10.4-12.2-28-18.8-45.4-19.6H192.1c-19.18.8-34.9 7.4-47.16 19.6-12.28 12.2-18.8 27.8-19.56 47v388.8c0 18.4 6.52 34 19.56 47s28.76 19.6 47.16 19.6H832.8c18.4 0 34-6.6 46.6-19.6 12.6-13 19.4-28.6 20.2-47V347.6zm-528.6 85.4c12.6 12.6 19.4 28.2 20.2 46.4V546c-.8 18.4-7.4 33.8-19.6 46.4-12.4 12.6-28 19-47.2 19-19.2 0-35-6.4-47.2-19-12.2-12.6-18.8-28-19.6-46.4v-66.6c.8-18.2 7.6-33.8 20.2-46.4 12.6-12.6 26.4-19.2 46.6-20 18.4.8 34 7.4 46.6 20zm383 0c12.6 12.6 19.4 28.2 20.2 46.4V546c-.8 18.4-7.4 33.8-19.6 46.4-12.2 12.6-28 19-47.2 19-19.2 0-34.8-6.4-47.2-19-14-12.6-18.8-28-19.4-46.4v-66.6c.6-18.2 7.4-33.8 20-46.4 12.6-12.6 28.2-19.2 46.6-20 18.4.8 34 7.4 46.6 20z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M977.2 208.2c33.4 36.2 48.8 79.4 46.6 131.4v404.8c-.8 52.8-18.4 96.2-53 130.2-34.4 34-78.2 51.8-131 53.4H184.04c-52.9-1.6-96.42-19.6-130.56-54.4C19.36 838.8 1.53 793 0 736.4V339.6c1.53-52 19.36-95.2 53.48-131.4 34.14-32.7 77.66-50.66 130.56-52.2h58.76L192.1 104.38c-11.5-11.46-17.26-26-17.26-43.58 0-17.6 5.76-32.12 17.26-43.59C203.6 5.74 218.2 0 235.8 0s32.2 5.74 43.8 17.21L426.2 156h176l149-138.79C763.4 5.74 778.4 0 796 0c17.6 0 32.2 5.74 43.8 17.21 11.4 11.47 17.2 25.99 17.2 43.59 0 17.58-5.8 32.12-17.2 43.58L789.2 156h58.6c52.8 1.54 96 19.5 129.4 52.2zM899.6 347.6c-.8-19.2-7.4-34.8-21.4-47-10.4-12.2-28-18.8-45.4-19.6H192.1c-19.18.8-34.9 7.4-47.16 19.6-12.28 12.2-18.8 27.8-19.56 47v388.8c0 18.4 6.52 34 19.56 47s28.76 19.6 47.16 19.6H832.8c18.4 0 34-6.6 46.6-19.6 12.6-13 19.4-28.6 20.2-47V347.6zm-528.6 85.4c12.6 12.6 19.4 28.2 20.2 46.4V546c-.8 18.4-7.4 33.8-19.6 46.4-12.4 12.6-28 19-47.2 19-19.2 0-35-6.4-47.2-19-12.2-12.6-18.8-28-19.6-46.4v-66.6c.8-18.2 7.6-33.8 20.2-46.4 12.6-12.6 26.4-19.2 46.6-20 18.4.8 34 7.4 46.6 20zm383 0c12.6 12.6 19.4 28.2 20.2 46.4V546c-.8 18.4-7.4 33.8-19.6 46.4-12.2 12.6-28 19-47.2 19-19.2 0-34.8-6.4-47.2-19-14-12.6-18.8-28-19.4-46.4v-66.6c.6-18.2 7.4-33.8 20-46.4 12.6-12.6 28.2-19.2 46.6-20 18.4.8 34 7.4 46.6 20z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M977.2 208.2c33.4 36.2 48.8 79.4 46.6 131.4v404.8c-.8 52.8-18.4 96.2-53 130.2-34.4 34-78.2 51.8-131 53.4H184.04c-52.9-1.6-96.42-19.6-130.56-54.4C19.36 838.8 1.53 793 0 736.4V339.6c1.53-52 19.36-95.2 53.48-131.4 34.14-32.7 77.66-50.66 130.56-52.2h58.76L192.1 104.38c-11.5-11.46-17.26-26-17.26-43.58 0-17.6 5.76-32.12 17.26-43.59C203.6 5.74 218.2 0 235.8 0s32.2 5.74 43.8 17.21L426.2 156h176l149-138.79C763.4 5.74 778.4 0 796 0c17.6 0 32.2 5.74 43.8 17.21 11.4 11.47 17.2 25.99 17.2 43.59 0 17.58-5.8 32.12-17.2 43.58L789.2 156h58.6c52.8 1.54 96 19.5 129.4 52.2zM899.6 347.6c-.8-19.2-7.4-34.8-21.4-47-10.4-12.2-28-18.8-45.4-19.6H192.1c-19.18.8-34.9 7.4-47.16 19.6-12.28 12.2-18.8 27.8-19.56 47v388.8c0 18.4 6.52 34 19.56 47s28.76 19.6 47.16 19.6H832.8c18.4 0 34-6.6 46.6-19.6 12.6-13 19.4-28.6 20.2-47V347.6zm-528.6 85.4c12.6 12.6 19.4 28.2 20.2 46.4V546c-.8 18.4-7.4 33.8-19.6 46.4-12.4 12.6-28 19-47.2 19-19.2 0-35-6.4-47.2-19-12.2-12.6-18.8-28-19.6-46.4v-66.6c.8-18.2 7.6-33.8 20.2-46.4 12.6-12.6 26.4-19.2 46.6-20 18.4.8 34 7.4 46.6 20zm383 0c12.6 12.6 19.4 28.2 20.2 46.4V546c-.8 18.4-7.4 33.8-19.6 46.4-12.2 12.6-28 19-47.2 19-19.2 0-34.8-6.4-47.2-19-14-12.6-18.8-28-19.4-46.4v-66.6c.6-18.2 7.4-33.8 20-46.4 12.6-12.6 28.2-19.2 46.6-20 18.4.8 34 7.4 46.6 20z'/%3E%3C/svg%3E");
 }
 
-/* 网易云音乐图标：内嵌 SVG 数据 URI */
+/* 网易云音乐图标：遮罩图形 */
 .home-social a i.fa-netease-icon {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M623.61751703 18.30760297c26.82121482-7.73082075 55.55996445-7.34245925 82.64817779-1.11653927 31.10532741 7.39100445 60.53584592 21.67542518 85.86429629 41.14204445 9.24785778 7.02691555 17.59762963 15.76504889 21.84533334 26.76053333 6.57787259 16.26263703 4.81810963 35.7049837-4.89092742 50.35349334-8.47113482 13.15574518-22.87691852 22.31864889-38.39924148 24.28472888-12.40329482 1.69908148-25.40126815-0.93449482-36.0569363-7.5245037-6.00746667-3.53166222-10.58285037-8.98085925-16.61458962-12.47611259-16.17768297-10.26730667-34.80689778-18.35008-54.28565333-17.88890074-13.71401482 0.15777185-25.77749333 8.192-35.0738963 17.63403851-8.70172445 8.98085925-13.13147259 22.22155852-10.25517037 34.53989927 6.68709925 25.17067852 13.33778963 50.34135703 20.01275259 75.51203555 47.98691555 2.46366815 95.94955852 15.15823408 137.20082963 40.20754963 40.09832297 24.80658963 76.32516741 56.26386963 105.05178074 93.75288889 24.38181925 31.7728237 42.86539852 68.06034963 54.17642666 106.4838637 12.24552297 41.40904297 16.21409185 85.07543703 13.02224593 128.08647111-2.65784889 35.48653037-9.63621925 70.7667437-21.67542518 104.29933037-31.1296 81.65300148-88.7891437 153.24501333-163.00259555 199.64207408-54.43128889 34.38212741-116.94535111 55.12305778-180.69731556 63.03592297-44.00621037 5.49774222-88.84982518 5.52201482-132.63758222-1.9782163-89.97850075-14.86696297-174.30148741-59.71057778-238.29617778-124.48199112-63.59419259-63.71555555-107.85526518-146.41227852-125.75630222-234.6310163-13.20429037-64.33450667-12.60961185-131.50890667 2.03889778-195.55214221 17.90103703-78.97088 57.46536297-152.84451555 113.08600888-211.66914371 45.36547555-48.30245925 101.39875555-86.5196563 162.90550519-111.19274666 6.33514667-2.41512297 12.57320297-5.27928889 19.3209837-6.34728297 14.4057837-2.52434963 29.79460741 0.88594963 41.59108741 9.57553777 15.97136592 11.27461925 24.75804445 31.72427852 22.10019555 51.06953483-2.19666963 19.74575408-16.21409185 37.54970075-34.89185185 44.30961777-62.13783703 23.22887111-117.23662222 64.73500445-156.89803851 117.87984593-35.45012148 47.16164741-58.58190222 103.49833482-66.33699557 162.00741925-7.82791111 57.91440592-0.86167703 117.72207408 19.89138964 172.33540742 29.97665185 79.84469333 89.57800297 148.54826667 165.56335408 187.65141333 45.75383703 23.70218667 97.26027852 36.08120889 148.77885628 35.7292563 42.37994667-0.54613333 84.89339259-7.35459555 124.72471705-22.08805926 35.02535111-13.01010963 67.85403259-32.22186667 95.76751407-57.12554667 26.02021925-23.05896297 47.67137185-50.92389925 64.18887111-81.49522963 8.27695408-15.59514075 15.92282075-31.65146075 20.59529482-48.72722963 13.78683259-48.8121837 16.17768297-101.71429925 1.43208295-150.59930074-12.19697778-40.99640889-37.29483852-77.53879703-69.34679703-105.61005037-14.17519408-12.40329482-29.32129185-23.77500445-45.5596563-33.33840593-14.34510222-8.05850075-30.01306075-13.54410667-45.99656295-17.29422222 11.14112 43.5693037 23.05896297 86.95656297 34.35785481 130.48945778 1.91753482 10.43721482 3.83506963 20.87442963 5.63124147 31.33591704 1.6505363 44.91643259-14.1023763 90.16054518-43.07171555 124.5184-26.99112297 32.37963852-65.31754667 55.15946667-106.77513481 62.98737777-44.68584297 8.90804148-92.73344 0.49758815-131.10840889-24.27259259-36.63947852-23.22887111-63.70341925-60.01398518-77.9757037-100.73125926-8.08277333-22.77982815-12.1120237-46.8703763-12.91301927-70.99733334-2.45153185-52.48948148 11.27461925-106.11977482 41.2998163-149.53130666 35.28021333-51.80984889 90.90085925-87.42987852 150.53861926-104.80905482-4.39333925-16.79663408-8.88376889-33.56899555-13.32565334-50.36562963-11.51734518-36.25111703-9.06581333-76.95625482 8.11918223-111.03497481 9.27213037-19.0175763 23.05896297-35.58362075 39.0060563-49.35831703 17.75540148-15.18250667 38.48419555-27.17316741 61.08197925-33.38695111M481.22235259 413.16200297c-15.99563852 16.79663408-27.2095763 38.03515259-32.03982222 60.70575406-4.34479408 20.58315852-4.36906667 42.04013037-0.46117926 62.68397038 4.76956445 22.80410075 16.54177185 45.11061333 36.0569363 58.56976592 15.14609778 10.75275852 34.86757925 14.01742222 52.93852444 10.48576 33.4354963-5.87396741 60.71789037-36.63947852 61.65238518-70.68178963-1.27431111-8.43472592-2.66998518-16.86945185-5.04869925-25.07358815-12.48824889-47.23446518-25.08572445-94.43252148-37.50115556-141.69125925-28.25329778 8.71386075-55.14733037 23.39877925-75.59698963 45.00138667z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M623.61751703 18.30760297c26.82121482-7.73082075 55.55996445-7.34245925 82.64817779-1.11653927 31.10532741 7.39100445 60.53584592 21.67542518 85.86429629 41.14204445 9.24785778 7.02691555 17.59762963 15.76504889 21.84533334 26.76053333 6.57787259 16.26263703 4.81810963 35.7049837-4.89092742 50.35349334-8.47113482 13.15574518-22.87691852 22.31864889-38.39924148 24.28472888-12.40329482 1.69908148-25.40126815-0.93449482-36.0569363-7.5245037-6.00746667-3.53166222-10.58285037-8.98085925-16.61458962-12.47611259-16.17768297-10.26730667-34.80689778-18.35008-54.28565333-17.88890074-13.71401482 0.15777185-25.77749333 8.192-35.0738963 17.63403851-8.70172445 8.98085925-13.13147259 22.22155852-10.25517037 34.53989927 6.68709925 25.17067852 13.33778963 50.34135703 20.01275259 75.51203555 47.98691555 2.46366815 95.94955852 15.15823408 137.20082963 40.20754963 40.09832297 24.80658963 76.32516741 56.26386963 105.05178074 93.75288889 24.38181925 31.7728237 42.86539852 68.06034963 54.17642666 106.4838637 12.24552297 41.40904297 16.21409185 85.07543703 13.02224593 128.08647111-2.65784889 35.48653037-9.63621925 70.7667437-21.67542518 104.29933037-31.1296 81.65300148-88.7891437 153.24501333-163.00259555 199.64207408-54.43128889 34.38212741-116.94535111 55.12305778-180.69731556 63.03592297-44.00621037 5.49774222-88.84982518 5.52201482-132.63758222-1.9782163-89.97850075-14.86696297-174.30148741-59.71057778-238.29617778-124.48199112-63.59419259-63.71555555-107.85526518-146.41227852-125.75630222-234.6310163-13.20429037-64.33450667-12.60961185-131.50890667 2.03889778-195.55214221 17.90103703-78.97088 57.46536297-152.84451555 113.08600888-211.66914371 45.36547555-48.30245925 101.39875555-86.5196563 162.90550519-111.19274666 6.33514667-2.41512297 12.57320297-5.27928889 19.3209837-6.34728297 14.4057837-2.52434963 29.79460741 0.88594963 41.59108741 9.57553777 15.97136592 11.27461925 24.75804445 31.72427852 22.10019555 51.06953483-2.19666963 19.74575408-16.21409185 37.54970075-34.89185185 44.30961777-62.13783703 23.22887111-117.23662222 64.73500445-156.89803851 117.87984593-35.45012148 47.16164741-58.58190222 103.49833482-66.33699557 162.00741925-7.82791111 57.91440592-0.86167703 117.72207408 19.89138964 172.33540742 29.97665185 79.84469333 89.57800297 148.54826667 165.56335408 187.65141333 45.75383703 23.70218667 97.26027852 36.08120889 148.77885628 35.7292563 42.37994667-0.54613333 84.89339259-7.35459555 124.72471705-22.08805926 35.02535111-13.01010963 67.85403259-32.22186667 95.76751407-57.12554667 26.02021925-23.05896297 47.67137185-50.92389925 64.18887111-81.49522963 8.27695408-15.59514075 15.92282075-31.65146075 20.59529482-48.72722963 13.78683259-48.8121837 16.17768297-101.71429925 1.43208295-150.59930074-12.19697778-40.99640889-37.29483852-77.53879703-69.34679703-105.61005037-14.17519408-12.40329482-29.32129185-23.77500445-45.5596563-33.33840593-14.34510222-8.05850075-30.01306075-13.54410667-45.99656295-17.29422222 11.14112 43.5693037 23.05896297 86.95656297 34.35785481 130.48945778 1.91753482 10.43721482 3.83506963 20.87442963 5.63124147 31.33591704 1.6505363 44.91643259-14.1023763 90.16054518-43.07171555 124.5184-26.99112297 32.37963852-65.31754667 55.15946667-106.77513481 62.98737777-44.68584297 8.90804148-92.73344 0.49758815-131.10840889-24.27259259-36.63947852-23.22887111-63.70341925-60.01398518-77.9757037-100.73125926-8.08277333-22.77982815-12.1120237-46.8703763-12.91301927-70.99733334-2.45153185-52.48948148 11.27461925-106.11977482 41.2998163-149.53130666 35.28021333-51.80984889 90.90085925-87.42987852 150.53861926-104.80905482-4.39333925-16.79663408-8.88376889-33.56899555-13.32565334-50.36562963-11.51734518-36.25111703-9.06581333-76.95625482 8.11918223-111.03497481 9.27213037-19.0175763 23.05896297-35.58362075 39.0060563-49.35831703 17.75540148-15.18250667 38.48419555-27.17316741 61.08197925-33.38695111M481.22235259 413.16200297c-15.99563852 16.79663408-27.2095763 38.03515259-32.03982222 60.70575406-4.34479408 20.58315852-4.36906667 42.04013037-0.46117926 62.68397038 4.76956445 22.80410075 16.54177185 45.11061333 36.0569363 58.56976592 15.14609778 10.75275852 34.86757925 14.01742222 52.93852444 10.48576 33.4354963-5.87396741 60.71789037-36.63947852 61.65238518-70.68178963-1.27431111-8.43472592-2.66998518-16.86945185-5.04869925-25.07358815-12.48824889-47.23446518-25.08572445-94.43252148-37.50115556-141.69125925-28.25329778 8.71386075-55.14733037 23.39877925-75.59698963 45.00138667z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M623.61751703 18.30760297c26.82121482-7.73082075 55.55996445-7.34245925 82.64817779-1.11653927 31.10532741 7.39100445 60.53584592 21.67542518 85.86429629 41.14204445 9.24785778 7.02691555 17.59762963 15.76504889 21.84533334 26.76053333 6.57787259 16.26263703 4.81810963 35.7049837-4.89092742 50.35349334-8.47113482 13.15574518-22.87691852 22.31864889-38.39924148 24.28472888-12.40329482 1.69908148-25.40126815-0.93449482-36.0569363-7.5245037-6.00746667-3.53166222-10.58285037-8.98085925-16.61458962-12.47611259-16.17768297-10.26730667-34.80689778-18.35008-54.28565333-17.88890074-13.71401482 0.15777185-25.77749333 8.192-35.0738963 17.63403851-8.70172445 8.98085925-13.13147259 22.22155852-10.25517037 34.53989927 6.68709925 25.17067852 13.33778963 50.34135703 20.01275259 75.51203555 47.98691555 2.46366815 95.94955852 15.15823408 137.20082963 40.20754963 40.09832297 24.80658963 76.32516741 56.26386963 105.05178074 93.75288889 24.38181925 31.7728237 42.86539852 68.06034963 54.17642666 106.4838637 12.24552297 41.40904297 16.21409185 85.07543703 13.02224593 128.08647111-2.65784889 35.48653037-9.63621925 70.7667437-21.67542518 104.29933037-31.1296 81.65300148-88.7891437 153.24501333-163.00259555 199.64207408-54.43128889 34.38212741-116.94535111 55.12305778-180.69731556 63.03592297-44.00621037 5.49774222-88.84982518 5.52201482-132.63758222-1.9782163-89.97850075-14.86696297-174.30148741-59.71057778-238.29617778-124.48199112-63.59419259-63.71555555-107.85526518-146.41227852-125.75630222-234.6310163-13.20429037-64.33450667-12.60961185-131.50890667 2.03889778-195.55214221 17.90103703-78.97088 57.46536297-152.84451555 113.08600888-211.66914371 45.36547555-48.30245925 101.39875555-86.5196563 162.90550519-111.19274666 6.33514667-2.41512297 12.57320297-5.27928889 19.3209837-6.34728297 14.4057837-2.52434963 29.79460741 0.88594963 41.59108741 9.57553777 15.97136592 11.27461925 24.75804445 31.72427852 22.10019555 51.06953483-2.19666963 19.74575408-16.21409185 37.54970075-34.89185185 44.30961777-62.13783703 23.22887111-117.23662222 64.73500445-156.89803851 117.87984593-35.45012148 47.16164741-58.58190222 103.49833482-66.33699557 162.00741925-7.82791111 57.91440592-0.86167703 117.72207408 19.89138964 172.33540742 29.97665185 79.84469333 89.57800297 148.54826667 165.56335408 187.65141333 45.75383703 23.70218667 97.26027852 36.08120889 148.77885628 35.7292563 42.37994667-0.54613333 84.89339259-7.35459555 124.72471705-22.08805926 35.02535111-13.01010963 67.85403259-32.22186667 95.76751407-57.12554667 26.02021925-23.05896297 47.67137185-50.92389925 64.18887111-81.49522963 8.27695408-15.59514075 15.92282075-31.65146075 20.59529482-48.72722963 13.78683259-48.8121837 16.17768297-101.71429925 1.43208295-150.59930074-12.19697778-40.99640889-37.29483852-77.53879703-69.34679703-105.61005037-14.17519408-12.40329482-29.32129185-23.77500445-45.5596563-33.33840593-14.34510222-8.05850075-30.01306075-13.54410667-45.99656295-17.29422222 11.14112 43.5693037 23.05896297 86.95656297 34.35785481 130.48945778 1.91753482 10.43721482 3.83506963 20.87442963 5.63124147 31.33591704 1.6505363 44.91643259-14.1023763 90.16054518-43.07171555 124.5184-26.99112297 32.37963852-65.31754667 55.15946667-106.77513481 62.98737777-44.68584297 8.90804148-92.73344 0.49758815-131.10840889-24.27259259-36.63947852-23.22887111-63.70341925-60.01398518-77.9757037-100.73125926-8.08277333-22.77982815-12.1120237-46.8703763-12.91301927-70.99733334-2.45153185-52.48948148 11.27461925-106.11977482 41.2998163-149.53130666 35.28021333-51.80984889 90.90085925-87.42987852 150.53861926-104.80905482-4.39333925-16.79663408-8.88376889-33.56899555-13.32565334-50.36562963-11.51734518-36.25111703-9.06581333-76.95625482 8.11918223-111.03497481 9.27213037-19.0175763 23.05896297-35.58362075 39.0060563-49.35831703 17.75540148-15.18250667 38.48419555-27.17316741 61.08197925-33.38695111M481.22235259 413.16200297c-15.99563852 16.79663408-27.2095763 38.03515259-32.03982222 60.70575406-4.34479408 20.58315852-4.36906667 42.04013037-0.46117926 62.68397038 4.76956445 22.80410075 16.54177185 45.11061333 36.0569363 58.56976592 15.14609778 10.75275852 34.86757925 14.01742222 52.93852444 10.48576 33.4354963-5.87396741 60.71789037-36.63947852 61.65238518-70.68178963-1.27431111-8.43472592-2.66998518-16.86945185-5.04869925-25.07358815-12.48824889-47.23446518-25.08572445-94.43252148-37.50115556-141.69125925-28.25329778 8.71386075-55.14733037 23.39877925-75.59698963 45.00138667z'/%3E%3C/svg%3E");
 }
 
-/* Steam 图标：内嵌 SVG 数据 URI */
+/* Steam 图标：遮罩图形 */
 .home-social a i.fa-steam-icon {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M511.1 0C242.26 0 21.8 207.36.94 470.91l274.43 113.41c30.12-16.13 56.45-25.17 81.58-25.17 2.69 0 5.33.17 8.02.26l122.07-176.73V380.16a193.19 193.19 0 0 1 193.02-193.02c106.41 0 193.02 86.66 193.02 193.15s-86.61 193.07-193.02 193.07h-4.48L612.74 697.56c0 2.22.17 4.48.17 6.78a144.73 144.73 0 0 1-144.64 144.9 145.58 145.58 0 0 1-142.12-116.35L18.6 651.52C79.45 866.43 276.74 1024 511.1 1024c282.75 0 511.96-229.25 511.96-512S793.81 0 511.1 0zm-189.39 776.96l-62.85-26.03c11.18 23.17 30.46 42.62 56.06 53.33a108.84 108.84 0 0 0 142.38-141.82 108.67 108.67 0 0 0-138.88-60.29l64.98 26.88a80.13 80.13 0 0 1-61.65 147.93h-.04zm487.04-396.93a128.81 128.81 0 0 0-128.64-128.64 128.64 128.64 0 1 0 128.64 128.64zm-224.98-.21a96.6 96.6 0 1 1 193.32 0 96.73 96.73 0 0 1-96.68 96.64 96.6 96.6 0 0 1-96.64-96.64z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M511.1 0C242.26 0 21.8 207.36.94 470.91l274.43 113.41c30.12-16.13 56.45-25.17 81.58-25.17 2.69 0 5.33.17 8.02.26l122.07-176.73V380.16a193.19 193.19 0 0 1 193.02-193.02c106.41 0 193.02 86.66 193.02 193.15s-86.61 193.07-193.02 193.07h-4.48L612.74 697.56c0 2.22.17 4.48.17 6.78a144.73 144.73 0 0 1-144.64 144.9 145.58 145.58 0 0 1-142.12-116.35L18.6 651.52C79.45 866.43 276.74 1024 511.1 1024c282.75 0 511.96-229.25 511.96-512S793.81 0 511.1 0zm-189.39 776.96l-62.85-26.03c11.18 23.17 30.46 42.62 56.06 53.33a108.84 108.84 0 0 0 142.38-141.82 108.67 108.67 0 0 0-138.88-60.29l64.98 26.88a80.13 80.13 0 0 1-61.65 147.93h-.04zm487.04-396.93a128.81 128.81 0 0 0-128.64-128.64 128.64 128.64 0 1 0 128.64 128.64zm-224.98-.21a96.6 96.6 0 1 1 193.32 0 96.73 96.73 0 0 1-96.68 96.64 96.6 96.6 0 0 1-96.64-96.64z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M511.1 0C242.26 0 21.8 207.36.94 470.91l274.43 113.41c30.12-16.13 56.45-25.17 81.58-25.17 2.69 0 5.33.17 8.02.26l122.07-176.73V380.16a193.19 193.19 0 0 1 193.02-193.02c106.41 0 193.02 86.66 193.02 193.15s-86.61 193.07-193.02 193.07h-4.48L612.74 697.56c0 2.22.17 4.48.17 6.78a144.73 144.73 0 0 1-144.64 144.9 145.58 145.58 0 0 1-142.12-116.35L18.6 651.52C79.45 866.43 276.74 1024 511.1 1024c282.75 0 511.96-229.25 511.96-512S793.81 0 511.1 0zm-189.39 776.96l-62.85-26.03c11.18 23.17 30.46 42.62 56.06 53.33a108.84 108.84 0 0 0 142.38-141.82 108.67 108.67 0 0 0-138.88-60.29l64.98 26.88a80.13 80.13 0 0 1-61.65 147.93h-.04zm487.04-396.93a128.81 128.81 0 0 0-128.64-128.64 128.64 128.64 0 1 0 128.64 128.64zm-224.98-.21a96.6 96.6 0 1 1 193.32 0 96.73 96.73 0 0 1-96.68 96.64 96.6 96.6 0 0 1-96.64-96.64z'/%3E%3C/svg%3E");
 }
 
-/* GitHub 图标：内嵌 SVG 数据 URI */
+/* GitHub 图标：遮罩图形 */
 .home-social a i.fa-github-icon {
-    background-image: url("data:image/svg+xml,%3Csvg t='1771702197263' class='icon' viewBox='0 0 1049 1024' version='1.1' xmlns='http://www.w3.org/2000/svg' p-id='14025'%3E%3Cpath d='M524.712986 0q107.255961 0 203.996632 41.009632 94.637613 39.958103 167.193116 112.513606t112.513606 167.193116q41.009632 96.740671 41.009632 203.996632 0 113.565135-46.267277 216.61498-45.215748 99.895258-126.709248 173.50229t-185.594874 108.30749q-17.875994 3.154587-28.391284-5.257645-7.360703-8.412232-7.360703-19.979052v-144.059477q0-34.700458-10.515291-60.988683-9.463761-23.133639-25.236696-36.803516 69.400916-7.360703 114.616664-27.339755 58.885626-26.288226 89.379967-77.813148 36.803516-58.885626 36.803517-153.523239 0-80.967735-54.67951-140.90489 8.412232-21.030581 10.51529-47.318806 3.154587-45.215748-15.772935-92.534555-18.927523-5.257645-56.782568 8.412232-26.288226 9.463761-59.937154 29.442813-27.339755 15.772935-27.339755 16.824465-64.143271-17.875994-131.441129-17.875994t-131.441129 17.875994l-27.339755-16.824465q-33.648929-19.979052-59.937154-29.442813-36.803516-13.669877-56.782568-8.412232-18.927523 47.318806-15.772935 92.534555 2.103058 26.288226 10.51529 47.318806-54.67951 59.937155-54.67951 140.90489 0 94.637613 36.803516 153.523239 30.494342 50.473393 89.379968 77.813148 45.215748 19.979052 113.565135 27.339755-27.339755 25.236697-33.648929 70.452445-35.751987 16.824464-70.452445 13.669877-51.524922-4.206116-82.019264-56.782568-12.618348-22.08211-33.648929-36.803516-14.721406-9.463761-32.5974-14.721406-9.463761-3.154587-14.721406-3.154587-31.545871 0-19.979052 15.772935 5.257645 8.412232 16.824465 16.824465 22.08211 9.463761 42.061161 44.164219 10.51529 16.824464 15.772935 32.5974 13.669877 41.009632 59.937155 57.834097 32.5974 11.566819 78.864677 8.412232 22.08211-1.051529 38.906574-4.206116l1.051529 97.792199q0 11.566819-8.412232 19.979052-10.51529 8.412232-28.391284 5.257645-104.101374-34.700458-185.594874-108.30749T46.267277 741.327966q-46.267277-103.049845-46.267277-216.61498 0-107.255961 41.009632-203.996632 39.958103-94.637613 112.513606-167.193116t167.193116-112.513606q97.7922-41.009632 203.996632-41.009632z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg t='1771702197263' class='icon' viewBox='0 0 1049 1024' version='1.1' xmlns='http://www.w3.org/2000/svg' p-id='14025'%3E%3Cpath d='M524.712986 0q107.255961 0 203.996632 41.009632 94.637613 39.958103 167.193116 112.513606t112.513606 167.193116q41.009632 96.740671 41.009632 203.996632 0 113.565135-46.267277 216.61498-45.215748 99.895258-126.709248 173.50229t-185.594874 108.30749q-17.875994 3.154587-28.391284-5.257645-7.360703-8.412232-7.360703-19.979052v-144.059477q0-34.700458-10.515291-60.988683-9.463761-23.133639-25.236696-36.803516 69.400916-7.360703 114.616664-27.339755 58.885626-26.288226 89.379967-77.813148 36.803516-58.885626 36.803517-153.523239 0-80.967735-54.67951-140.90489 8.412232-21.030581 10.51529-47.318806 3.154587-45.215748-15.772935-92.534555-18.927523-5.257645-56.782568 8.412232-26.288226 9.463761-59.937154 29.442813-27.339755 15.772935-27.339755 16.824465-64.143271-17.875994-131.441129-17.875994t-131.441129 17.875994l-27.339755-16.824465q-33.648929-19.979052-59.937154-29.442813-36.803516-13.669877-56.782568-8.412232-18.927523 47.318806-15.772935 92.534555 2.103058 26.288226 10.51529 47.318806-54.67951 59.937155-54.67951 140.90489 0 94.637613 36.803516 153.523239 30.494342 50.473393 89.379968 77.813148 45.215748 19.979052 113.565135 27.339755-27.339755 25.236697-33.648929 70.452445-35.751987 16.824464-70.452445 13.669877-51.524922-4.206116-82.019264-56.782568-12.618348-22.08211-33.648929-36.803516-14.721406-9.463761-32.5974-14.721406-9.463761-3.154587-14.721406-3.154587-31.545871 0-19.979052 15.772935 5.257645 8.412232 16.824465 16.824465 22.08211 9.463761 42.061161 44.164219 10.51529 16.824464 15.772935 32.5974 13.669877 41.009632 59.937155 57.834097 32.5974 11.566819 78.864677 8.412232 22.08211-1.051529 38.906574-4.206116l1.051529 97.792199q0 11.566819-8.412232 19.979052-10.51529 8.412232-28.391284 5.257645-104.101374-34.700458-185.594874-108.30749T46.267277 741.327966q-46.267277-103.049845-46.267277-216.61498 0-107.255961 41.009632-203.996632 39.958103-94.637613 112.513606-167.193116t167.193116-112.513606q97.7922-41.009632 203.996632-41.009632z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg t='1771702197263' class='icon' viewBox='0 0 1049 1024' version='1.1' xmlns='http://www.w3.org/2000/svg' p-id='14025'%3E%3Cpath d='M524.712986 0q107.255961 0 203.996632 41.009632 94.637613 39.958103 167.193116 112.513606t112.513606 167.193116q41.009632 96.740671 41.009632 203.996632 0 113.565135-46.267277 216.61498-45.215748 99.895258-126.709248 173.50229t-185.594874 108.30749q-17.875994 3.154587-28.391284-5.257645-7.360703-8.412232-7.360703-19.979052v-144.059477q0-34.700458-10.515291-60.988683-9.463761-23.133639-25.236696-36.803516 69.400916-7.360703 114.616664-27.339755 58.885626-26.288226 89.379967-77.813148 36.803516-58.885626 36.803517-153.523239 0-80.967735-54.67951-140.90489 8.412232-21.030581 10.51529-47.318806 3.154587-45.215748-15.772935-92.534555-18.927523-5.257645-56.782568 8.412232-26.288226 9.463761-59.937154 29.442813-27.339755 15.772935-27.339755 16.824465-64.143271-17.875994-131.441129-17.875994t-131.441129 17.875994l-27.339755-16.824465q-33.648929-19.979052-59.937154-29.442813-36.803516-13.669877-56.782568-8.412232-18.927523 47.318806-15.772935 92.534555 2.103058 26.288226 10.51529 47.318806-54.67951 59.937155-54.67951 140.90489 0 94.637613 36.803516 153.523239 30.494342 50.473393 89.379968 77.813148 45.215748 19.979052 113.565135 27.339755-27.339755 25.236697-33.648929 70.452445-35.751987 16.824464-70.452445 13.669877-51.524922-4.206116-82.019264-56.782568-12.618348-22.08211-33.648929-36.803516-14.721406-9.463761-32.5974-14.721406-9.463761-3.154587-14.721406-3.154587-31.545871 0-19.979052 15.772935 5.257645 8.412232 16.824465 16.824465 22.08211 9.463761 42.061161 44.164219 10.51529 16.824464 15.772935 32.5974 13.669877 41.009632 59.937155 57.834097 32.5974 11.566819 78.864677 8.412232 22.08211-1.051529 38.906574-4.206116l1.051529 97.792199q0 11.566819-8.412232 19.979052-10.51529 8.412232-28.391284 5.257645-104.101374-34.700458-185.594874-108.30749T46.267277 741.327966q-46.267277-103.049845-46.267277-216.61498 0-107.255961 41.009632-203.996632 39.958103-94.637613 112.513606-167.193116t167.193116-112.513606q97.7922-41.009632 203.996632-41.009632z'/%3E%3C/svg%3E");
 }
 
-/* 豆瓣图标：内嵌 SVG 数据 URI */
+/* 豆瓣图标：遮罩图形 */
 .home-social a i.fa-douban-icon {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M745.26 308c-76.94-.65-153.9-.14-230.85-.14-78.59 0-157.18-.51-235.76.14-76.91.64-113.16 37.48-114.36 115.18-.53 34.37-.84 68.79.13 103.14 1.92 68.32 39.49 107.78 106.66 108.22 160.44 1.04 320.9 1 481.35 0 65.21-.4 103.7-38.24 106.99-103.12 1.9-37.56 1.57-75.33.38-112.94-1.35-73.75-38.81-109.85-113.54-110.48zM777.41 502.09c-1.68 36.82-13.99 50.21-50.94 51.24-50.73 1.41-101.52.42-152.29.44-21.29 0-42.58 0-63.87 0-67.14 0-134.29.44-201.43-.16-51.86-.46-62.32-11.63-63.06-64.29-.26-18.01-.95-36.1.35-54.02 2.24-31.02 14.77-45.41 46.03-45.62 145.74-1 291.49-1.01 437.24-.11 33.93.21 46.17 14.38 47.94 48.66.14 12.06.04 33.43-.93 54.68z'/%3E%3Cpath d='M861.44 820.17c-39.31-.46-78.62.2-117.93-.35-10.2-.14-20.37-2.97-33.44-5.02 8.25-15.9 14.03-27.51 20.23-38.88 6.27-11.49 12.97-22.75 19.45-34.13 9.77-17.16 11.23-34.14-2.02-50.23-19.68-23.87-49.12-20.51-68.79 9.95-19.52 30.23-37.16 61.74-54.21 93.45-9.58 17.81-21.53 26.11-42.63 25.49-47.46-1.39-95-.1-142.48.87-18.75.38-30.29-6.46-39.11-22.82-16.31-30.25-33.65-59.98-51.58-89.3-18.86-30.84-36.95-38.62-59.18-27.41-25.02 12.61-29.54 34.83-12.61 66.94 11.28 21.39 23.67 42.2 40.68 72.33-41.37 0-72.32-.03-103.28.01-22.93.03-45.93-.92-68.77.54-26.97 1.73-41.92 16-43.03 37.97-1.2 23.95 14.71 39.61 44.01 42.24 11.38 1.02 22.92.39 34.38.39 219.48 0 438.97.01 658.45 0 6.55 0 13.11.08 19.66-.04 41.87-.76 61.2-13.09 62.06-39.52.85-26.14-18.49-39.92-59.88-40.41z'/%3E%3Cpath d='M206.91 204.11c101.54.38 203.09.12 304.63.13 65.51 0 131.02.06 196.54-.01 42.58-.04 85.21.93 127.73-.74 29.95-1.18 44.88-17.37 43.53-41.86-1.22-22.22-15.99-35.76-42.65-38.61-6.48-.69-13.09-.31-19.64-.31-203.09-.01-406.17-.12-609.26.08-44.9.05-64.48 13.86-63.22 42.84 1.25 28.53 18.82 40.02 62.44 40.19z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M745.26 308c-76.94-.65-153.9-.14-230.85-.14-78.59 0-157.18-.51-235.76.14-76.91.64-113.16 37.48-114.36 115.18-.53 34.37-.84 68.79.13 103.14 1.92 68.32 39.49 107.78 106.66 108.22 160.44 1.04 320.9 1 481.35 0 65.21-.4 103.7-38.24 106.99-103.12 1.9-37.56 1.57-75.33.38-112.94-1.35-73.75-38.81-109.85-113.54-110.48zM777.41 502.09c-1.68 36.82-13.99 50.21-50.94 51.24-50.73 1.41-101.52.42-152.29.44-21.29 0-42.58 0-63.87 0-67.14 0-134.29.44-201.43-.16-51.86-.46-62.32-11.63-63.06-64.29-.26-18.01-.95-36.1.35-54.02 2.24-31.02 14.77-45.41 46.03-45.62 145.74-1 291.49-1.01 437.24-.11 33.93.21 46.17 14.38 47.94 48.66.14 12.06.04 33.43-.93 54.68z'/%3E%3Cpath d='M861.44 820.17c-39.31-.46-78.62.2-117.93-.35-10.2-.14-20.37-2.97-33.44-5.02 8.25-15.9 14.03-27.51 20.23-38.88 6.27-11.49 12.97-22.75 19.45-34.13 9.77-17.16 11.23-34.14-2.02-50.23-19.68-23.87-49.12-20.51-68.79 9.95-19.52 30.23-37.16 61.74-54.21 93.45-9.58 17.81-21.53 26.11-42.63 25.49-47.46-1.39-95-.1-142.48.87-18.75.38-30.29-6.46-39.11-22.82-16.31-30.25-33.65-59.98-51.58-89.3-18.86-30.84-36.95-38.62-59.18-27.41-25.02 12.61-29.54 34.83-12.61 66.94 11.28 21.39 23.67 42.2 40.68 72.33-41.37 0-72.32-.03-103.28.01-22.93.03-45.93-.92-68.77.54-26.97 1.73-41.92 16-43.03 37.97-1.2 23.95 14.71 39.61 44.01 42.24 11.38 1.02 22.92.39 34.38.39 219.48 0 438.97.01 658.45 0 6.55 0 13.11.08 19.66-.04 41.87-.76 61.2-13.09 62.06-39.52.85-26.14-18.49-39.92-59.88-40.41z'/%3E%3Cpath d='M206.91 204.11c101.54.38 203.09.12 304.63.13 65.51 0 131.02.06 196.54-.01 42.58-.04 85.21.93 127.73-.74 29.95-1.18 44.88-17.37 43.53-41.86-1.22-22.22-15.99-35.76-42.65-38.61-6.48-.69-13.09-.31-19.64-.31-203.09-.01-406.17-.12-609.26.08-44.9.05-64.48 13.86-63.22 42.84 1.25 28.53 18.82 40.02 62.44 40.19z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M745.26 308c-76.94-.65-153.9-.14-230.85-.14-78.59 0-157.18-.51-235.76.14-76.91.64-113.16 37.48-114.36 115.18-.53 34.37-.84 68.79.13 103.14 1.92 68.32 39.49 107.78 106.66 108.22 160.44 1.04 320.9 1 481.35 0 65.21-.4 103.7-38.24 106.99-103.12 1.9-37.56 1.57-75.33.38-112.94-1.35-73.75-38.81-109.85-113.54-110.48zM777.41 502.09c-1.68 36.82-13.99 50.21-50.94 51.24-50.73 1.41-101.52.42-152.29.44-21.29 0-42.58 0-63.87 0-67.14 0-134.29.44-201.43-.16-51.86-.46-62.32-11.63-63.06-64.29-.26-18.01-.95-36.1.35-54.02 2.24-31.02 14.77-45.41 46.03-45.62 145.74-1 291.49-1.01 437.24-.11 33.93.21 46.17 14.38 47.94 48.66.14 12.06.04 33.43-.93 54.68z'/%3E%3Cpath d='M861.44 820.17c-39.31-.46-78.62.2-117.93-.35-10.2-.14-20.37-2.97-33.44-5.02 8.25-15.9 14.03-27.51 20.23-38.88 6.27-11.49 12.97-22.75 19.45-34.13 9.77-17.16 11.23-34.14-2.02-50.23-19.68-23.87-49.12-20.51-68.79 9.95-19.52 30.23-37.16 61.74-54.21 93.45-9.58 17.81-21.53 26.11-42.63 25.49-47.46-1.39-95-.1-142.48.87-18.75.38-30.29-6.46-39.11-22.82-16.31-30.25-33.65-59.98-51.58-89.3-18.86-30.84-36.95-38.62-59.18-27.41-25.02 12.61-29.54 34.83-12.61 66.94 11.28 21.39 23.67 42.2 40.68 72.33-41.37 0-72.32-.03-103.28.01-22.93.03-45.93-.92-68.77.54-26.97 1.73-41.92 16-43.03 37.97-1.2 23.95 14.71 39.61 44.01 42.24 11.38 1.02 22.92.39 34.38.39 219.48 0 438.97.01 658.45 0 6.55 0 13.11.08 19.66-.04 41.87-.76 61.2-13.09 62.06-39.52.85-26.14-18.49-39.92-59.88-40.41z'/%3E%3Cpath d='M206.91 204.11c101.54.38 203.09.12 304.63.13 65.51 0 131.02.06 196.54-.01 42.58-.04 85.21.93 127.73-.74 29.95-1.18 44.88-17.37 43.53-41.86-1.22-22.22-15.99-35.76-42.65-38.61-6.48-.69-13.09-.31-19.64-.31-203.09-.01-406.17-.12-609.26.08-44.9.05-64.48 13.86-63.22 42.84 1.25 28.53 18.82 40.02 62.44 40.19z'/%3E%3C/svg%3E");
 }
 
-/* 微信图标：内嵌 SVG 数据 URI */
+/* 微信图标：遮罩图形 */
 .home-social a i.fa-wechat-icon {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1184 1024'%3E%3Cpath d='M331.42 263.42q0-23.42-14.27-37.73t-37.73-14.27q-24.58 0-43.42 14.56t-18.85 37.44q0 22.27 18.85 36.86t43.42 14.56q23.42 0 37.73-14.02t14.27-37.44zm424.58 289.73q0-16-14.56-28.58t-37.44-12.58q-15.42 0-28.29 12.86t-12.86 28.29q0 16 12.86 28.86t28.29 12.86q22.85 0 37.44-12.58t14.56-29.15zM621.15 263.42q0-23.42-14.02-37.73t-37.44-14.27q-24.58 0-43.42 14.56t-18.85 37.44q0 22.27 18.85 36.86t43.42 14.56q23.42 0 37.44-14.02t14.02-37.44zM984 553.15q0-16-14.85-28.58t-37.15-12.58q-15.42 0-28.29 12.86t-12.86 28.29q0 16 12.86 28.86t28.29 12.86q22.27 0 37.15-12.58t14.85-29.15zM832 326.27q-17.73-2.27-40-2.27-96.58 0-177.73 44t-127.71 119.14-46.56 164.29q0 44.58 13.15 86.85-20 1.73-38.85 1.73-14.85 0-28.58-.86t-31.42-3.71-25.44-4-31.14-6.02-28.58-6.02l-144.58 72.58 41.15-124.58q-165.73-116-165.73-280 0-96.58 55.71-177.73t150.85-127.71 207.71-46.56q100.58 0 190.02 37.73t149.73 104.29 78.02 148.86zm338.27 320.58q0 66.85-39.14 127.71t-106.02 110.56l31.42 103.42-113.73-62.27q-85.73 21.15-124.58 21.15-96.58 0-177.73-40.29t-127.71-109.44-46.56-150.85 46.56-150.85 127.71-109.44 177.73-40.29q92 0 173.15 40.29t130.02 109.73 48.86 150.56z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1184 1024'%3E%3Cpath d='M331.42 263.42q0-23.42-14.27-37.73t-37.73-14.27q-24.58 0-43.42 14.56t-18.85 37.44q0 22.27 18.85 36.86t43.42 14.56q23.42 0 37.73-14.02t14.27-37.44zm424.58 289.73q0-16-14.56-28.58t-37.44-12.58q-15.42 0-28.29 12.86t-12.86 28.29q0 16 12.86 28.86t28.29 12.86q22.85 0 37.44-12.58t14.56-29.15zM621.15 263.42q0-23.42-14.02-37.73t-37.44-14.27q-24.58 0-43.42 14.56t-18.85 37.44q0 22.27 18.85 36.86t43.42 14.56q23.42 0 37.44-14.02t14.02-37.44zM984 553.15q0-16-14.85-28.58t-37.15-12.58q-15.42 0-28.29 12.86t-12.86 28.29q0 16 12.86 28.86t28.29 12.86q22.27 0 37.15-12.58t14.85-29.15zM832 326.27q-17.73-2.27-40-2.27-96.58 0-177.73 44t-127.71 119.14-46.56 164.29q0 44.58 13.15 86.85-20 1.73-38.85 1.73-14.85 0-28.58-.86t-31.42-3.71-25.44-4-31.14-6.02-28.58-6.02l-144.58 72.58 41.15-124.58q-165.73-116-165.73-280 0-96.58 55.71-177.73t150.85-127.71 207.71-46.56q100.58 0 190.02 37.73t149.73 104.29 78.02 148.86zm338.27 320.58q0 66.85-39.14 127.71t-106.02 110.56l31.42 103.42-113.73-62.27q-85.73 21.15-124.58 21.15-96.58 0-177.73-40.29t-127.71-109.44-46.56-150.85 46.56-150.85 127.71-109.44 177.73-40.29q92 0 173.15 40.29t130.02 109.73 48.86 150.56z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1184 1024'%3E%3Cpath d='M331.42 263.42q0-23.42-14.27-37.73t-37.73-14.27q-24.58 0-43.42 14.56t-18.85 37.44q0 22.27 18.85 36.86t43.42 14.56q23.42 0 37.73-14.02t14.27-37.44zm424.58 289.73q0-16-14.56-28.58t-37.44-12.58q-15.42 0-28.29 12.86t-12.86 28.29q0 16 12.86 28.86t28.29 12.86q22.85 0 37.44-12.58t14.56-29.15zM621.15 263.42q0-23.42-14.02-37.73t-37.44-14.27q-24.58 0-43.42 14.56t-18.85 37.44q0 22.27 18.85 36.86t43.42 14.56q23.42 0 37.44-14.02t14.02-37.44zM984 553.15q0-16-14.85-28.58t-37.15-12.58q-15.42 0-28.29 12.86t-12.86 28.29q0 16 12.86 28.86t28.29 12.86q22.27 0 37.15-12.58t14.85-29.15zM832 326.27q-17.73-2.27-40-2.27-96.58 0-177.73 44t-127.71 119.14-46.56 164.29q0 44.58 13.15 86.85-20 1.73-38.85 1.73-14.85 0-28.58-.86t-31.42-3.71-25.44-4-31.14-6.02-28.58-6.02l-144.58 72.58 41.15-124.58q-165.73-116-165.73-280 0-96.58 55.71-177.73t150.85-127.71 207.71-46.56q100.58 0 190.02 37.73t149.73 104.29 78.02 148.86zm338.27 320.58q0 66.85-39.14 127.71t-106.02 110.56l31.42 103.42-113.73-62.27q-85.73 21.15-124.58 21.15-96.58 0-177.73-40.29t-127.71-109.44-46.56-150.85 46.56-150.85 127.71-109.44 177.73-40.29q92 0 173.15 40.29t130.02 109.73 48.86 150.56z'/%3E%3C/svg%3E");
 }
 
-
-/* Email 图标：内嵌 SVG 数据 URI */
+/* Email 图标：遮罩图形 */
 .home-social a i.fa-email-icon {
-    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201024%201024'%3E%3Cpath%20d%3D'M204.8%20842.6496a108.8%20108.8%200%200%201-108.8-108.8V290.1504c0-60.1088%2048.6912-108.8%20108.8-108.8h614.4c60.1088%200%20108.8%2048.6912%20108.8%20108.8v443.6992A108.8%20108.8%200%200%201%20819.2%20842.6496H204.8z%20m0-64h614.4a44.8%2044.8%200%200%200%2044.8-44.8V290.1504A44.8%2044.8%200%200%200%20819.2%20245.3504H204.8a44.8%2044.8%200%200%200-44.8%2044.8v443.6992c0%2024.7808%2020.0704%2044.8%2044.8%2044.8z'%20fill%3D'%23040303'%2F%3E%3Cpath%20d%3D'M139.5712%20387.1744a32%2032%200%201%201%2028.0576-57.5488l335.9744%20163.9936c5.2736%202.56%2011.52%202.56%2016.7936%200l335.9744-163.9936a32%2032%200%201%201%2028.0576%2057.5488l-335.9232%20163.9424c-23.04%2011.264-49.9712%2011.264-73.0112%200L139.5712%20387.1744z'%20fill%3D'%23040303'%2F%3E%3C%2Fsvg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201024%201024'%3E%3Cpath%20d%3D'M204.8%20842.6496a108.8%20108.8%200%200%201-108.8-108.8V290.1504c0-60.1088%2048.6912-108.8%20108.8-108.8h614.4c60.1088%200%20108.8%2048.6912%20108.8%20108.8v443.6992A108.8%20108.8%200%200%201%20819.2%20842.6496H204.8z%20m0-64h614.4a44.8%2044.8%200%200%200%2044.8-44.8V290.1504A44.8%2044.8%200%200%200%20819.2%20245.3504H204.8a44.8%2044.8%200%200%200-44.8%2044.8v443.6992c0%2024.7808%2020.0704%2044.8%2044.8%2044.8z'%20fill%3D'%23040303'%2F%3E%3Cpath%20d%3D'M139.5712%20387.1744a32%2032%200%201%201%2028.0576-57.5488l335.9744%20163.9936c5.2736%202.56%2011.52%202.56%2016.7936%200l335.9744-163.9936a32%2032%200%201%201%2028.0576%2057.5488l-335.9232%20163.9424c-23.04%2011.264-49.9712%2011.264-73.0112%200L139.5712%20387.1744z'%20fill%3D'%23040303'%2F%3E%3C%2Fsvg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201024%201024'%3E%3Cpath%20d%3D'M204.8%20842.6496a108.8%20108.8%200%200%201-108.8-108.8V290.1504c0-60.1088%2048.6912-108.8%20108.8-108.8h614.4c60.1088%200%20108.8%2048.6912%20108.8%20108.8v443.6992A108.8%20108.8%200%200%201%20819.2%20842.6496H204.8z%20m0-64h614.4a44.8%2044.8%200%200%200%2044.8-44.8V290.1504A44.8%2044.8%200%200%200%20819.2%20245.3504H204.8a44.8%2044.8%200%200%200-44.8%2044.8v443.6992c0%2024.7808%2020.0704%2044.8%2044.8%2044.8z'%20fill%3D'%23040303'%2F%3E%3Cpath%20d%3D'M139.5712%20387.1744a32%2032%200%201%201%2028.0576-57.5488l335.9744%20163.9936c5.2736%202.56%2011.52%202.56%2016.7936%200l335.9744-163.9936a32%2032%200%201%201%2028.0576%2057.5488l-335.9232%20163.9424c-23.04%2011.264-49.9712%2011.264-73.0112%200L139.5712%20387.1744z'%20fill%3D'%23040303'%2F%3E%3C%2Fsvg%3E");
 }
-
 
 /* 文章列表条目：每篇文章之间的间距 */
 /* - 文章列表 */
@@ -1346,6 +1636,70 @@ html.cw-back::view-transition-new(root) {
    4 - 文章与页面
    ========================================= */
 
+/* 阅读页玻璃底板：正文（标题 / 正文 / 标签，包在 .reading-sheet 里）与评论区各托一块玻璃，中间留空
+   - 玻璃画在两块各自的 ::before 上，而不是给它们本身加 backdrop-filter：
+     后者会让里面 position: fixed 的元素改为相对它定位，也会让正文里自带毛玻璃的元素嵌套失效；
+     伪元素不是任何内容的祖先，两者都不受影响（目录 .article-list 挂在 .wrap 里，也不在玻璃内）
+   - 两块都不建立层叠上下文，z-index: -1 的伪元素落在根层叠上下文里、排在 body:before 背景图之后，正好压在背景上、内容之下
+   - 玻璃即两块的内边距盒；.wrap 的最大宽度加上玻璃左右内边距，正文行宽仍是原来的 50em
+   配色走 --sheet-* 变量，这里是夜间（默认），白天见第 8 节 */
+body.post-page main {
+    padding: 2em 0 3em;             /* 上下留白，玻璃自身已有内边距，这里比其他页面收一些 */
+
+    --sheet-pad: clamp(1.25em, 4vw, 2.75em);          /* 玻璃左右内边距：宽屏 2.75em，随视口收窄 */
+    --sheet-bg: rgba(20, 22, 28, 0.42);               /* 玻璃底色 */
+    --sheet-filter: blur(22px) saturate(140%);        /* 玻璃模糊 */
+    --sheet-border: rgba(255, 255, 255, 0.07);        /* 玻璃描边 */
+    --sheet-highlight: rgba(255, 255, 255, 0.06);     /* 顶部内高光 */
+    --sheet-shadow: rgba(0, 0, 0, 0.45);              /* 投影 */
+}
+body.post-page main > .wrap {
+    max-width: calc(50em + 2 * var(--sheet-pad));
+}
+body.post-page .reading-sheet,
+body.post-page main .post-comments {
+    position: relative;
+    padding: 2.4em var(--sheet-pad) 2.6em;
+}
+body.post-page main .post-comments {
+    margin-top: 1.75em;             /* 正文与评论两块玻璃之间的空隙 */
+    padding-top: 1.8em;
+    padding-bottom: 2em;
+}
+body.post-page .reading-sheet > :last-child { margin-bottom: 0; } /* 最后一块（标签或正文）不再额外撑高玻璃 */
+
+body.post-page .reading-sheet:before,
+body.post-page main .post-comments:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 24px;            /* 与首页卡片一致 */
+    background: linear-gradient(180deg, var(--sheet-highlight), transparent 240px), var(--sheet-bg);
+    border: 1px solid var(--sheet-border);
+    box-shadow: inset 0 1px 0 var(--sheet-highlight),
+                0 24px 60px -24px var(--sheet-shadow);
+    backdrop-filter: var(--sheet-filter);
+    -webkit-backdrop-filter: var(--sheet-filter);
+    pointer-events: none;
+    animation: fade-in .4s both;    /* kico.css 的 fade-in */
+}
+body.post-page main .post-comments:before { animation-delay: .15s; }
+
+/* 评论区原本整体淡入（改透明度），会让它自己的玻璃在动画期间失去模糊；改为只让里面的内容淡入 */
+body.post-page main .post-comments { animation: none; }
+body.post-page main .post-comments > * { animation: fade-in-top .3s .4s backwards; }
+
+@media screen and (max-width: 599px) {
+    /* 手机端：玻璃离屏幕两侧各留一点缝，圆角收小 */
+    body.post-page main > .wrap { padding: 0 .5em; }
+    body.post-page .reading-sheet,
+    body.post-page main .post-comments { padding: 1.6em .9em 1.8em; }
+    body.post-page main .post-comments { margin-top: 1.25em; }
+    body.post-page .reading-sheet:before,
+    body.post-page main .post-comments:before { border-radius: 18px; }
+}
+
 /* 文章属性（发布时间/分类/标签等）条：横向滚动，隐藏滚动条 */
 /* - 文章属性 */
 .post-meta {
@@ -1402,7 +1756,7 @@ html.cw-back::view-transition-new(root) {
 
 /* 文章/页面标题 h2 样式 */
 .post-title h2, .page-title h2 {
-    color: #6e8aad;                 /* 标题文字颜色，蓝灰色 */
+    color: var(--tc-dim);                 /* 标题文字颜色，蓝灰色 */
     margin-right: .25rem;
     display: inline-block;
     font-weight: 600;               /* 标题字重 */
@@ -1816,110 +2170,293 @@ article table tr:hover, .post-content table tr:hover {
    5 - 页尾与悬浮按钮
    ========================================= */
 
-/* 页脚整体过渡动画 */
+/* 页脚三层：毛玻璃底板 → 半透明卡片 → 悬停浮起的条目/胶囊
+   底板自身有 backdrop-filter，卡片不再嵌套模糊（嵌套会失效），只靠半透明 + 内高光 + 投影拉开层次
+   白天配色见第 8 节，这里是夜间（默认）配色 */
 footer {
-    transition: all 0.5s var(--ease-spring);
+    position: relative;
+    color: #e0e0e0;                                   /* 页脚文字颜色 */
+    background: radial-gradient(60% 160px at 50% 0, color-mix(in srgb, var(--tc-main) 13%, transparent), transparent 70%), /* 顶部中央一抹微光 */
+                rgba(0, 0, 0, 0.45);                  /* 底板透明度 */
+    backdrop-filter: blur(14px) saturate(140%);       /* 底板毛玻璃 */
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background-color .5s var(--ease-spring), border-color .5s var(--ease-spring);
+
+    --footer-accent: var(--tc-light);                         /* 强调色：链接悬停、时间线、图标 */
+    --footer-link: var(--tc-pale);                           /* 条目文字颜色 */
+    --footer-card: rgba(255, 255, 255, 0.035);        /* 卡片底色 */
+    --footer-card-top: rgba(255, 255, 255, 0.07);     /* 卡片顶部渐变起点，越往下越透 */
+    --footer-card-border: rgba(255, 255, 255, 0.08);  /* 卡片描边 */
+    --footer-card-highlight: rgba(255, 255, 255, 0.08); /* 卡片顶部内高光 */
+    --footer-card-shadow: rgba(0, 0, 0, 0.55);        /* 卡片投影 */
+    --footer-pill: rgba(255, 255, 255, 0.06);         /* 条目悬停底 / 标签胶囊底 */
+    --footer-icon-bg: color-mix(in srgb, var(--tc-light) 12%, transparent);      /* 标题图标底色 */
+    --footer-icon: var(--tc-light);                           /* 标题图标颜色 */
+    --footer-muted: rgba(255, 255, 255, 0.42);        /* 次要文字 */
 }
 
-/* 亮色模式页脚：半透明毛玻璃效果 */
-body:not(.dark-theme) footer {
-    background-color: rgba(255, 255, 255, 0.7); /* 亮色页脚背景透明度 */
-    backdrop-filter: blur(6px);                  /* 亮色页脚毛玻璃模糊强度 */
-    -webkit-backdrop-filter: blur(6px);
-    border-top: 1px solid rgba(0, 0, 0, 0.06);  /* 页脚顶部分隔线 */
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03); /* 页脚顶部阴影 */
+/* 顶边一道中间亮、两端隐去的细光 */
+footer:before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--footer-accent) 55%, transparent) 50%, transparent);
+    pointer-events: none;
 }
 
-/* 亮色模式页脚链接过渡 */
-body:not(.dark-theme) footer a {
-    transition: color 0.3s ease, text-shadow 0.3s ease;
-}
-
-/* 亮色模式页脚链接悬停：蓝色 + 光晕 */
-body:not(.dark-theme) footer a:hover {
-    color: #6f9fc7;
-    text-shadow: 0 0 12px rgba(111, 159, 199, 0.6); /* 链接悬停光晕强度 */
-}
-
-/* 夜间模式页脚：深色半透明毛玻璃 */
-.dark-theme footer {
-    background-color: rgba(0, 0, 0, 0.45);          /* 夜间页脚背景透明度 */
-    backdrop-filter: blur(10px);                      /* 夜间页脚毛玻璃模糊强度 */
-    -webkit-backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08); /* 夜间页脚顶部分隔线透明度 */
-    color: #e0e0e0;                                   /* 夜间页脚文字颜色 */
-    font-weight: 550;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);      /* 夜间页脚文字阴影 */
-}
-
-/* 夜间模式页脚链接颜色 */
-.dark-theme footer a {
-    color: #a6cff5;                 /* 夜间页脚链接颜色，浅蓝色 */
+footer a {
+    color: var(--footer-link);
     font-weight: inherit;
-    transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
-/* 夜间模式页脚链接悬停：白色 + 蓝色光晕 */
-.dark-theme footer a:hover {
-    color: #ffffff;
-    text-shadow: 0 0 10px rgba(166, 207, 245, 0.6), 0 2px 6px rgba(0, 0, 0, 0.8); /* 悬停光晕颜色与强度 */
+/* 页脚小工具区域上下留白 */
+footer .widget { padding: 2.5em 0 1.75em; }
+
+/* 三栏卡片：窄屏两栏（标签云占满一行），手机单栏 */
+footer .footer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1em;                                         /* 卡片间距 */
+}
+@media screen and (max-width: 799px) {
+    footer .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    footer .footer-card:last-child { grid-column: 1 / -1; }
+}
+@media screen and (max-width: 559px) {
+    footer .footer-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* 夜间模式页脚小工具列表前置箭头透明度 */
-.dark-theme footer .widget ul li:before {
-    opacity: 0.7;                   /* 夜间箭头透明度，值越大越明显 */
-    color: #ffffff;
+/* 卡片：自上而下渐透的玻璃片，悬停时弹性浮起 */
+footer .footer-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 1.1em 1.15em 1.2em;
+    border-radius: calc(var(--glass-radius) - 2px);
+    corner-shape: squircle;
+    background: linear-gradient(170deg, var(--footer-card-top), var(--footer-card) 60%);
+    border: 1px solid var(--footer-card-border);
+    box-shadow: inset 0 1px 0 var(--footer-card-highlight),
+                0 14px 32px -18px var(--footer-card-shadow);
+    transition: transform .7s var(--ease-spring), box-shadow .7s var(--ease-spring), border-color .4s ease;
+}
+footer .footer-card:hover {
+    transform: translateY(-4px);                      /* 悬停浮起高度 */
+    border-color: color-mix(in srgb, var(--footer-accent) 18%, transparent);
+    box-shadow: inset 0 1px 0 var(--footer-card-highlight),
+                0 22px 44px -18px var(--footer-card-shadow);
 }
 
-/* 页脚小工具上下内边距 */
-footer .widget { padding: 2em 0; /* 小工具区域上下留白 */ }
-
-/* 页脚小工具标题后置 FontAwesome 图标 */
-footer .title-comments:after,
-footer .title-recent:after,
-footer .title-date:after,
-footer .title-tags:after {
-    float: right;
-    margin-right: .75em;
+/* 卡片标题：图标方块 + 中文标题 + 右侧英文小字 */
+footer .footer-card-title {
+    display: flex;
+    align-items: center;
+    gap: .65em;
+    margin: 0 0 .85em;
+    font-size: 1em;
+    font-weight: 600;
+    letter-spacing: .08em;
+}
+footer .footer-card-title:before {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2em;
+    height: 2em;
+    border-radius: .65em;
+    corner-shape: squircle;
     font-family: "FontAwesome";
+    font-size: .8em;
+    font-weight: normal;
+    letter-spacing: 0;
+    color: var(--footer-icon);
+    background: var(--footer-icon-bg);
+    text-shadow: none;
+    transition: transform .7s var(--ease-spring);
+}
+footer .footer-card:hover .footer-card-title:before { transform: rotate(-8deg) scale(1.08); }
+
+footer .title-recent:before { content: "\f040"; } /* 最新文章：笔 */
+footer .title-date:before { content: "\f017"; }   /* 时光机：钟 */
+footer .title-tags:before { content: "\f02c"; }   /* 标签云：标签 */
+
+footer .footer-card-sub {
+    margin-left: auto;
+    font-size: .68em;
+    font-weight: 500;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--footer-muted);
 }
 
-/* 各小工具标题对应的 FontAwesome 图标 */
-footer .title-comments:after { content: "\f0e6"; } /* 评论小工具标题图标 */
-footer .title-recent:after { content: "\f040"; }   /* 最近文章标题图标 */
-footer .title-date:after { content: "\f017"; }     /* 归档/日期标题图标 */
-footer .title-tags:after { content: "\f02c"; }     /* 标签云标题图标 */
-
-/* 页脚小工具列表：无样式列表 */
+/* 列表：清除默认样式 */
 footer .widget ul {
     margin: 0;
     list-style: none;
+    line-height: 1.6;
 }
+footer .widget ul li { margin: 0; }
 
-/* 页脚小工具列表每项：单行截断，防止长文章名撑破布局 */
-footer .widget ul li {
+/* 最新文章：单行截断；悬停时整条右移，左侧长出一道强调色短竖线 */
+footer .widget .post-list { margin: 0 -.55em; }
+footer .post-list-link {
+    position: relative;
+    display: block;
     overflow: hidden;
-    margin-bottom: .5em;            /* 列表项间距 */
+    padding: .38em .6em .38em .9em;
+    border-radius: .6em;
     white-space: nowrap;
-    text-overflow: ellipsis;        /* 超长内容显示省略号 */
+    text-overflow: ellipsis;                          /* 超长标题显示省略号 */
+    transition: color .3s ease, background-color .3s ease, transform .6s var(--ease-spring);
+}
+footer .post-list-link:before {
+    content: "";
+    position: absolute;
+    left: .35em;
+    top: 50%;
+    width: 2px;
+    height: .35em;                                    /* 平时是一个小点 */
+    border-radius: 2px;
+    background: var(--footer-accent);
+    opacity: .35;
+    transform: translateY(-50%);
+    transition: height .6s var(--ease-spring), opacity .3s ease;
+}
+footer .post-list-link:hover {
+    color: var(--footer-accent);
+    background-color: var(--footer-pill);
+    transform: translateX(.3em);
+}
+footer .post-list-link:hover:before { height: 1.1em; opacity: 1; }
+
+/* 时光机：竖向时间线，最新的月份为实心点 */
+footer .archive-list {
+    position: relative;
+    padding-left: 1.2em;
+}
+footer .archive-list:before {
+    content: "";
+    position: absolute;
+    left: .35em;
+    top: .9em;
+    bottom: .9em;
+    width: 1px;
+    background: linear-gradient(color-mix(in srgb, var(--footer-accent) 50%, transparent), color-mix(in srgb, var(--footer-accent) 5%, transparent)); /* 越往前越淡 */
+}
+footer .archive-list-link {
+    position: relative;
+    display: block;
+    padding: .28em .6em;
+    border-radius: .6em;
+    font-variant-numeric: tabular-nums;
+    transition: color .3s ease, background-color .3s ease, transform .6s var(--ease-spring);
+}
+footer .archive-list-link:before {
+    content: "";
+    position: absolute;
+    left: calc(.35em - 1.2em - 3px);                  /* 对准时间线（7px 圆点居中） */
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    border: 1.5px solid color-mix(in srgb, var(--footer-accent) 60%, transparent);
+    background: transparent;
+    transform: translate(.5px, -50%);
+    transition: transform .6s var(--ease-spring), background-color .3s ease, box-shadow .6s var(--ease-spring);
+}
+footer .archive-list-item:first-child .archive-list-link:before { background: var(--footer-accent); }
+footer .archive-list-link:hover {
+    color: var(--footer-accent);
+    background-color: var(--footer-pill);
+    transform: translateX(.25em);
+}
+footer .archive-list-link:hover:before {
+    background: var(--footer-accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--footer-accent) 16%, transparent); /* 悬停时圆点外扩一圈光晕 */
+    transform: translate(calc(.5px - .25em), -50%) scale(1.3);  /* 抵消链接右移，圆点留在线上 */
 }
 
-/* 列表项前置箭头图标（半透明） */
-footer .widget ul li:before {
-    opacity: .3;                    /* 箭头透明度，影响前置箭头的明显程度 */
-    content: "\f105";               /* FontAwesome 向右箭头图标 */
-    margin-right: .75em;
-    font-family: "FontAwesome";
+/* 标签云：玻璃胶囊，字号仍随文章数变化 */
+footer .footer-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5em;
+}
+footer .footer-tags a {
+    display: inline-block;
+    padding: .3em .85em;
+    border-radius: 999px;
+    line-height: 1.5;
+    background: var(--footer-pill);
+    border: 1px solid var(--footer-card-border);
+    transition: color .3s ease, background-color .3s ease, border-color .3s ease,
+                transform .6s var(--ease-spring), box-shadow .6s var(--ease-spring);
+}
+footer .footer-tags a:before {
+    content: "#";
+    margin-right: .2em;
+    opacity: .45;
+}
+footer .footer-tags a:hover {
+    color: var(--footer-accent);
+    background: color-mix(in srgb, var(--footer-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--footer-accent) 35%, transparent);
+    box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--footer-accent) 50%, transparent);
+    transform: translateY(-3px) scale(1.04);
 }
 
-/* 页脚版权信息区域（最底部） */
+/* 标签云卡片底部的统计，贴底 */
+footer .footer-card-note {
+    margin-top: auto;
+    padding-top: 1.2em;
+    font-size: .8em;
+    letter-spacing: .05em;
+    color: var(--footer-muted);
+}
+
+/* 卡片随滚动依次浮现（支持滚动驱动动画的浏览器）；用 translate / scale 独立属性，不和悬停的 transform 打架 */
+@supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+        footer .footer-card {
+            animation: footer-card-in linear both;
+            animation-timing-function: var(--ease-spring);
+            animation-timeline: view();
+            animation-range: entry 0% entry 70%;
+        }
+        footer .footer-card:nth-child(2) { animation-range: entry 8% entry 78%; }
+        footer .footer-card:nth-child(3) { animation-range: entry 16% entry 86%; }
+    }
+}
+@keyframes footer-card-in {
+    from { opacity: 0; translate: 0 28px; scale: .96; }
+    to   { opacity: 1; translate: 0 0; scale: 1; }
+}
+
+/* 页脚版权信息区域（最底部），上方一道两端隐去的分隔线 */
 footer .sub-footer {
-    padding: 1em 0;
+    position: relative;
+    padding: 1.1em 0 1.3em;
     text-align: center;
+    color: var(--footer-muted);
 }
-
-/* 版权信息文字大小 */
-footer .sub-footer p { font-size: .875em; /* 版权信息字号，略小于正文 */ }
+footer .sub-footer:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--footer-rule, var(--footer-card-border)) 50%, transparent);
+}
+footer .sub-footer p { font-size: .8em; letter-spacing: .03em; /* 版权信息字号，略小于正文 */ }
+footer .sub-footer a { transition: color .3s ease; }
+footer .sub-footer a:hover { color: var(--footer-accent); }
 
 /* 右下角悬浮按钮组（回到顶部 + 目录切换） */
 /* - 悬浮按钮 */
@@ -1992,13 +2529,13 @@ footer .sub-footer p { font-size: .875em; /* 版权信息字号，略小于正�
 .dark-theme .buttons .to-top, .dark-theme .buttons .toggle-list {
     background-color: rgba(40, 40, 40, 0.85); /* 夜间按钮背景透明度 */
     border-color: rgba(255, 255, 255, 0.08);
-    color: #8bb4e0;                            /* 夜间按钮图标颜色 */
+    color: var(--tc-soft);                            /* 夜间按钮图标颜色 */
     backdrop-filter: blur(5px);                /* 夜间按钮毛玻璃效果 */
 }
 
 /* 夜间模式悬浮按钮悬停颜色 */
 .dark-theme .buttons .to-top:hover, .dark-theme .buttons .toggle-list:hover {
-    background-color: #8bb4e0;      /* 夜间悬停背景色 */
+    background-color: var(--tc-soft);      /* 夜间悬停背景色 */
     color: #111;                    /* 夜间悬停图标颜色 */
 }
 
@@ -2011,193 +2548,170 @@ body.hide-to-top .buttons .to-top {
    6 - 附加组件
    ========================================= */
 
-/* 文章目录（侧边栏）：桌面端固定在右侧，移动端从底部弹出 */
+/* 文章目录：外层沿用设置面板的毛玻璃浮层（--glass-*）；列表是一条贯穿各项的细竖线（轨道），
+   当前章节点亮自己那一段轨道与文字，子章节缩进成自己的一段轨道，只在所属章节激活时展开
+   桌面端是右侧悬浮卡片，收起后缩成右上角的「迷你目录」按钮（.toc-mini）；手机端是从底部升起的卡片
+   位置与开合见第 7 节；目录挂在 .wrap 里，.wrap 不能有 filter / transform / backdrop-filter（见第 4 节阅读页玻璃底板）
+   配色走 --toc-*，这里是夜间（默认），白天见第 8 节 */
 /* - 文章目录 */
+body {
+    --toc-rail: rgba(255, 255, 255, 0.12);            /* 轨道 */
+    --toc-ink: rgba(225, 225, 225, 0.68);             /* 目录项文字 */
+    --toc-accent: var(--tc-light);                    /* 悬停与当前章节 */
+}
+
 .article-list {
-    right: 0;
-    bottom: 0;
-    opacity: 0;                     /* 移动端默认隐藏 */
-    z-index: 1;
-    width: calc(16em);        /* 目录侧边栏宽度（桌面端） */
-    padding: 1em;
-    overflow: auto;
     position: fixed;
-    transform: translateY(0%);
-    background-color: rgba(255, 255, 255, .5); /* 目录背景透明度（移动端） */
-    transition: transform .3s, border-color .3s, opacity .3s, background-color .3s;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 1.05em 1.15em .9em;
+    border-radius: var(--glass-radius);
+    corner-shape: squircle;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    color: #333;
+    font-size: 1em;                 /* 目录字号，与正文同大 */
 }
+.dark-theme .article-list { color: #ddd; }
 
-/* 目录激活状态（移动端弹出时）：完全可见 */
-.article-list.active {
-    opacity: 1;
-    background-color: #fff;
-    background-color: var(--light-background); /* 激活后背景色，跟随全局浅色背景 */
-    transform: translateY(0%);
+/* 标题栏：图标 +「目录」+ 收起按钮 */
+.article-list-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+    margin: 0 -.3em .55em 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.4;
 }
+.article-list-head .fa { color: var(--toc-ink); font-size: .95rem; }
+.article-list-head .title { flex: 1; }
 
-/* 隐藏目录自身的滚动条 */
-.article-list::-webkit-scrollbar { width: 0; height: 0; }
-
-/* 目录标题居中，相对定位用于放置收起按钮 */
-.article-list h4 {
-    text-align: center;
-    position: relative;
+/* 列表：单独滚动（滚动条隐藏），上下边缘渐隐，提示还有内容 */
+.article-list-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: .2em 0 .4em;
+    scrollbar-width: none;
+    -webkit-mask: linear-gradient(transparent, #000 .4em, #000 calc(100% - .7em), transparent);
+    mask: linear-gradient(transparent, #000 .4em, #000 calc(100% - .7em), transparent);
 }
+.article-list-body::-webkit-scrollbar { width: 0; height: 0; }
 
-/* 目录整体、目录小标题、目录链接加粗显示 */
-.article-list,
-.article-list .title,
-.article-list a {
-    font-weight: 600;               /* 目录字重，影响目录文字粗细 */
-}
-
-/* 目录分类标题：带上下边框的内联块 */
-.article-list .title {
-    padding: .25em 1em;
-    display: inline-block;
-    transition: border-color .3s;
-    border-top: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
-    border-color: var(--border);    /* 目录标题分隔线颜色 */
-}
-
-/* 目录每项链接：块级显示，有底部间距 */
+/* 目录项：左侧一段轨道，相邻项的轨道几乎连成一条线 */
 .article-list a {
     display: block;
-    margin-bottom: .5em;            /* 目录项间距 */
-    padding: 4px 8px;
-    border-left: 2px solid transparent;
-    border-radius: 999px;
-    color: inherit;
-    transition: color .12s linear, border-color .12s linear, background-color .12s linear, box-shadow .12s linear, transform .12s linear;
-    line-height: 1.45;
+    margin: 3px 0;
+    padding: 3px 0 3px .85rem;
+    border-left: 2px solid var(--toc-rail);
+    color: var(--toc-ink);
+    font-weight: 500;
+    line-height: 1.5;
     word-break: break-word;
+    transition: color .2s ease, border-color .2s ease;
 }
 .article-list a:hover {
-    color: var(--blue);
-    background-color: rgba(111, 159, 199, 0.06);
+    color: var(--toc-accent);
+    border-left-color: var(--toc-accent);
 }
 
-/* 当前阅读章节（scrollspy 高亮） */
+/* 当前阅读章节（scrollspy 高亮）：点亮自己那段轨道，文字加粗 */
 .article-list a.active {
-    color: var(--blue);
-    border-left-color: rgba(111, 159, 199, 0.55);
-    background: linear-gradient(90deg, rgba(111, 159, 199, 0.14), rgba(111, 159, 199, 0.05));
-    box-shadow: inset 0 0 0 1px rgba(111, 159, 199, 0.08);
-}
-.dark-theme .article-list a.active {
-    background: linear-gradient(90deg, rgba(159, 207, 247, 0.16), rgba(159, 207, 247, 0.06));
-    box-shadow: inset 0 0 0 1px rgba(159, 207, 247, 0.10);
+    color: var(--toc-accent);
+    border-left-color: var(--toc-accent);
+    font-weight: 700;
 }
 
-/* 有子层级的父级目录项：右侧显示展开/收起指示器 */
-.article-list a.has-toc-children {
-    position: relative;
-    padding-right: 1.6em;
-    cursor: pointer;
-}
+/* 有子章节的目录项：点击即展开 / 收起子章节（hingle.js），不另加箭头 */
+.article-list a.has-toc-children { cursor: pointer; }
 
-.article-list a.has-toc-children::after {
-    content: "";
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    width: 5px;
-    height: 5px;
-    border-right: 1.5px solid rgba(111, 159, 199, 0.55);
-    border-bottom: 1.5px solid rgba(111, 159, 199, 0.55);
-    transform: translateY(-65%) rotate(-45deg);
-    transition: transform .3s var(--ease-spring),
-                border-color .2s;
-}
-
-.article-list a.has-toc-children.is-toc-open::after {
-    transform: translateY(-35%) rotate(45deg);
-    border-color: var(--blue);
-}
-
-.article-list a.has-toc-children:hover::after {
-    border-color: var(--blue);
-}
-
-.dark-theme .article-list a.has-toc-children::after {
-    border-color: rgba(159, 207, 247, 0.55);
-}
-
-.dark-theme .article-list a.has-toc-children.is-toc-open::after,
-.dark-theme .article-list a.has-toc-children:hover::after {
-    border-color: #cfe5fb;
-}
-
-/* 子层级目录项：默认收起，配合舒缓的非线性曲线展开 */
+/* 子章节：缩进成自己的一段轨道；默认收起，所属章节激活或被点开时展开 */
 .article-list a.is-toc-child {
     max-height: 0;
-    opacity: 0;
+    margin-top: 0;
     margin-bottom: 0;
     padding-top: 0;
     padding-bottom: 0;
-    border-left-width: 0;
-    pointer-events: none;
+    opacity: 0;
     overflow: hidden;
-    transform: translateY(-2px);
-    transition: max-height .42s cubic-bezier(0.22, 1, 0.36, 1),
-                opacity .26s ease,
-                margin-bottom .42s cubic-bezier(0.22, 1, 0.36, 1),
-                padding-top .42s cubic-bezier(0.22, 1, 0.36, 1),
-                padding-bottom .42s cubic-bezier(0.22, 1, 0.36, 1),
-                border-left-width .35s cubic-bezier(0.22, 1, 0.36, 1),
-                transform .35s cubic-bezier(0.22, 1, 0.36, 1),
-                color .12s linear,
-                background-color .12s linear;
+    pointer-events: none;
+    transition: max-height .4s var(--ease-spring),
+                margin .4s var(--ease-spring),
+                padding .4s var(--ease-spring),
+                opacity .3s ease,
+                color .2s ease,
+                border-color .2s ease;
 }
-
 .article-list a.is-toc-child.is-toc-open {
     max-height: 8em;                /* 留足两到三行标题的展开空间 */
+    margin-top: 3px;
+    margin-bottom: 3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
     opacity: 1;
-    margin-bottom: .5em;
-    padding-top: 4px;
-    padding-bottom: 4px;
-    border-left-width: 2px;
     pointer-events: auto;
-    transform: translateY(0);
 }
 
-/* 目录层级缩进前置符号（右边距统一） */
-.article-list .item-2:before,
-.article-list .item-3:before,
-.article-list .item-4:before,
-.article-list .item-5:before,
-.article-list .item-6:before {
-    margin-right: .5em;             /* 缩进符号与文字的间距 */
-    opacity: 0.5;
-}
+/* 层级：每深一级缩进 1rem，字号与字重逐级减轻 */
+.article-list .item-2 { margin-left: 1rem; font-size: .94em; }
+.article-list .item-3 { margin-left: 2rem; font-size: .9em; font-weight: 400; }
+.article-list a.item-2.active, .article-list a.item-3.active { font-weight: 600; }
 
-/* 各层级目录项的前置缩进符号（用短横线表示层级深度） */
-.article-list .item-2:before { content: "-"; }
-.article-list .item-3:before { content: "--"; }
-.article-list .item-4:before { content: "---"; }
-.article-list .item-5:before { content: "----"; }
-.article-list .item-6:before { content: "-----"; }
-
-/* 二、三级目录：缩进 + 字号略小，营造层次感 */
-.article-list .item-2 {
-    font-size: 0.92em;
-    padding-left: 0.6em;
-    font-weight: 500;
-}
-.article-list .item-3 {
-    font-size: 0.86em;
-    padding-left: 1.2em;
-    font-weight: 400;
-    opacity: 0.85;
-}
-
-/* 仅隐藏 4 级及以下，避免目录过长 */
+/* 仅显示到三级，避免目录过长 */
 .article-list .item-4,
 .article-list .item-5,
 .article-list .item-6 {
     display: none;
 }
+
+/* 迷你目录：目录收起后缩成右上角的这枚小玻璃块，几道短横线代表各章节，当前章节那道亮起；点击即展开
+   短横线由 hingle.js 生成（最多 8 道），手机端不显示 */
+.toc-mini {
+    position: fixed;
+    z-index: 2;
+    top: calc(3.2em + 1em);         /* 与目录卡片同一个右上角 */
+    right: 1em;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    width: 3.6em;                   /* 迷你目录宽度 */
+    padding: .95em .9em;
+    box-sizing: border-box;
+    border-radius: calc(var(--glass-radius) - .35em);
+    corner-shape: squircle;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(.6);
+    transform-origin: 100% 0;
+    transition: opacity .2s ease, transform .3s var(--ease-exit), top .5s var(--ease-spring);
+}
+.toc-mini span {
+    display: block;
+    height: 3px;
+    border-radius: 1.5px;
+    background: var(--toc-rail);
+    transition: background-color .3s ease, width .5s var(--ease-spring);
+}
+.toc-mini span.is-active { background: var(--toc-accent); }
+.toc-mini:hover span { background: color-mix(in srgb, var(--toc-accent) 45%, transparent); }
+.toc-mini:hover span.is-active { background: var(--toc-accent); }
+.toc-mini:active { transform: scale(.92); transition-duration: .12s; }
+.toc-mini:focus-visible { outline: 2px solid var(--toc-accent); outline-offset: 3px; }
 
 /* 锚点跳转使用平滑滚动（影响 TOC 点击和"回到顶部"以外的所有 # 跳转） */
 html {
@@ -2207,45 +2721,31 @@ html {
     html { scroll-behavior: auto; }
 }
 
-/* 目录收起按钮（桌面端右上角） */
+/* 目录收起按钮：标题栏右侧的圆形按钮，悬停浮出浅底、箭头向右探一下 */
 #close-toc-btn {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 24px;                    /* 按钮宽度 */
-    height: 24px;                   /* 按钮高度 */
-    line-height: 24px;
-    text-align: center;
-    cursor: pointer;
+    flex: none;
+    width: 1.9em;
+    height: 1.9em;
     padding: 0;
     border: 0;
     border-radius: 50%;
     background: transparent;
     color: var(--blue);             /* 按钮图标颜色 */
-    transition: transform 0.3s var(--ease-spring), color 0.3s, background-color 0.3s;
+    cursor: pointer;
+    transition: color .3s, background-color .3s, transform .5s var(--ease-spring);
 }
-
-/* 目录收起按钮图标：双右箭头 */
 #close-toc-btn::before {
     content: "\f101";               /* FontAwesome 双右箭头图标 */
+    display: inline-block;
     font-family: "FontAwesome";
-    font-size: 1.2em;               /* 图标字号 */
+    font-size: 1.05em;
+    transition: transform .5s var(--ease-spring);
 }
-
-/* 收起按钮悬停：放大效果 */
-#close-toc-btn:hover {
-    transform: translateY(-50%) scale(1.25); /* 悬停放大倍数 */
-    background-color: rgba(111, 159, 199, 0.08);
-    color: #9fcff7;
-}
-
-/* 夜间模式收起按钮颜色 */
-.dark-theme #close-toc-btn { color: #8bb4e0; }
-.dark-theme #close-toc-btn:hover {
-    background-color: rgba(159, 207, 247, 0.12);
-    color: #fff;
-}
+#close-toc-btn:hover { background-color: var(--glass-tile); color: var(--tc-glow); }
+#close-toc-btn:hover::before { transform: translateX(2px); }
+#close-toc-btn:active { transform: scale(.88); transition-duration: .12s; }
+.dark-theme #close-toc-btn { color: var(--tc-soft); }
+.dark-theme #close-toc-btn:hover { color: #fff; }
 
 /* 本地搜索结果下拉面板：绝对定位，浮于导航栏下方 */
 /* - 本地搜索结果 */
@@ -2328,7 +2828,7 @@ html {
 
 /* 搜索结果命中关键字高亮 */
 .search-result-mark {
-    background: rgba(111, 159, 199, 0.18);
+    background: color-mix(in srgb, var(--tc-main) 18%, transparent);
     color: var(--blue);
     padding: 0 2px;
     border-radius: 2px;
@@ -2355,7 +2855,7 @@ html {
 
 /* 夜间模式搜索结果标题颜色 */
 .dark-theme .search-result-title {
-    color: #8bb4e0;
+    color: var(--tc-soft);
 }
 
 /* 夜间模式搜索结果悬停背景 */
@@ -2374,8 +2874,8 @@ html {
     color: #bbb;
 }
 .dark-theme .search-result-mark {
-    background: rgba(159, 207, 247, 0.18);
-    color: #9fcff7;
+    background: color-mix(in srgb, var(--tc-glow) 18%, transparent);
+    color: var(--tc-glow);
 }
 
 /* 设置面板：右上角浮层，带毛玻璃效果，点击设置按钮时显示 */
@@ -2481,7 +2981,7 @@ html {
     border-radius: 50%;
     font-size: 0.75rem;
     color: var(--blue);
-    background: rgba(111, 159, 199, 0.15);
+    background: color-mix(in srgb, var(--tc-main) 15%, transparent);
 }
 
 /* 设置行标签文字 */
@@ -2520,7 +3020,7 @@ html {
     background-position: 1em 0;     /* 宽度 − 高度 */
 }
 .settings-row input[type="checkbox"]:focus-visible {
-    outline: 2px solid rgba(111, 159, 199, 0.35);
+    outline: 2px solid color-mix(in srgb, var(--tc-main) 35%, transparent);
     outline-offset: 2px;
 }
 
@@ -2547,7 +3047,8 @@ div.settings-row { cursor: default; }
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
     transition: transform 0.45s var(--ease-spring);
 }
-.settings-segment[data-value="system-default"]:before { transform: translateX(100%); }
+.settings-segment[data-value="system-default"]:before,
+.settings-segment[data-value="origin"]:before { transform: translateX(100%); } /* 右侧选项：字体「系统默认」、界面「Origin」 */
 .settings-segment button {
     position: relative;             /* 位于滑块之上 */
     padding: 0.35em 0.8em;
@@ -2563,9 +3064,63 @@ div.settings-row { cursor: default; }
 }
 .settings-segment button[aria-checked="true"] { color: var(--blue); }
 .settings-segment button:focus-visible {
-    outline: 2px solid rgba(111, 159, 199, 0.35);
+    outline: 2px solid color-mix(in srgb, var(--tc-main) 35%, transparent);
     outline-offset: 0;
 }
+
+/* 主题色色块：一排圆形色块，选中的外扩一圈同色细环并弹性放大，中间亮出一枚对勾 */
+.settings-accent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75em 0.1em;
+}
+.settings-accent button {
+    position: relative;
+    width: 1.75em;                  /* 色块直径 */
+    height: 1.75em;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--sw);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08),
+                0 0 0 0 var(--sw);
+    cursor: pointer;
+    transition: transform 0.5s var(--ease-spring), box-shadow 0.5s var(--ease-spring);
+}
+.settings-accent button:before {
+    content: "\f00c";               /* FontAwesome 对勾 */
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font: 0.7rem/1 "FontAwesome";
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    transform: scale(0.4);
+    transition: opacity 0.2s ease, transform 0.45s var(--ease-spring);
+}
+.settings-accent button:hover { transform: scale(1.12); }
+.settings-accent button:active { transform: scale(0.92); transition-duration: 0.12s; }
+.settings-accent button[aria-checked="true"] {
+    transform: scale(1.08);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08),
+                0 0 0 2.5px var(--glass-bg),          /* 与色块之间留一道底色缝隙 */
+                0 0 0 4px var(--sw);
+}
+.settings-accent button[aria-checked="true"]:before { opacity: 1; transform: none; }
+.settings-accent button:focus-visible {
+    outline: 2px solid var(--sw);
+    outline-offset: 3px;
+}
+.dark-theme .settings-accent button { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 0 0 var(--sw); }
+.dark-theme .settings-accent button[aria-checked="true"] {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 0 0 2.5px rgba(30, 30, 32, 0.9),
+                0 0 0 4px var(--sw);
+}
+.dark-theme .settings-accent button:before { color: #1e1e20; text-shadow: none; }
 
 /* 面板内容依次浮现（与导航磁贴相同节奏） */
 .settings-panel-body > *, .settings-panel-footer {
@@ -2582,7 +3137,9 @@ div.settings-row { cursor: default; }
 .settings-panel.open .settings-panel-body > :nth-child(3) { transition-delay: 40ms; }
 .settings-panel.open .settings-panel-body > :nth-child(4),
 .settings-panel.open .settings-panel-body > :nth-child(5) { transition-delay: 80ms; }
-.settings-panel.open .settings-panel-footer { transition-delay: 120ms; }
+.settings-panel.open .settings-panel-body > :nth-child(6),
+.settings-panel.open .settings-panel-body > :nth-child(7) { transition-delay: 120ms; }
+.settings-panel.open .settings-panel-footer { transition-delay: 160ms; }
 
 /* ---- 设置面板 · 滑动条 ----
    架构：input background 承载 JS 动态渐变（进度+轨道），
@@ -2604,7 +3161,7 @@ div.settings-row { cursor: default; }
 }
 
 .settings-row-range input[type="range"]:focus-visible {
-    outline: 2px solid rgba(111, 159, 199, 0.35);
+    outline: 2px solid color-mix(in srgb, var(--tc-main) 35%, transparent);
     outline-offset: 6px;
 }
 
@@ -2637,13 +3194,13 @@ div.settings-row { cursor: default; }
 .settings-row-range input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.25);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16),
-                0 0 0 4px rgba(111, 159, 199, 0.08);
+                0 0 0 4px color-mix(in srgb, var(--tc-main) 8%, transparent);
 }
 
 /* 按下：急速收缩 + 涟漪扩散 */
 .settings-row-range input[type="range"]:active::-webkit-slider-thumb {
     transform: scale(1.05);
-    box-shadow: 0 0 0 8px rgba(111, 159, 199, 0.08);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--tc-main) 8%, transparent);
     transition: transform 0.1s cubic-bezier(0.22, 1, 0.36, 1),
                 box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -2660,7 +3217,7 @@ div.settings-row { cursor: default; }
 .settings-row-range input[type="range"]::-moz-range-progress {
     height: 6px;
     border-radius: 999px;
-    background: rgba(111, 159, 199, 0.55);
+    background: color-mix(in srgb, var(--tc-main) 55%, transparent);
 }
 
 /* 6. Firefox 手柄 */
@@ -2680,7 +3237,7 @@ div.settings-row { cursor: default; }
 .settings-row-range input[type="range"]::-moz-range-thumb:hover {
     transform: scale(1.25);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16),
-                0 0 0 4px rgba(111, 159, 199, 0.08);
+                0 0 0 4px color-mix(in srgb, var(--tc-main) 8%, transparent);
 }
 
 /* 7. 暗色模式 */
@@ -2689,7 +3246,7 @@ div.settings-row { cursor: default; }
 }
 
 .dark-theme .settings-row-range input[type="range"]::-moz-range-progress {
-    background: rgba(139, 180, 224, 0.5);
+    background: color-mix(in srgb, var(--tc-soft) 50%, transparent);
 }
 
 .dark-theme .settings-row-range input[type="range"]::-webkit-slider-thumb {
@@ -2700,11 +3257,11 @@ div.settings-row { cursor: default; }
 
 .dark-theme .settings-row-range input[type="range"]::-webkit-slider-thumb:hover {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5),
-                0 0 0 4px rgba(139, 180, 224, 0.1);
+                0 0 0 4px color-mix(in srgb, var(--tc-soft) 10%, transparent);
 }
 
 .dark-theme .settings-row-range input[type="range"]:active::-webkit-slider-thumb {
-    box-shadow: 0 0 0 8px rgba(139, 180, 224, 0.08);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--tc-soft) 8%, transparent);
 }
 
 .dark-theme .settings-row-range input[type="range"]::-moz-range-thumb {
@@ -2715,7 +3272,7 @@ div.settings-row { cursor: default; }
 
 .dark-theme .settings-row-range input[type="range"]::-moz-range-thumb:hover {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5),
-                0 0 0 4px rgba(139, 180, 224, 0.1);
+                0 0 0 4px color-mix(in srgb, var(--tc-soft) 10%, transparent);
 }
 
 /* 夜间模式设置面板样式 */
@@ -2725,14 +3282,14 @@ div.settings-row { cursor: default; }
 .dark-theme .settings-group-title { color: #777; }
 .dark-theme .settings-group, .dark-theme .settings-reset-btn { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04); }
 .dark-theme .settings-row + .settings-row { border-top-color: rgba(255, 255, 255, 0.06); }
-.dark-theme .settings-panel-header .fa { color: #8bb4e0; }
-.dark-theme .settings-row .fa { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
+.dark-theme .settings-panel-header .fa { color: var(--tc-soft); }
+.dark-theme .settings-row .fa { color: var(--tc-soft); background: color-mix(in srgb, var(--tc-soft) 12%, transparent); }
 .dark-theme .settings-row input[type="checkbox"] { background-color: rgba(255, 255, 255, 0.14); }
-.dark-theme .settings-row input[type="checkbox"]:checked { background-color: #6f9fc7; }
+.dark-theme .settings-row input[type="checkbox"]:checked { background-color: var(--tc-main); }
 .dark-theme .settings-segment { background: rgba(255, 255, 255, 0.07); }
 .dark-theme .settings-segment:before { background: rgba(255, 255, 255, 0.14); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
 .dark-theme .settings-segment button { color: #888; }
-.dark-theme .settings-segment button[aria-checked="true"] { color: #8bb4e0; }
+.dark-theme .settings-segment button[aria-checked="true"] { color: var(--tc-soft); }
 
 /* 设置面板底部区域（重置按钮区） */
 .settings-panel-footer { margin-top: 0.9em; }
@@ -2759,7 +3316,7 @@ div.settings-row { cursor: default; }
 .settings-reset-btn .fa { transition: transform 0.6s var(--ease-spring); }
 
 /* 悬停：染上浅蓝，图标逆时针转一下 */
-.settings-reset-btn:hover { background-color: rgba(111, 159, 199, 0.15); }
+.settings-reset-btn:hover { background-color: color-mix(in srgb, var(--tc-main) 15%, transparent); }
 .settings-reset-btn:hover .fa { transform: rotate(-180deg); }
 
 /* 按下：轻微回缩 */
@@ -2768,8 +3325,8 @@ div.settings-row { cursor: default; }
     transition-duration: 0.12s;
 }
 
-.dark-theme .settings-reset-btn { color: #8bb4e0; }
-.dark-theme .settings-reset-btn:hover { background-color: rgba(139, 180, 224, 0.12); }
+.dark-theme .settings-reset-btn { color: var(--tc-soft); }
+.dark-theme .settings-reset-btn:hover { background-color: color-mix(in srgb, var(--tc-soft) 12%, transparent); }
 
 /* Prism 代码高亮主题：各种 token 类型的颜色定义 */
 /* - Prism 代码块 */
@@ -2838,6 +3395,7 @@ pre[class*="language-"].line-numbers {
 @media print {
     body { background: none; }
     body:before, header, .post-comments, .post-near, footer { display: none; } /* 打印时隐藏的元素 */
+    body.post-page .reading-sheet:before, body.post-page main .post-comments:before { display: none; } /* 打印时不要阅读页玻璃底板 */
     main { margin-top: 0; padding: 1.25em 0; }
     .post-author { margin-bottom: 0; }
 }
@@ -2849,79 +3407,105 @@ pre[class*="language-"].line-numbers {
 /* -- 桌面端 (>= 800px) */
 /* 桌面端：页面右移为目录让出空间 */
 @media screen and (min-width: 800px) {
-    /* 有目录时 body 右移，避免内容被目录遮挡 */
-    body.has-trees { margin-right: calc(15em + 2px); /* 目录宽度，应与 .article-list width 一致 */ }
+    /* 有目录时正文区右侧让出目录卡片：卡片宽 + 两侧各 1em 间距
+       只给 main 留白、不再整个 body 右移：顶栏与底栏仍铺满整宽，目录卡片浮在底栏之上
+       （body 设了 overflow-x: hidden，任何伸出 body 的做法都会被裁掉） */
+    body.has-trees main,
+    body.has-trees footer {
+        padding-right: calc(17.5em + 2em); /* 目录卡片宽 + 两侧间距；底栏背景照样铺满，只是内容与正文同一中线，不钻到目录卡片下面 */
+        transition: padding-right 0.5s var(--ease-spring),
+                    background-color .5s var(--ease-spring), border-color .5s var(--ease-spring); /* 保留底栏自身的配色过渡 */
+    }
+    body.has-trees.toc-collapsed main,
+    body.has-trees.toc-collapsed footer { padding-right: 0; }
 
-    /* 夜间模式目录背景 */
-    .dark-theme .article-list { background-color: rgba(0, 0, 0, .1); }
+    /* 桌面端不显示右下角的目录开关（收起后由右上角的迷你目录展开）；
+       目录展开时「回到顶部」（若开启）收到右下角、与卡片右缘对齐，卡片底部相应让出它的位置 */
+    body.has-trees .buttons { transition: right 0.5s var(--ease-spring), bottom 0.5s var(--ease-spring); }
+    body.has-trees:not(.toc-collapsed):not(.hide-to-top) .buttons { right: 1em; bottom: 1em; }
+    body.has-trees:not(.hide-to-top) .article-list { max-height: calc(100vh - 3.2em - 2em - 4em); } /* 4em = 回到顶部按钮高 + 间距 */
 
-    /* 桌面端目录：固定在顶部下方，始终可见 */
+    /* 桌面端目录：右侧悬浮卡片，高度随内容，最高到视口底部留 1em */
     .article-list {
-        top: 3.2em;                 /* 目录距顶部距离（等于导航栏高度） */
-        opacity: 1;
-        visibility: visible;
-        border-left: 1px solid #ddd;
-        border-color: var(--border);
+        top: calc(3.2em + 1em);     /* 导航栏下方留 1em */
+        right: 1em;
+        width: 17.5em;              /* 目录卡片宽度；改动时同步上方 main / footer 的 padding-right */
+        max-height: calc(100vh - 3.2em - 2em);
+        transform-origin: 100% 0;   /* 收起 / 展开都以右上角（迷你目录所在处）为原点 */
+        transition: transform 0.6s var(--ease-spring), opacity 0.3s ease, top 0.5s var(--ease-spring);
     }
 
-    /* 桌面端目录过渡动画 */
-    .article-list {
-        transition: transform 0.5s var(--ease-spring), opacity 0.5s, background-color 0.3s;
-    }
+    /* 沉浸模式收起顶栏时，目录卡片与迷你目录跟着上移，贴到原来顶栏的位置 */
+    html.header-hidden body.immersive .article-list,
+    html.header-hidden body.immersive .toc-mini { top: 1em; }
 
-    /* 目录收起状态：滑出视口右侧 */
+    /* 目录收起：卡片朝右上角缩进迷你目录里；展开时从迷你目录处弹性长出 */
     body.toc-collapsed .article-list {
-        transform: translateX(100%); /* 水平移出，值为 100% 时完全隐藏 */
+        transform: scale(.18);
         opacity: 0;
         pointer-events: none;
+        transition: transform 0.4s var(--ease-exit), opacity 0.25s ease;
     }
-
-    /* body 右边距过渡动画（目录展开/收起时同步） */
-    body.has-trees {
-        transition: margin-right 0.5s var(--ease-spring);
-    }
-
-    /* 目录收起时 body 右边距归零 */
-    body.has-trees.toc-collapsed {
-        margin-right: 0;
-    }
-
-    /* 目录收起时在页脚显示目录切换按钮（提醒用户可展开） */
-    body.toc-collapsed footer .toggle-list {
-        display: block;
-        transform: translateX(0);
-    }
-
-    /* 目录收起时在悬浮按钮区显示目录切换按钮（与展开时位置一致，避免按钮跳动） */
-    body.toc-collapsed .buttons .toggle-list {
-        display: block;
-        transform: translateX(0);
-    }
-
-    /* 桌面端始终显示目录切换按钮 */
-    .buttons .toggle-list {
-        display: block;
-        transform: translateX(0);
+    .toc-mini { display: flex; }
+    body.toc-collapsed .toc-mini {
+        opacity: 1;
+        pointer-events: auto;
+        transform: none;
+        transition: opacity .25s ease .12s, transform .55s var(--ease-spring) .08s, top .5s var(--ease-spring); /* 等卡片缩进来再浮现 */
     }
 }
 
-/* 宽度小于 800px：目录变为底部弹出抽屉 */
+/* 宽度小于 800px：与桌面端同一套做法——平时只在右上角露出迷你目录，点它从右上角展开目录卡片
+   卡片铺满屏宽（两侧留缝），最高到屏幕约三分之二；点卡片外或标题栏的收起按钮即缩回迷你目录 */
 @media screen and (max-width: 799px) {
     .article-list {
-        left: 0;
-        width: 100%;                /* 移动端目录宽度占满屏幕 */
-        min-height: 0;
-        height: 40vh;               /* 移动端目录固定占屏幕下方 40% 高度 */
-        max-height: 40vh;
-        background-color: #fff;
-        background-color: var(--light-background);
-        transform: translateY(100%); /* 默认在屏幕底部外，激活时滑入 */
-        border-top: 1px solid #ddd;
-        border-color: var(--border);
+        top: calc(3.2rem + .6em);   /* 顶栏下方留一点缝 */
+        left: .6em;
+        right: .6em;
+        max-height: min(65vh, calc(100vh - 3.2rem - 1.2em));
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(.2);
+        transform-origin: 100% 0;   /* 以右上角（迷你目录所在处）为原点缩放 */
+        transition: transform 0.35s var(--ease-exit), opacity 0.25s ease, top 0.5s var(--ease-spring); /* 收起：快速利落 */
+    }
+    .article-list.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: none;
+        transition: transform 0.55s var(--ease-spring), opacity 0.3s var(--ease-spring), top 0.5s var(--ease-spring); /* 展开：先快后缓 */
     }
 
-    /* 移动端隐藏目录收起按钮（通过其他方式关闭） */
-    #close-toc-btn { display: none; }
+    .toc-mini {
+        display: flex;
+        top: calc(3.2rem + .6em);
+        right: .6em;
+        width: 3.1em;
+        padding: .8em .75em;
+        opacity: 1;
+        pointer-events: auto;
+        transform: none;
+        transition: opacity .25s ease .1s, transform .5s var(--ease-spring) .06s, top .5s var(--ease-spring);
+    }
+    /* 向下滚动时半隐到屏幕右缘、半透明（hingle.js 挂 .is-docked），向上滚动再完整露出 */
+    .toc-mini.is-docked {
+        transform: translateX(calc(50% + .6em));
+        opacity: .45;
+        transition: opacity .35s var(--ease-spring), transform .55s cubic-bezier(0.22, 1, 0.36, 1), top .5s var(--ease-spring);
+    }
+
+    /* 目录展开时迷你目录让位（卡片正是从它这里长出来的） */
+    body:has(.article-list.active) .toc-mini {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(.6);
+        transition: opacity .2s ease, transform .3s var(--ease-exit), top .5s var(--ease-spring);
+    }
+
+    /* 沉浸模式收起顶栏时，迷你目录与目录卡片跟着上移 */
+    html.header-hidden body.immersive .article-list,
+    html.header-hidden body.immersive .toc-mini { top: .6em; }
+    html.header-hidden body.immersive .article-list { max-height: min(65vh, calc(100vh - 1.2em)); }
 }
 
 /* 宽度小于等于 800px：作者信息区块调整为顶部头像悬浮布局 */
@@ -2941,11 +3525,6 @@ pre[class*="language-"].line-numbers {
     .post-author .author-info { margin-left: 0; }
     .post-author h4 { text-align: center; }  /* 作者名居中 */
 
-    /* 移动端显示目录切换按钮 */
-    .buttons .toggle-list {
-        display: block;
-        transform: translateX(0);
-    }
 }
 
 /* -- 桌面端导航 (>= 600px)：水平导航菜单 */
@@ -2980,13 +3559,42 @@ pre[class*="language-"].line-numbers {
         pointer-events: auto;
     }
 
-    /* 桌面端导航链接的内边距与行高 */
+    /* 桌面端导航链接的内边距与行高；左右内边距与间距改动时，须同步 header.ejs 收起判断里的 PAD / SPACE */
     html:not(.nav-collapsed) .head-menu > a, html:not(.nav-collapsed) .has-child > a {
-        padding: .6em 0;
+        padding: .6em .85em;        /* 左右内边距即胶囊的留白 */
         line-height: 2em;
-        margin-right: 1em;          /* 导航项之间的间距 */
+        margin-right: .15em;        /* 导航项之间的间距 */
     }
     html:not(.nav-collapsed) .head-menu > a:last-child { margin-right: 0; }
+
+    /* 桌面端导航强调框：全导航共用一枚玻璃胶囊，平时停在当前页，悬停时带回弹地滑到所指项，移开后滑回
+       位置与宽度由 header.ejs 写入 --pill-x / --pill-w；没有当前页时移开即淡出，再出现时原地浮现、不从别处滑来 */
+    html:not(.nav-collapsed) .head-menu-pill {
+        display: block;
+        position: absolute;
+        top: .55em;
+        left: 0;
+        width: var(--pill-w, 0);
+        height: 2.1em;
+        border-radius: 999px;
+        background: var(--hd-tile);
+        box-shadow: inset 0 0 0 1px var(--hd-line);
+        opacity: 0;
+        translate: var(--pill-x, 0) 0;  /* 用独立的 translate 属性：它在 scale 之后生效，缩放才以胶囊自身为中心 */
+        pointer-events: none;
+        transition: translate .7s var(--ease-glide), width .7s var(--ease-glide),
+                    opacity .25s ease, scale .45s var(--ease-glide), background-color .35s ease, box-shadow .35s ease;
+    }
+    html:not(.nav-collapsed) .head-menu-pill.is-on { opacity: 1; }
+    html:not(.nav-collapsed) .head-menu-pill.no-glide { transition: opacity .25s ease, scale .45s var(--ease-glide); }
+    /* 停在当前页时染上强调色 */
+    html:not(.nav-collapsed) .head-menu-pill.is-current {
+        background: var(--hd-tile-strong);
+        box-shadow: inset 0 0 0 1px var(--hd-current-ring);
+    }
+    /* 按下：胶囊微微弹性放大 */
+    html:not(.nav-collapsed) .head-menu:has(> a:active) .head-menu-pill { scale: 1.06; }
+    html:not(.nav-collapsed) .head-menu > a.current { color: var(--hd-accent); }
 
     /* 有子菜单的项目使用相对定位（子菜单绝对定位参考） */
     html:not(.nav-collapsed) .head-menu .has-child { position: relative; }
@@ -3147,17 +3755,17 @@ html.nav-collapsed .head-menu a .fa {
     border-radius: 50%;
     font-size: 1.05rem;
     color: var(--blue);
-    background: rgba(111, 159, 199, 0.15);
+    background: color-mix(in srgb, var(--tc-main) 15%, transparent);
     transition: background-color 0.25s, color 0.25s;
 }
 
 /* 当前所在页面：磁贴染上主题蓝，图标反白 */
-html.nav-collapsed .head-menu a.current { color: var(--blue); background: rgba(111, 159, 199, 0.16); }
+html.nav-collapsed .head-menu a.current { color: var(--blue); background: color-mix(in srgb, var(--tc-main) 16%, transparent); }
 html.nav-collapsed .head-menu a.current .fa { color: #fff; background: var(--blue); }
 
 /* 菜单展开时，汉堡按钮变为关闭图标 */
 html.nav-collapsed .toggle-btn:before { transition: transform 0.45s var(--ease-spring); }
-html.nav-collapsed body:has(.head-menu.active) .toggle-btn { background-color: rgba(0, 0, 0, .05); }
+html.nav-collapsed body:has(.head-menu.active) .toggle-btn { background-color: var(--hd-tile); box-shadow: inset 0 0 0 1px var(--hd-line); }
 html.nav-collapsed body:has(.head-menu.active) .toggle-btn:before {
     content: "\f00d";
     transform: rotate(90deg);
@@ -3182,11 +3790,10 @@ html.nav-collapsed .head-menu::-webkit-scrollbar-thumb {
 /* 夜间模式手机端菜单 */
 html.nav-collapsed .dark-theme .head-menu { color: #ddd; } /* 毛玻璃底色与投影由 --glass-* 变量统一控制 */
 html.nav-collapsed .dark-theme .head-menu a { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04); }
-html.nav-collapsed .dark-theme .head-menu a .fa { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
-html.nav-collapsed .dark-theme .head-menu a.current { color: #8bb4e0; background: rgba(139, 180, 224, 0.12); }
-html.nav-collapsed .dark-theme .head-menu a.current .fa { color: #1e1e20; background: #8bb4e0; }
-html.nav-collapsed .dark-theme .head-menu a:hover { color: #8bb4e0; }
-html.nav-collapsed body.dark-theme:has(.head-menu.active) .toggle-btn { background-color: rgba(255, 255, 255, .06); }
+html.nav-collapsed .dark-theme .head-menu a .fa { color: var(--tc-soft); background: color-mix(in srgb, var(--tc-soft) 12%, transparent); }
+html.nav-collapsed .dark-theme .head-menu a.current { color: var(--tc-soft); background: color-mix(in srgb, var(--tc-soft) 12%, transparent); }
+html.nav-collapsed .dark-theme .head-menu a.current .fa { color: #1e1e20; background: var(--tc-soft); }
+html.nav-collapsed .dark-theme .head-menu a:hover { color: var(--tc-soft); }
 
 /* 收起式导航在桌面端：汉堡按钮占据最左侧，Logo 右移让位 */
 html.nav-collapsed .header-logo { left: 3em; }
@@ -3415,23 +4022,6 @@ article sup a[data-footnote-ref] {
         opacity: 0.45;                             /* 收起时的透明度 */
     }
 
-    /* 手机端有目录时显示目录切换按钮 */
-    body.has-trees .buttons .toggle-list {
-        display: block;
-        transform: translateX(0);
-        opacity: 1;
-        will-change: transform, opacity;
-        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-                    opacity 0.45s var(--ease-spring),
-                    background-color 0.35s var(--ease-spring),
-                    color 0.35s var(--ease-spring);
-    }
-
-    /* 手机端目录切换按钮停靠状态（半透明收到右侧） */
-    body.has-trees .buttons .toggle-list.toc-toggle-docked {
-        transform: translateX(calc(50% + 1.5em)); /* 收起时的横向位移 */
-        opacity: 0.45;                             /* 收起时的透明度 */
-    }
 }
 
 /* =========================================
@@ -3521,7 +4111,7 @@ article sup a[data-footnote-ref] {
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    box-shadow: 0 0 0 6px rgba(111, 159, 199, 0.5);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--tc-main) 50%, transparent);
     opacity: 0;
     pointer-events: none;
     animation: todo-glow 2.8s ease-in-out infinite;
@@ -3613,7 +4203,7 @@ article sup a[data-footnote-ref] {
     border-radius: 6px;
     transition: background-color .2s;
 }
-.todo-list a:hover { background-color: rgba(111, 159, 199, 0.12); }
+.todo-list a:hover { background-color: color-mix(in srgb, var(--tc-main) 12%, transparent); }
 .todo-list img {
     flex: none;
     width: 40px;
@@ -3711,8 +4301,8 @@ body:not(.dark-theme) {
         #e9eff7 0%,                 /* 顶部：极淡的天空蓝 */
         #f6f1ec 48%,                /* 中段：暖白云色 */
         #fdeedf 100%) fixed;        /* 底部：极淡的落日杏色 */
-    --blue: #5481ae;                /* 白天主题蓝，取自背景图上方天空，比原色略深更清透 */
-    --light-blue: #e0894c;          /* 白天悬停色，取自落日橙，与天空蓝形成冷暖呼应 */
+    --blue: var(--tc-deep);                /* 白天主题蓝，取自背景图上方天空，比原色略深更清透 */
+    --light-blue: var(--tc-warm);          /* 白天悬停色，取自落日橙，与天空蓝形成冷暖呼应 */
     --border: #e6dbcf;              /* 白天边框颜色，暖灰 */
     --light-border: #f0e7dc;        /* 白天浅边框颜色 */
     --light-background: #fffaf4;    /* 白天卡片/输入框/目录背景，暖白 */
@@ -3734,32 +4324,37 @@ body:not(.dark-theme)::-webkit-scrollbar {
     background: rgba(255, 250, 244, .6);
 }
 
-/* 白天模式导航栏：暖白毛玻璃 */
-body:not(.dark-theme) header {
-    background-color: rgba(255, 250, 244, 0.72);
-    border-color: rgba(120, 90, 60, 0.10);
-    box-shadow: 0 1px 12px rgba(120, 80, 40, 0.06);
+/* 白天模式顶栏：暖白毛玻璃，底边中段一抹落日光；当前页取天空蓝，悬停取落日橙 */
+body:not(.dark-theme) {
+    --hd-bg: rgba(255, 250, 244, 0.5);
+    --hd-bg-solid: rgba(255, 250, 244, 0.82);
+    --hd-shadow: rgba(120, 80, 40, 0.16);
+    --hd-line: rgba(120, 90, 60, 0.12);
+    --hd-glow: var(--tc-warm);
+    --hd-accent: var(--blue);
+    --hd-hover: var(--light-blue);
+    --hd-tile: rgba(255, 255, 255, 0.55);
+    --hd-tile-strong: color-mix(in srgb, var(--tc-deep) 13%, transparent);
+    --hd-current-ring: color-mix(in srgb, var(--tc-deep) 24%, transparent);
+    --hd-input: rgba(255, 255, 255, 0.5);
+    --hd-input-focus: rgba(255, 250, 244, 0.95);
+    --hd-input-highlight: rgba(255, 255, 255, 0.8);
+    --hd-ink: #4d4741;
+    --hd-muted: rgba(77, 71, 65, 0.45);
 }
-
-/* 白天模式搜索框 */
-body:not(.dark-theme) .head-search input {
-    background-color: rgba(255, 255, 255, 0.6);
-    color: #4d4741;
-}
-body:not(.dark-theme) .head-search input:focus { background-color: #fffaf4; }
 
 /* 白天模式引用块：淡天空蓝底 */
 body:not(.dark-theme) blockquote {
-    background-color: rgba(84, 129, 174, 0.08);
+    background-color: color-mix(in srgb, var(--tc-deep) 8%, transparent);
 }
 
-/* --- 首页：头像与 ID 区域 ---
-   背景图保持清晰，用一圈柔和的暖白光晕托住头像、ID 与签名，让它们从画面中浮出来 */
-body:not(.dark-theme) .home-title {
+/* --- 归档 / 标签等页的标题区域 ---
+   背景图保持清晰，用一圈柔和的暖白光晕托住标题，让它从画面中浮出来（首页博主信息已是玻璃卡片，不需要） */
+body:not(.dark-theme) .home-title:not(.home-hero) {
     position: relative;
     isolation: isolate;
 }
-body:not(.dark-theme) .home-title:before {
+body:not(.dark-theme) .home-title:not(.home-hero):before {
     content: '';
     position: absolute;
     z-index: -1;
@@ -3775,33 +4370,30 @@ body:not(.dark-theme) .home-title:before {
         rgba(255, 247, 238, 0) 100%); /* 光晕由中心向外渐隐 */
 }
 
-/* 白天模式头像：白色描边 + 落日橙柔光投影（覆盖模板内联的灰色投影） */
-body:not(.dark-theme) .home-avatar {
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.92),
-                0 8px 28px rgba(214, 112, 62, 0.35) !important;
+/* 白天模式博主信息卡片：暖白玻璃，投影同白天文章卡片；ID 取背景图上方的深暮蓝，强调色取落日橙 */
+body:not(.dark-theme) .home-hero {
+    --hero-glass: rgba(255, 250, 244, 0.55);
+    --hero-sheen: rgba(255, 255, 255, 0.5);
+    --hero-border: rgba(255, 255, 255, 0.7);
+    --hero-highlight: rgba(255, 255, 255, 0.9);
+    --hero-shadow: rgba(70, 45, 30, 0.3);
+    --hero-name: var(--tc-ink);
+    --hero-ink: #4d4741;
+    --hero-muted: rgba(77, 71, 65, 0.4);
+    --hero-line: rgba(120, 90, 60, 0.16);
+    --hero-ring: rgba(255, 255, 255, 0.6);
+    --hero-icon: #4d4741;
+    --hero-tile: rgba(255, 255, 255, 0.85);
+    --hero-tip-bg: rgba(255, 250, 244, 0.96);
+    --hero-accent: var(--tc-warm-deep);
 }
 
-/* 白天模式 ID：取自背景图上方的深暮蓝，配白色外发光，与天空区分开 */
-body:not(.dark-theme) .home-title h1 {
-    color: #2d5383;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7),
-                 0 0 18px rgba(255, 255, 255, 0.95);
-}
-/* 悬停头像时 ID 变为落日橙 */
-body:not(.dark-theme) .home-profile-link:hover h1 {
-    color: #d16b34;
-}
-
-/* 白天模式签名（打字机文字） */
-body:not(.dark-theme) #typewriter-text {
-    color: #3f3832;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.95);
-}
-
-/* 白天模式社交胶囊：暖白毛玻璃 */
-body:not(.dark-theme) .home-social {
-    background-color: rgba(255, 250, 244, 0.75);
-    box-shadow: 0 8px 22px rgba(120, 70, 30, 0.10);
+/* 白天模式阅读页玻璃底板：暖白玻璃，投影带一点暖色 */
+body.post-page:not(.dark-theme) main {
+    --sheet-bg: rgba(255, 250, 244, 0.6);
+    --sheet-border: rgba(255, 255, 255, 0.65);
+    --sheet-highlight: rgba(255, 255, 255, 0.5);
+    --sheet-shadow: rgba(110, 70, 40, 0.22);
 }
 
 /* 白天模式卡片投影：带一点暖色，与晚霞底色融合 */
@@ -3812,31 +4404,34 @@ body:not(.dark-theme) .post-item.card-style:hover {
     box-shadow: 0 15px 40px rgba(70, 45, 30, 0.42);
 }
 
-/* 白天模式目录：暖白半透明 + 毛玻璃 */
-body:not(.dark-theme) .article-list {
-    background-color: rgba(255, 250, 244, 0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-body:not(.dark-theme) .article-list.active { background-color: var(--light-background); }
-body:not(.dark-theme) .article-list a:hover { background-color: rgba(84, 129, 174, 0.08); }
-body:not(.dark-theme) .article-list a.active {
-    border-left-color: rgba(84, 129, 174, 0.55);
-    background: linear-gradient(90deg, rgba(84, 129, 174, 0.15), rgba(84, 129, 174, 0.05));
+/* 白天模式目录：卡片沿用 --glass-* 毛玻璃，轨道与文字换成暖灰，强调取天空蓝 */
+body:not(.dark-theme) {
+    --toc-rail: rgba(120, 90, 60, 0.14);
+    --toc-ink: rgba(77, 71, 65, 0.72);
+    --toc-accent: var(--blue);
 }
 
-/* 白天模式页脚：暖白毛玻璃 */
+/* 白天模式页脚：暖白毛玻璃底板，顶部一抹落日微光；卡片是更亮的白玻璃，图标取天空蓝、悬停取落日橙 */
 body:not(.dark-theme) footer {
-    background-color: rgba(255, 250, 244, 0.72);
+    color: #4d4741;
+    background: radial-gradient(60% 160px at 50% 0, color-mix(in srgb, var(--tc-warm) 12%, transparent), transparent 70%),
+                rgba(255, 250, 244, 0.62);
     border-top-color: rgba(120, 90, 60, 0.08);
+
+    --footer-accent: var(--tc-warm);
+    --footer-link: var(--blue);
+    --footer-card: rgba(255, 255, 255, 0.28);
+    --footer-card-top: rgba(255, 255, 255, 0.62);
+    --footer-card-border: rgba(255, 255, 255, 0.75);
+    --footer-card-highlight: rgba(255, 255, 255, 0.9);
+    --footer-card-shadow: rgba(120, 75, 40, 0.28);
+    --footer-pill: rgba(120, 90, 60, 0.06);
+    --footer-icon-bg: color-mix(in srgb, var(--tc-deep) 12%, transparent);
+    --footer-icon: var(--blue);
+    --footer-muted: rgba(77, 71, 65, 0.5);
+    --footer-rule: rgba(120, 90, 60, 0.14);          /* 版权区分隔线 */
 }
-body:not(.dark-theme) footer a:hover {
-    color: var(--light-blue);
-    text-shadow: 0 0 12px rgba(224, 137, 76, 0.45);
-}
-@media screen and (max-width: 799px) {
-    body:not(.dark-theme) .article-list { background-color: var(--light-background); }
-}
+body:not(.dark-theme) footer .footer-tags a { border-color: rgba(120, 90, 60, 0.08); }
 
 /* 白天模式 Quote Box：暖调半透明底，替代中性灰 */
 body:not(.dark-theme) .quote-box {

@@ -2,6 +2,26 @@
 <html lang="zh-CN">
   <head>
     
+<script>
+    (function () {
+        var CURRENT = "glint"; // 本套界面
+        var KEY = "whatasiger_ui";
+        function target(to) {
+            var path = location.pathname.replace(/^\/origin(?=\/|$)/, "") || "/";
+            return (to === "origin" ? "/origin" + path : path) + location.search + location.hash;
+        }
+        // 设置面板调用：记下选择并跳到另一套界面的同一页（会重新加载）
+        window.switchUI = function (to) {
+            try { localStorage.setItem(KEY, to); } catch (e) {}
+            if (to !== CURRENT) location.assign(target(to));
+        };
+        var want = null;
+        try { want = localStorage.getItem(KEY); } catch (e) {}
+        if ((want === "glint" || want === "origin") && want !== CURRENT) location.replace(target(want));
+    })();
+</script>
+
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Whatasiger</title>
@@ -322,6 +342,10 @@
             var systemFontStack = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
             document.body.style.fontFamily = fontChoice === "noto-sans-sc" ? sourceHanFontStack : systemFontStack;
             if (savedSettings && savedSettings.hideTodo) document.body.classList.add("hide-todo");
+            // 主题色：首帧前挂到 html 上，避免先闪一下默认的蓝
+            if (savedSettings && savedSettings.accent && savedSettings.accent !== "blue") {
+                document.documentElement.setAttribute("data-accent", savedSettings.accent);
+            }
         } catch (e) {
             document.body.style.fontFamily = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
         }
@@ -415,7 +439,7 @@
     })();
 </script>
 <header>
-    <a href="/" class="header-logo">Whatasiger - GA 2.2</a>
+    <a href="/" class="header-logo"><span class="header-logo-name">Whatasiger</span><span class="header-logo-ver">Ciel</span></a>
     <div class="head-title">
         <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
             <h4>Whatasiger</h4>
@@ -446,10 +470,24 @@
         </div>
         <div class="settings-panel-body">
             <div class="settings-group">
+                
+                <div class="settings-row">
+                    <i class="fa fa-desktop"></i>
+                    <span>界面</span>
+                    <div class="settings-segment" id="setting-ui" data-value="glint" role="radiogroup" aria-label="界面">
+                        <button type="button" role="radio" data-value="glint" aria-checked="true">Glint</button>
+                        <button type="button" role="radio" data-value="origin" aria-checked="false">Origin</button>
+                    </div>
+                </div>
                 <label class="settings-row">
                     <i class="fa fa-arrow-up"></i>
                     <span>显示「回到顶部」</span>
                     <input type="checkbox" id="setting-show-top">
+                </label>
+                <label class="settings-row">
+                    <i class="fa fa-expand"></i>
+                    <span>沉浸模式</span>
+                    <input type="checkbox" id="setting-immersive">
                 </label>
                 <label class="settings-row">
                     <i class="fa fa-picture-o"></i>
@@ -501,6 +539,26 @@
                     <input type="range" id="setting-bg-blur" min="0" max="20" step="1">
                 </label>
             </div>
+            
+            
+            <div class="settings-group-title">主题色<small id="setting-accent-name">天青</small></div>
+            <div class="settings-group">
+                <div class="settings-accent" id="setting-accent" role="radiogroup" aria-label="主题色">
+                    
+                        <button type="button" role="radio" data-value="blue" data-name="天青" aria-label="天青" title="天青" style="--sw: #8bb4e0"></button>
+                    
+                        <button type="button" role="radio" data-value="lavender" data-name="藤紫" aria-label="藤紫" title="藤紫" style="--sw: oklch(0.756 0.078 300)"></button>
+                    
+                        <button type="button" role="radio" data-value="sakura" data-name="樱粉" aria-label="樱粉" title="樱粉" style="--sw: oklch(0.756 0.078 355)"></button>
+                    
+                        <button type="button" role="radio" data-value="mikan" data-name="蜜柑" aria-label="蜜柑" title="蜜柑" style="--sw: oklch(0.756 0.078 62)"></button>
+                    
+                        <button type="button" role="radio" data-value="wakakusa" data-name="若草" aria-label="若草" title="若草" style="--sw: oklch(0.756 0.078 135)"></button>
+                    
+                        <button type="button" role="radio" data-value="mint" data-name="薄荷" aria-label="薄荷" title="薄荷" style="--sw: oklch(0.756 0.078 185)"></button>
+                    
+                </div>
+            </div>
         </div>
         <div class="settings-panel-footer">
             <button id="setting-reset-btn" class="settings-reset-btn"><i class="fa fa-undo"></i>恢复默认</button>
@@ -509,6 +567,7 @@
 </div>
 
 <nav class="head-menu">
+    <span class="head-menu-pill" aria-hidden="true"></span>
     <a href="/" class="current"><i class="fa fa-home"></i><span>首页</span></a>
     
         <a href="/about-me"><i class="fa fa-user"></i><span>关于我</span></a>
@@ -526,16 +585,17 @@
         var nav = document.querySelector(".head-menu");
         var ctx = document.createElement("canvas").getContext("2d");
         var GAP = 24; // 与两侧元素至少留出的间距（px）
+        var PAD = 0.85, SPACE = 0.15; // 与 hingle.css 中 .head-menu > a 的左右 padding / margin-right 一致（em）
 
         function update() {
             var collapse = window.innerWidth < 600; // 手机端始终收起
             if (!collapse) {
-                // 桌面端导航宽度：各按钮文字宽 + 按钮间距（.head-menu > a 的 margin-right: 1em）
+                // 桌面端导航宽度：各按钮文字宽 + 胶囊左右留白 + 按钮间距
                 var cs = getComputedStyle(nav);
                 var fontSize = parseFloat(cs.fontSize);
                 ctx.font = "600 " + cs.fontSize + " " + cs.fontFamily;
                 var labels = nav.querySelectorAll("a span");
-                var width = (labels.length - 1) * fontSize;
+                var width = (labels.length * PAD * 2 + (labels.length - 1) * SPACE) * fontSize;
                 for (var i = 0; i < labels.length; i++) width += ctx.measureText(labels[i].textContent).width;
 
                 var vw = root.clientWidth;
@@ -563,7 +623,47 @@
                     requestAnimationFrame(function () { root.classList.remove("nav-switching"); });
                 });
             }
+            // 布局或字体变了：强调框直接跳到位，不播放滑动
+            if (!collapse) place(target, true);
         }
+
+        // 桌面端导航强调框：平时停在当前页，悬停 / 聚焦时滑到所指项，离开后滑回（无当前页则淡出）
+        var pill = nav.querySelector(".head-menu-pill");
+        var current = nav.querySelector(":scope > a.current");
+        var target = current;
+        var leaveTimer = 0;
+
+        function place(a, instant) {
+            target = a;
+            if (!a) { pill.classList.remove("is-on"); return; }
+            // 从隐藏状态出现时原地浮现，不从上一次的位置滑过来
+            if (instant || !pill.classList.contains("is-on")) {
+                pill.classList.add("no-glide");
+                instant = true;
+            }
+            pill.style.setProperty("--pill-x", a.offsetLeft + "px");
+            pill.style.setProperty("--pill-w", a.offsetWidth + "px");
+            pill.classList.toggle("is-current", a === current);
+            pill.classList.add("is-on");
+            if (instant) {
+                void pill.offsetWidth;
+                pill.classList.remove("no-glide");
+            }
+        }
+
+        [].forEach.call(nav.querySelectorAll(":scope > a"), function (a) {
+            a.addEventListener("pointerenter", function () {
+                clearTimeout(leaveTimer);
+                place(a);
+            });
+            // 两项之间有空隙，稍等一下再滑回，免得划过空隙时先回到当前页再折返
+            a.addEventListener("pointerleave", function () {
+                clearTimeout(leaveTimer);
+                leaveTimer = setTimeout(function () { place(current); }, 90);
+            });
+            a.addEventListener("focus", function () { place(a); });
+            a.addEventListener("blur", function () { place(current); });
+        });
 
         update();
         window.addEventListener("resize", update);
@@ -578,88 +678,134 @@
 
     <main>
     <div class="wrap min">
-        <section class="home-title">
-            <a href="/about-me" class="home-profile-link" style="text-decoration: none; color: inherit; display: inline-block; text-align: center;">
-                <img src="/images/webp/40df5751567c0aeb.webp" alt="Author Avatar" class="home-avatar" style="width: 110px; height: 110px; border-radius: 50%; margin: 0 auto 1.5em; display: block; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
-                <h1>Whatasiger</h1>
+        
+        
+        <section class="home-title home-hero">
+            <a href="/about-me" class="home-profile-link">
+                <span class="home-avatar-ring"><img src="/images/webp/40df5751567c0aeb.webp" alt="Author Avatar" class="home-avatar"></span>
+                <h1 class="home-name">Whatasiger</h1>
             </a>
 
-            <div style="display: block; margin-bottom: 0.4em;">
-                <span id="typewriter-text" style="display: inline-block; min-height: 1.5em; border-right: 2px solid var(--blue); padding-right: 4px; font-style: normal;"></span>
-            </div>
+            
+            <a class="home-motto" href="https://music.163.com/#/song?id=3330074495" target="_blank" rel="noopener" aria-label="二人には夢があった 今は凍りついた花。（在网易云音乐中收听）">
+                <span class="home-motto-ghost" aria-hidden="true">二人には夢があった 今は凍りついた花。</span>
+                <span class="home-motto-text" aria-hidden="true"></span>
+            </a>
 
             <script>
                 (function() {
-                    const text = "二人には夢があった 今は凍りついた花。";
-                    const container = document.getElementById("typewriter-text");
-                    let i = 0;
+                    var text = "二人には夢があった 今は凍りついた花。";
+                    var container = document.querySelector(".home-motto-text");
+                    var i = 0;
                     function typeWriter() {
                         if (i < text.length) {
-                            container.innerHTML += text.charAt(i);
+                            container.textContent += text.charAt(i);
                             i++;
                             setTimeout(typeWriter, 120);
+                        } else {
+                            container.classList.add("is-done");
                         }
                     }
-                    setTimeout(typeWriter, 600);
+                    setTimeout(typeWriter, 900); // 等入场动画走到座右铭再开始
                 })();
             </script>
 
-            <div style="display: block;">
-                
+            
     <div class="home-social">
+        <span class="home-social-pill" aria-hidden="true"></span>
+        <span class="home-social-tip" aria-hidden="true"></span>
     
-        <a target="_blank" rel="noopener" href="https://bgm.tv/user/whatasiger" title="Bangumi">
+        <a target="_blank" rel="noopener" href="https://bgm.tv/user/whatasiger" aria-label="Bangumi" data-title="Bangumi">
         
             <i class="fa fa-bgm-icon"></i>
         
         </a>
     
-        <a target="_blank" rel="noopener" href="https://space.bilibili.com/355133306" title="BiliBili">
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/355133306" aria-label="BiliBili" data-title="BiliBili">
         
             <i class="fa fa-bili-icon"></i>
         
         </a>
     
-        <a target="_blank" rel="noopener" href="https://music.163.com/#/user/home?id=1929899165" title="网易云音乐">
+        <a target="_blank" rel="noopener" href="https://music.163.com/#/user/home?id=1929899165" aria-label="网易云音乐" data-title="网易云音乐">
         
             <i class="fa fa-netease-icon"></i>
         
         </a>
     
-        <a target="_blank" rel="noopener" href="https://steamcommunity.com/id/whatasiger" title="Steam">
+        <a target="_blank" rel="noopener" href="https://steamcommunity.com/id/whatasiger" aria-label="Steam" data-title="Steam">
         
             <i class="fa fa-steam-icon"></i>
         
         </a>
     
-        <a target="_blank" rel="noopener" href="https://github.com/Whatasiger" title="GitHub">
+        <a target="_blank" rel="noopener" href="https://github.com/Whatasiger" aria-label="GitHub" data-title="GitHub">
         
             <i class="fa fa-github-icon"></i>
         
         </a>
     
-        <a target="_blank" rel="noopener" href="https://www.douban.com/people/205865290" title="豆瓣">
+        <a target="_blank" rel="noopener" href="https://www.douban.com/people/205865290" aria-label="豆瓣" data-title="豆瓣">
         
             <i class="fa fa-douban-icon"></i>
         
         </a>
     
-        <a href="/images/wechat-qrcode.jpg" title="微信">
+        <a href="/images/wechat-qrcode.jpg" aria-label="微信" data-title="微信">
         
             <i class="fa fa-wechat-icon"></i>
         
         </a>
     
-        <a href="mailto:g25811pr@gmail.com" title="Email">
+        <a href="mailto:g25811pr@gmail.com" aria-label="Email" data-title="Email">
         
             <i class="fa fa-email-icon"></i>
         
         </a>
     
     </div>
+    <script>
+        // 社交栏：悬停时一枚强调框带回弹地滑到所指图标，上方的名称标签随之滑动换字；
+        // 移出整栏后两者淡出，再次进入时原地浮现，不从上一次的位置滑来（与顶栏导航强调框同一套做法）
+        (function () {
+            var dock = document.currentScript.previousElementSibling;
+            var pill = dock.querySelector(".home-social-pill");
+            var tip = dock.querySelector(".home-social-tip");
+            var leaveTimer = 0;
+
+            function place(a) {
+                var instant = !dock.classList.contains("is-pointing");
+                if (instant) dock.classList.add("no-glide");
+                dock.style.setProperty("--x", a.offsetLeft + "px");
+                dock.style.setProperty("--w", a.offsetWidth + "px");
+                tip.textContent = a.getAttribute("data-title");
+                dock.classList.add("is-pointing");
+                if (instant) {
+                    void dock.offsetWidth;
+                    dock.classList.remove("no-glide");
+                }
+            }
+
+            [].forEach.call(dock.querySelectorAll("a"), function (a) {
+                a.addEventListener("pointerenter", function (e) {
+                    if (e.pointerType === "touch") return;
+                    clearTimeout(leaveTimer);
+                    place(a);
+                });
+                a.addEventListener("focus", function () { place(a); });
+            });
+            // 图标之间有空隙，稍等再收起，免得划过空隙时闪一下
+            function leave() {
+                clearTimeout(leaveTimer);
+                leaveTimer = setTimeout(function () { dock.classList.remove("is-pointing"); }, 120);
+            }
+            dock.addEventListener("pointerleave", leave);
+            dock.addEventListener("focusout", leave);
+            dock.addEventListener("pointerenter", function () { clearTimeout(leaveTimer); });
+        })();
+    </script>
 
 
-            </div>
         </section>
         <section class="home-posts">
     
@@ -1023,7 +1169,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=2111740365" target="_blank" rel="noopener">
                         <span class="todo-rank">1</span>
-                        <img src="https://p1.music.126.net/19xlS-oxqi3yG7890PEehA==/109951173986849987.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p2.music.126.net/19xlS-oxqi3yG7890PEehA==/109951173986849987.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">itsuka</span>
                             <span class="todo-meta">ひとひら</span>
@@ -1032,20 +1178,9 @@
                 </li>
                 
                 <li>
-                    <a href="https://music.163.com/#/song?id=2066755272" target="_blank" rel="noopener">
-                        <span class="todo-rank">2</span>
-                        <img src="https://p1.music.126.net/cGIdZW4EEtPhd3rB775SaQ==/109951168857920159.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">飞松</span>
-                            <span class="todo-meta">陈粒</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
                     <a href="https://music.163.com/#/song?id=26405133" target="_blank" rel="noopener">
-                        <span class="todo-rank">3</span>
-                        <img src="https://p1.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">2</span>
+                        <img src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">Girl meets NUMBER GIRL</span>
                             <span class="todo-meta">きのこ帝国</span>
@@ -1055,8 +1190,8 @@
                 
                 <li>
                     <a href="https://music.163.com/#/song?id=26405131" target="_blank" rel="noopener">
-                        <span class="todo-rank">4</span>
-                        <img src="https://p1.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">3</span>
+                        <img src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">スクールフィクション</span>
                             <span class="todo-meta">きのこ帝国</span>
@@ -1066,8 +1201,8 @@
                 
                 <li>
                     <a href="https://music.163.com/#/song?id=2722426126" target="_blank" rel="noopener">
-                        <span class="todo-rank">5</span>
-                        <img src="https://p1.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">4</span>
+                        <img src="https://p2.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">おとぎ</span>
                             <span class="todo-meta">RAY</span>
@@ -1076,20 +1211,9 @@
                 </li>
                 
                 <li>
-                    <a href="https://music.163.com/#/song?id=2748701151" target="_blank" rel="noopener">
-                        <span class="todo-rank">6</span>
-                        <img src="https://p1.music.126.net/hTnLSH8R5Wj0_seLnUw_0A==/109951172051293982.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">doll</span>
-                            <span class="todo-meta">羊文学</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
                     <a href="https://music.163.com/#/song?id=2712589107" target="_blank" rel="noopener">
-                        <span class="todo-rank">7</span>
-                        <img src="https://p1.music.126.net/jd5vRmlAEaJ40ao4HK2Wag==/109951171268447043.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">5</span>
+                        <img src="https://p2.music.126.net/jd5vRmlAEaJ40ao4HK2Wag==/109951171268447043.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">春の嵐</span>
                             <span class="todo-meta">羊文学</span>
@@ -1098,20 +1222,20 @@
                 </li>
                 
                 <li>
-                    <a href="https://music.163.com/#/song?id=2131278053" target="_blank" rel="noopener">
-                        <span class="todo-rank">8</span>
-                        <img src="https://p1.music.126.net/RUncgVNxqcwGwp84Ikf0Xw==/109951169377173678.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                    <a href="https://music.163.com/#/song?id=2066755272" target="_blank" rel="noopener">
+                        <span class="todo-rank">6</span>
+                        <img src="https://p2.music.126.net/cGIdZW4EEtPhd3rB775SaQ==/109951168857920159.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">13月</span>
-                            <span class="todo-meta">downt</span>
+                            <span class="todo-title">飞松</span>
+                            <span class="todo-meta">陈粒</span>
                         </span>
                     </a>
                 </li>
                 
                 <li>
                     <a href="https://music.163.com/#/song?id=2600524616" target="_blank" rel="noopener">
-                        <span class="todo-rank">9</span>
-                        <img src="https://p1.music.126.net/TZyy6V0geCU5zP0j9lLDZg==/109951169703704961.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">7</span>
+                        <img src="https://p2.music.126.net/TZyy6V0geCU5zP0j9lLDZg==/109951169703704961.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">流れゆく季節</span>
                             <span class="todo-meta">Haruka Nakamura</span>
@@ -1120,12 +1244,34 @@
                 </li>
                 
                 <li>
-                    <a href="https://music.163.com/#/song?id=2055198410" target="_blank" rel="noopener">
-                        <span class="todo-rank">10</span>
-                        <img src="https://p1.music.126.net/0ALOBu-1GDqWarT7Vh9TXA==/109951168675399206.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                    <a href="https://music.163.com/#/song?id=3428529559" target="_blank" rel="noopener">
+                        <span class="todo-rank">8</span>
+                        <img src="https://p2.music.126.net/R6Gm6V1C_abBY3f_XbKIug==/109951173855089233.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">it begins</span>
-                            <span class="todo-meta">牛尾憲輔</span>
+                            <span class="todo-title">EP07M07 从哪里开始才是现实</span>
+                            <span class="todo-meta">StJimmyL / Ray1-睿壹 / 小欣Xier</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://music.163.com/#/song?id=2748701151" target="_blank" rel="noopener">
+                        <span class="todo-rank">9</span>
+                        <img src="https://p2.music.126.net/hTnLSH8R5Wj0_seLnUw_0A==/109951172051293982.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">doll</span>
+                            <span class="todo-meta">羊文学</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://music.163.com/#/song?id=2055877719" target="_blank" rel="noopener">
+                        <span class="todo-rank">10</span>
+                        <img src="https://p2.music.126.net/ePjJOVKbnCIOh9xmwaGiwQ==/109951169954583836.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">死にゆく季節のきみへ</span>
+                            <span class="todo-meta">麻枝准 / やなぎなぎ</span>
                         </span>
                     </a>
                 </li>
@@ -1133,7 +1279,7 @@
             
         </ol>
         
-            <p class="todo-note">更新于 2026-10-24</p>
+            <p class="todo-note">更新于 2026-10-27</p>
         
     </section>
 </aside>
@@ -1150,18 +1296,19 @@
     <footer>
     <div class="wrap min">
         <section class="widget">
-            <div class="row">
-                <div class="col-m-4">
-                    <h3 class="title-recent">最新文章：</h3>
+            <div class="footer-grid">
+                <div class="footer-card">
+                    <h3 class="footer-card-title title-recent">最新文章<span class="footer-card-sub">Recent</span></h3>
                     <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/posts/12/">在纸页的内侧消失——《Q君与世界的外侧》评析</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/11/">「主播女孩重度依赖」动画分集浅读</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/10/">2026-02 ~ 2026-04 随笔</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/8/">2026-02-16 除夕</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/7/">1月14日：失败了</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/6/">我们的时间从什么时候起停下来了</a></li></ul>
                 </div>
-                <div class="col-m-4">
-                    <h3 class="title-date">时光机：</h3>
-                    <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/06/">六月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/04/">四月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/02/">二月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/01/">一月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/12/">十二月 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/01/">一月 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/07/">七月 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">十月 2023</a></li></ul>
+                <div class="footer-card">
+                    <h3 class="footer-card-title title-date">时光机<span class="footer-card-sub">Archive</span></h3>
+                    <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/06/">2026 年 6 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/04/">2026 年 4 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/02/">2026 年 2 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/01/">2026 年 1 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/12/">2025 年 12 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/01/">2025 年 1 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/07/">2024 年 7 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">2023 年 10 月</a></li></ul>
                 </div>
-                <div class="col-m-4">
-                    <h3 class="title-tags">标签云：</h3>
-                    <a href="/tags/%E5%B0%8F%E8%AF%B4/" style="font-size: 16.67px;">小说</a> <a href="/tags/%E7%89%B9%E6%AE%8A/" style="font-size: 10px;">特殊</a> <a href="/tags/%E8%AF%84%E6%9E%90/" style="font-size: 13.33px;">评析</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 20px;">随笔</a>
+                <div class="footer-card">
+                    <h3 class="footer-card-title title-tags">标签云<span class="footer-card-sub">Tags</span></h3>
+                    <div class="footer-tags"><a href="/tags/%E5%B0%8F%E8%AF%B4/" style="font-size: 15.67px;">小说</a> <a href="/tags/%E7%89%B9%E6%AE%8A/" style="font-size: 13px;">特殊</a> <a href="/tags/%E8%AF%84%E6%9E%90/" style="font-size: 14.33px;">评析</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 17px;">随笔</a></div>
+                    <p class="footer-card-note">共 11 篇文章 · 4 个标签</p>
                 </div>
             </div>
         </section>
