@@ -260,6 +260,13 @@ input, textarea, pre, hr, blockquote {
     font-size: var(--reader-font-size);           /* 阅读字号，由设置面板控制 */
 }
 
+/* 首帧只排屏幕附近的段落：长文（上千段）首次整篇排版要上百毫秒到一秒，首帧与一镜到底的开始都得等它
+   只管到过渡落定：之后 glint.js 在空闲时挂 .is-laid-out 整篇排好（按估计高度占位时，目录 / 脚注跳转会落错位置） */
+body.post-page :is(.post-content, .page-content):not(.is-special):not(.is-laid-out) > p {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 2lh;             /* 未排版时的估计高度：约两行 */
+}
+
 /* =========================================
    引用块（Quote Box）
    - 由 scripts/quote-box.js 在渲染期把带 [!XXX] 的 <blockquote> 转为 .quote-box

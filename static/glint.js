@@ -1546,6 +1546,21 @@ ks.image(CONTENT_IMG_SEL);
     }
 })();
 
+// 正文段落的 content-visibility: auto 只为首帧（见 glint.css）：页面真正打开、过渡落定后，空闲时整篇排好，
+// 目录 / 脚注跳转与滚动条都回到真实高度；预渲染中不排，免得点击时还在排版
+(function () {
+    var article = document.querySelector(".post-content:not(.is-special), .page-content:not(.is-special)");
+    if (!article) return;
+    var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 200); };
+    function layOut() {
+        (window.vtSettled || Promise.resolve()).then(function () {
+            idle(function () { article.classList.add("is-laid-out"); }, { timeout: 2000 });
+        });
+    }
+    if (document.prerendering) document.addEventListener("prerenderingchange", layOut, { once: true });
+    else layOut();
+})();
+
 // 请保留版权说明
 if(window.console && window.console.log){
     console.log("%c Glint %c based on Hingle · https://paugram.com ","color: #fff; margin: 1em 0; padding: 5px 0; background: #6f9fc7;","margin: 1em 0; padding: 5px 0; background: #efefef;");

@@ -522,7 +522,7 @@
             if (!vt) return;
             var t0 = performance.now();
             vt.ready.then(function () {
-                patch(i, { ready: 'ok' });
+                patch(i, { ready: Math.round(performance.now() - t0) + 'ms' });
             }, function (err) {
                 patch(i, { ready: (err && err.name) + ': ' + (err && err.message) });
             });

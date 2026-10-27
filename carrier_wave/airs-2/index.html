@@ -725,7 +725,7 @@
             if (!vt) return;
             var t0 = performance.now();
             vt.ready.then(function () {
-                patch(i, { ready: 'ok' });
+                patch(i, { ready: Math.round(performance.now() - t0) + 'ms' });
             }, function (err) {
                 patch(i, { ready: (err && err.name) + ': ' + (err && err.message) });
             });
@@ -777,8 +777,8 @@
 </script>
 
     
-    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mvqoqrs5">
-    <script src="/static/carrier-wave/cw.js?v=mvqoqrs5" defer></script>
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=mvqry5vj">
+    <script src="/static/carrier-wave/cw.js?v=mvqry5vj" defer></script>
 <meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
 <link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
 </head>
