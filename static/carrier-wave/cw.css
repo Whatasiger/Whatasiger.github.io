@@ -772,21 +772,25 @@ html.cw-from-home::view-transition-group(cw-stage) {
     animation-duration: .85s;
     animation-timing-function: var(--ease-out);
 }
-/* 新旧背景都裁成圆角矩形，圆角随铺开从卡片的 24px 收成直角；也顺带裁掉被拉伸的卡片投影
+/* 新旧背景一起裁成圆角矩形（裁切挂在 image-pair 上），圆角随铺开从卡片的 24px 收成直角；也顺带裁掉被拉伸的卡片投影
+   圆角动画的时长、缓动须与组一致：形变改走合成线程后，head 里的 vtFlip 按组的非等比缩放逐帧折算半径
    旧卡片全程不透明垫底，新背景以普通叠加盖上，避免交叉淡化时中途透出首页 */
+html.cw-from-home::view-transition-image-pair(cw-stage) {
+    overflow: clip;
+    animation: cw-vt-unround .85s var(--ease-out) both;
+}
 html.cw-from-home::view-transition-old(cw-stage),
 html.cw-from-home::view-transition-new(cw-stage) {
-    overflow: clip;
     mix-blend-mode: normal;
 }
 /* 新背景完全不透明后（.6s），被盖住的旧卡片直接隐去，不再参与每帧合成 */
 html.cw-from-home::view-transition-old(cw-stage) {
-    animation: cw-vt-unround .85s var(--ease-out) both, cw-vt-fade-out 0s linear .6s forwards;
+    animation: cw-vt-fade-out 0s linear .6s forwards;
 }
 /* 新背景按视口比例裁切而非拉伸，像一扇逐渐开大的窗 */
 html.cw-from-home::view-transition-new(cw-stage) {
     object-fit: cover;
-    animation: cw-vt-fade-in .5s var(--ease-out) .1s both, cw-vt-unround .85s var(--ease-out) both;
+    animation: cw-vt-fade-in .5s var(--ease-out) .1s both;
 }
 
 /* 标题、副题：从卡片中的位置放大到首屏，带轻微回弹，稍错开 */

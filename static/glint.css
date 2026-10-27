@@ -146,8 +146,10 @@ body.bg-faded:before {
     opacity: calc(var(--bg-opacity) * 0.2) !important;
 }
 
-/* 手机端背景模糊已由 glint.js 烤进图片（bgBake），不再挂模糊滤镜；白天的提亮 / 饱和见第 8 节 */
-body.bg-baked:before { filter: none; }
+/* 背景模糊已由 glint.js 烤进图片（bgBake），不再挂模糊滤镜；白天的提亮 / 饱和见第 8 节
+   html.bg-prebaked：文章页首帧直接用首页预烤的图（head.ejs），glint.js 载入后转成 body.bg-baked */
+body.bg-baked:before,
+html.bg-prebaked body:before { filter: none; }
 
 /* 禁用背景图过渡动画，用于需要立即切换背景的场景 */
 body.no-bg-transition:before {
@@ -1313,21 +1315,25 @@ main img {
     line-height: inherit;
 }
 
-/* 卡片式文章条目：带封面图的全宽卡片，悬停时图片模糊并显示摘要 */
+/* 卡片式文章条目：带封面图的全宽卡片，悬停时图片模糊并显示摘要
+   性能要点（悬停动画全程只动 transform / opacity，交给合成线程，不逐帧重绘）：
+   - 投影不过渡 box-shadow：静止与悬停两套投影分别画在 ::before / ::after 上，悬停时交叉淡化
+   - 卡片本身不裁切（否则伪元素上的投影会被裁掉），需要裁切的封面层与遮罩层各自带圆角裁切
+   - 上浮用独立的 translate 属性；封面卡片的倾斜由 glint.js 的弹簧逐帧写内联 transform，transform 不再过渡 */
 /* - 卡片样式 */
 .post-item.card-style {
     position: relative;
+    isolation: isolate;             /* 投影伪元素 z-index: -1 留在卡片内部 */
     height: 270px;                  /* 卡片高度，影响封面图展示区域大小 */
     border-radius: 24px;            /* 卡片圆角，影响卡片外观弧度 */
-    overflow: hidden;
     margin-bottom: 2.5em;           /* 卡片下方间距 */
     cursor: pointer;
     padding: 0;
     border: none;
     background: #000;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); /* 卡片投影，增加立体感 */
-    transition: box-shadow 1.2s var(--ease-spring),
-                transform 1.2s var(--ease-spring);
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);         /* 卡片投影，增加立体感 */
+    --card-shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.5);    /* 悬停阴影扩散范围，影响悬浮感强度 */
+    transition: translate 1.2s var(--ease-spring);
 }
 
 /* 卡片式文章隐藏普通 h2 标题（由卡片内部标题代替） */
@@ -1335,22 +1341,41 @@ main img {
 
 /* 卡片悬停效果：上浮 + 更重阴影 */
 .post-item.card-style:hover {
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); /* 悬停阴影扩散范围，影响悬浮感强度 */
-    transform: translateY(-8px);                  /* 悬停上移距离，调整可改变上浮幅度 */
+    translate: 0 -8px;              /* 悬停上移距离，调整可改变上浮幅度 */
 }
 
-/* 夜间模式卡片投影：颜色更深（封面卡片另有分层投影，见下） */
-.dark-theme .post-item.cw-card {
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+/* 两套投影：静止的画在 ::before，悬停的画在 ::after，悬停时交叉淡化 */
+.post-item.card-style::before,
+.post-item.card-style::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: opacity 1.2s var(--ease-spring);
 }
-.dark-theme .post-item.cw-card:hover {
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+.post-item.card-style::before { box-shadow: var(--card-shadow); }
+.post-item.card-style::after { box-shadow: var(--card-shadow-hover); opacity: 0; }
+.post-item.card-style:hover::before { opacity: 0; }
+.post-item.card-style:hover::after { opacity: 1; }
+
+/* 「CARRiER WAVE.」卡片的投影；夜间更深（封面卡片另有分层投影，见下） */
+.post-item.cw-card {
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .06);
+    --card-shadow-hover: 0 15px 40px rgba(0, 0, 0, .5), inset 0 0 0 1px rgba(185, 164, 201, .22);
+}
+.dark-theme .post-item.cw-card {
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --card-shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.7);
 }
 
 /* 封面卡片的层次：分层投影 + 上亮下暗的细边 + 悬停时跟随指针的高光与轻微倾斜
    - 投影分三层：贴地的接触影（定住卡片的「底」）、中距离的主投影、大而淡的环境影；悬停时接触影变淡、远处两层拉长，像卡片离开桌面
-   - 细边画在 ::after（封面图层会盖住卡片自身的 inset 阴影），用 mask 挖空只留 1px，顶边最亮、往下渐暗，模拟光从上方照在卡片边沿
-   - 高光画在 ::before，位置 --mx/--my 与倾斜 --rx/--ry 由 glint.js setupCardFloat() 写入；触屏 / 减少动效时不写，停在默认值
+   - 细边画在遮罩层的 ::after，用 mask 挖空只留 1px，顶边最亮、往下渐暗，模拟光从上方照在卡片边沿
+   - 高光：.post-card-sheen 的背景是顶部一抹天光，指针处的柔光是其中一枚光斑 .post-card-spot（glint.js 创建），
+     只用 transform 移到指针处、按到最远角的距离缩放（等同原先 radial-gradient 的 farthest-corner），不逐帧重画渐变
+   - 倾斜（内联 transform）与光斑位置由 glint.js setupCardFloat() 写入；触屏 / 减少动效时不写，停在默认值
    - 配色变量白天在第 8 节覆盖 */
 .post-item.card-style:not(.cw-card) {
     --card-shadow:
@@ -1369,20 +1394,18 @@ main img {
     display: block;                 /* 整张卡片是 <a> */
     color: #fff;
     text-decoration: none;
-    box-shadow: var(--card-shadow);
-    transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transform: perspective(1000px);  /* 倾斜由 glint.js 写成内联的 perspective(1000px) rotateX() rotateY() */
 }
 .post-item.card-style:not(.cw-card):hover {
-    box-shadow: var(--card-shadow-hover);
-    transform: perspective(1000px) translateY(-10px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); /* 上浮距离 */
+    translate: 0 -10px;             /* 上浮距离 */
 }
 
 /* 细边：上亮下暗的 1px 渐变描边 */
-.post-item.card-style:not(.cw-card)::after {
+.post-item.card-style:not(.cw-card) .post-card-overlay::after {
     content: "";
     position: absolute;
     inset: 0;
-    z-index: 3;
+    z-index: 2;
     padding: 1px;                   /* 描边粗细 */
     border-radius: inherit;
     background: linear-gradient(to bottom, var(--card-edge-top), var(--card-edge-mid) 45%, var(--card-edge-mid) 70%, var(--card-edge-bottom));
@@ -1394,41 +1417,94 @@ main img {
     opacity: .85;
     transition: opacity 0.8s var(--ease-spring);
 }
-.post-item.card-style:not(.cw-card):hover::after { opacity: 1; }
+.post-item.card-style:not(.cw-card):hover .post-card-overlay::after { opacity: 1; }
 .post-item.card-style:not(.cw-card):focus-visible {
     outline: 2px solid var(--tc-main);
     outline-offset: 3px;
 }
 
-/* 高光：悬停时在指针处浮起一团柔光，顶部再带一抹天光 */
-.post-item.card-style:not(.cw-card)::before {
-    content: "";
+/* 高光：悬停时顶部浮起一抹天光（.post-card-sheen 自身的背景），指针处再浮起一团柔光（其中的光斑），两者一起淡入 */
+.post-card-sheen {
     position: absolute;
     inset: 0;
-    z-index: 3;
-    border-radius: inherit;
-    background:
-        radial-gradient(circle at var(--mx, 50%) var(--my, 0%), var(--card-sheen), transparent 55%),
-        linear-gradient(to bottom, color-mix(in srgb, var(--card-sheen) 60%, transparent), transparent 35%);
+    z-index: 2;
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--card-sheen) 60%, transparent), transparent 35%);
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.8s var(--ease-spring);
 }
-.post-item.card-style:not(.cw-card):hover::before { opacity: 1; }
+.post-item.card-style:not(.cw-card):hover .post-card-sheen { opacity: 1; }
+/* 光斑：200px 的圆形渐变，中心在 (0, 0)，由 glint.js 平移到指针处并缩放到所需半径（半径须与 glint.js 的 SPOT 一致） */
+.post-card-spot {
+    position: absolute;
+    left: -100px;
+    top: -100px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle closest-side, var(--card-sheen), transparent);
+}
+.post-item.card-style:not(.cw-card):hover .post-card-spot { will-change: transform; }
 
 @media (prefers-reduced-motion: reduce) {
-    .post-item.card-style:not(.cw-card):hover { transform: translateY(-6px); }
+    .post-item.card-style:not(.cw-card):hover { translate: 0 -6px; }
 }
 
-/* 卡片背景图层：铺满卡片区域，悬停时缩放并模糊 */
+/* 卡片背景图层：带圆角裁切的容器；里面 .post-card-img 是封面原图，.post-card-blur 是模糊压暗的封面，悬停时各层一起放大、模糊层淡入
+   模糊层由 glint.js setupCardBlur() 用 canvas 烤成一张小图（换掉它的 background-image，挂 .is-baked），悬停只做透明度与缩放；
+   没烤好之前退回 CSS 的 filter，只是静态的滤镜，不再逐帧改模糊半径
+   原先模糊半径沿弹簧曲线连续增长，约 75ms 细节就已糊掉；只用一层交叉淡入的话前段会透出清晰细节（重影），
+   所以中间再垫一层轻度模糊 .post-card-soft（3px，即原曲线 30% 处），清晰 → 轻模糊 → 全模糊接力，
+   两层的透明度缓动由原曲线换算成 linear()（见下方 @supports），离开时顺序反过来
+   三层放在同一个 .post-card-zoom 里一起放大，只有一个变换过渡
+   图片只写在元素的内联 background-image 上：若经 CSS 变量传 url()，过渡中每次样式重算都会被当成换了图，合成层逐帧重绘 */
 .post-card-bg {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-size: cover;
-    background-position: center;
-    transition: transform 1.2s var(--ease-spring),
-                filter 1.4s var(--ease-spring);
+    inset: 0;
     z-index: 1;
+    border-radius: inherit;
+    overflow: hidden;
+}
+.post-card-zoom {
+    position: absolute;
+    inset: 0;
+    transition: transform 1.2s var(--ease-spring);
+}
+.post-card-img {
+    position: absolute;
+    inset: 0;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.post-card-blur {
+    filter: blur(10px) brightness(0.8); /* 模糊度与亮度，影响背景图暗化程度（烤图时按同样的数值，见 glint.js） */
+    opacity: 0;
+    transition: opacity 1.4s var(--ease-spring);
+}
+.post-card-blur.is-baked,
+.post-card-soft.is-baked { filter: none; }
+.post-card-soft { display: none; }     /* 不支持 linear() 缓动时不用中间层 */
+/* 原曲线 cubic-bezier(0.16, 1, 0.3, 1) × 1.4s 的进度为 p：轻模糊层 = min(1, p / 0.3)，全模糊层 = max(0, (p − 0.3) / 0.7)，
+   亮度随之从 1 → 0.94 → 0.8，与原先 brightness 的过渡逐帧一致；离开时 p 从 1 回到 0，两层的换算对调 */
+@supports (transition-timing-function: linear(0, 1)) {
+    .post-card-bg {
+        --card-soft-in: linear(0 0%, 0.016 0.08%, 0.064 0.31%, 0.1427 0.69%, 0.2513 1.23%, 0.3871 1.93%, 0.5475 2.78%, 0.5885 3%, 0.7289 3.78%, 0.9266 4.94%, 0.9369 5%, 1 5.39%, 1 100%);
+        --card-blur-in: linear(0 0%, 0 5.39%, 0.0582 6.25%, 0.1064 7%, 0.1504 7.72%, 0.2243 9%, 0.2427 9.34%, 0.3328 11.11%, 0.4189 13.04%, 0.4993 15.12%, 0.5714 17.31%, 0.5731 17.36%, 0.6397 19.75%, 0.6989 22.3%, 0.7509 25%, 0.7961 27.86%, 0.8349 30.86%, 0.8679 34.03%, 0.8957 37.35%, 0.9189 40.82%, 0.9381 44.44%, 0.9536 48.23%, 0.9661 52.16%, 0.976 56.25%, 0.9836 60.49%, 0.9893 64.89%, 0.9934 69.44%, 0.9963 74.15%, 0.9981 79.01%, 0.9992 84.03%, 0.9998 89.2%, 1 94.52%, 1 100%);
+        --card-soft-out: linear(0 0%, 0 17.31%, 0.0039 17.36%, 0.1592 19.75%, 0.2974 22.3%, 0.4187 25%, 0.5241 27.86%, 0.6147 30.86%, 0.6918 34.03%, 0.7567 37.35%, 0.8108 40.82%, 0.8555 44.44%, 0.8918 48.23%, 0.921 52.16%, 0.9439 56.25%, 0.9617 60.49%, 0.975 64.89%, 0.9846 69.44%, 0.9913 74.15%, 0.9957 79.01%, 0.9982 84.03%, 0.9995 89.2%, 0.9999 94.52%, 1 100%);
+        --card-blur-out: linear(0 0%, 0.0069 0.08%, 0.0274 0.31%, 0.0612 0.69%, 0.1077 1.23%, 0.1659 1.93%, 0.2347 2.78%, 0.2522 3%, 0.3124 3.78%, 0.3971 4.94%, 0.4015 5%, 0.4286 5.39%, 0.4868 6.25%, 0.535 7%, 0.579 7.72%, 0.6529 9%, 0.6712 9.34%, 0.7614 11.11%, 0.8474 13.04%, 0.9279 15.12%, 1 17.31%, 1 100%);
+    }
+    .post-card-soft {
+        display: block;
+        filter: blur(3px) brightness(0.94); /* 烤图时按同样的数值，见 glint.js */
+        opacity: 0;
+        transition: opacity 1.4s var(--card-soft-out);
+    }
+    .post-card-blur { transition: opacity 1.4s var(--card-blur-out); }
+    .post-item.card-style:hover .post-card-soft {
+        opacity: 1;
+        transition-timing-function: var(--card-soft-in);
+    }
+    .post-item.card-style:hover .post-card-blur { transition-timing-function: var(--card-blur-in); }
 }
 
 /* 卡片遮罩层：半透明黑色叠加，保证文字可读性 */
@@ -1443,7 +1519,8 @@ main img {
     align-items: center;
     padding: 2em;                   /* 卡片内容与边缘的距离 */
     box-sizing: border-box;
-    transition: background 0.8s var(--ease-spring);
+    border-radius: inherit;
+    overflow: hidden;               /* 裁住光斑 */
 }
 
 /* 卡片标题容器，悬停时向上位移 */
@@ -1477,7 +1554,7 @@ main img {
     width: auto;
     opacity: 0;                     /* 初始透明（隐藏状态） */
     transform: translateY(10px);    /* 初始向下偏移，悬停时回归原位 */
-    transition: all 0.8s var(--ease-spring);
+    transition: opacity 0.8s var(--ease-spring), transform 0.8s var(--ease-spring);
     color: #fff;
 }
 
@@ -1502,11 +1579,11 @@ main img {
     justify-content: space-between;
 }
 
-/* 卡片悬停：背景图放大 */
-.post-item.card-style:hover .post-card-bg {
+/* 卡片悬停：背景图放大，模糊层淡入 */
+.post-item.card-style:hover .post-card-zoom {
     transform: scale(1.45);         /* 背景图放大倍数，影响悬停时的动态感 */
-    filter: blur(10px) brightness(0.8); /* 模糊度与亮度，影响背景图暗化程度 */
 }
+.post-item.card-style:hover .post-card-blur { opacity: 1; }
 
 /* 卡片悬停：标题向上移动为摘要腾出空间 */
 .post-item.card-style:hover .post-card-title {
@@ -1530,10 +1607,7 @@ main img {
         radial-gradient(50% 80% at 92% 100%, rgba(185, 164, 201, .14), transparent 70%),
         repeating-linear-gradient(0deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 4px),
         #14161B;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .06);
-}
-.post-item.cw-card:hover {
-    box-shadow: 0 15px 40px rgba(0, 0, 0, .5), inset 0 0 0 1px rgba(185, 164, 201, .22);
+    contain: layout;                /* 悬停时标题字距在变，重排只限于卡片内部 */
 }
 .cw-card-wave-box {
     position: absolute;
@@ -1627,8 +1701,9 @@ main img {
 
 /* 按下：卡片微沉，标题与载波从悬停状态回落到静止状态（与目录页首屏一致），点击的回应不必等新页面 */
 .post-item.cw-card.is-pressed {
-    transform: translateY(-4px) scale(.985);
-    transition: transform .5s var(--ease-spring), box-shadow .5s ease;
+    translate: 0 -4px;
+    scale: .985;
+    transition: translate .5s var(--ease-spring), scale .5s var(--ease-spring);
 }
 .post-item.cw-card.is-pressed .cw-card-title {
     letter-spacing: .04em;
@@ -1642,11 +1717,13 @@ html.cw-leaving .post-item.cw-card .cw-card-title { letter-spacing: .04em; trans
 html.cw-leaving .post-item.cw-card .cw-card-strand { stroke: rgba(228, 228, 224, .38); transform: none; transition: none; }
 html.cw-leaving .post-item.cw-card .cw-card-strand.is-ghost { stroke: rgba(174, 191, 214, .16); transform: translateY(5px) scaleY(.7); }
 
-/* 一镜到底：与 /carrier_wave/ 首屏的同名元素配对形变（仅在跳往该页时生效） */
-.post-item.cw-card { view-transition-name: cw-stage; }
-.cw-card-wave-box { view-transition-name: cw-hero-wave; }
-.post-item.card-style .cw-card-title { view-transition-name: cw-hero-title; }
-.cw-card-sub { view-transition-name: cw-hero-sub; }
+/* 一镜到底：与 /carrier_wave/ 首屏的同名元素配对形变
+   只在跳往该页（cw-leaving，pageswap 时挂上）与从该页回来（cw-back，pagereveal 时挂上）时带名；
+   常驻的话，点文章卡片时这几块也会被额外截成快照、各自跑一组过渡 */
+html:is(.cw-leaving, .cw-back) .post-item.cw-card { view-transition-name: cw-stage; }
+html:is(.cw-leaving, .cw-back) .cw-card-wave-box { view-transition-name: cw-hero-wave; }
+html:is(.cw-leaving, .cw-back) .post-item.card-style .cw-card-title { view-transition-name: cw-hero-title; }
+html:is(.cw-leaving, .cw-back) .cw-card-sub { view-transition-name: cw-hero-sub; }
 
 /* 反向：从 /carrier_wave/ 回到首页，整屏收回成卡片（cw-back 只在这次过渡期间挂在 html 上） */
 /* 文章卡片的逐张浮出由过渡代替，不再重播 */
@@ -1699,10 +1776,14 @@ html.cw-back::view-transition-new(root) {
      模糊的图放大也看不出糊，且与文章页的模糊背景同一调子，不会「模糊 → 清晰 → 模糊」来回跳。末段淡出，露出 root 里的最终背景
    - 标题挂在文字本身（行内块）上，两端的盒子都只包住文字，形变时字号按比例过渡，新旧快照几乎重合；新标题早早接手，落定时是清晰的实物 */
 /* 离场快照前：卡片一律定格在悬停态（触屏没有悬停，也补上模糊）；摘要、高光、细边不进快照 */
-html.post-leaving .post-item.vt-active .post-card-bg { transform: scale(1.45); filter: blur(10px) brightness(.8); transition: none; }
+html.post-leaving .post-item.vt-active .post-card-zoom { transform: scale(1.45); transition: none; }
+html.post-leaving .post-item.vt-active .post-card-blur { opacity: 1; transition: none; }
 html.post-leaving .post-item.vt-active .post-card-info { opacity: 0; transition: none; }
+/* 投影本就被裁在形变框外，连同高光、细边一起不进快照，快照只有卡片本身大小 */
 html.post-leaving .post-item.vt-active::before,
-html.post-leaving .post-item.vt-active::after { opacity: 0; transition: none; }
+html.post-leaving .post-item.vt-active::after,
+html.post-leaving .post-item.vt-active .post-card-sheen,
+html.post-leaving .post-item.vt-active .post-card-overlay::after { opacity: 0; transition: none; }
 
 .vt-cover { display: none; }
 html.vt-from-card .vt-cover {
@@ -1714,6 +1795,9 @@ html.vt-from-card .vt-cover {
     view-transition-name: post-cover;
 }
 html.vt-from-card .post-title h2 { view-transition-name: post-title; }
+/* 标题区自带的入场（从上方 20px 滑下）由一镜到底代替：带过渡名的元素在过渡中须保持静止，
+   否则每帧都要重新截取位置，且形变的终点（_partial/vt-flip.ejs 在开始时算定）会与实际位置差这 20px */
+html.vt-card-in .post-title { animation: none; -webkit-animation: none; }
 /* 过渡期间背景层直接落到阅读状态（淡化 + 模糊），不再另走一遍「清晰 → 淡化」：封面淡出时露出的就是最终的样子 */
 html.vt-from-card body:before { transition: none !important; }
 
@@ -4358,14 +4442,16 @@ body:not(.dark-theme) {
 body:not(.dark-theme):before {
     filter: blur(var(--bg-blur)) saturate(1.25) brightness(1.07);
 }
-body.bg-baked:not(.dark-theme):before { filter: saturate(1.25) brightness(1.07); } /* 模糊已烤进图片 */
+body.bg-baked:not(.dark-theme):before,
+html.bg-prebaked body:not(.dark-theme):before { filter: saturate(1.25) brightness(1.07); } /* 模糊已烤进图片 */
 
 /* 白天模式阅读页（背景淡化时）：进一步提亮封面色，只留一层淡淡的色调，避免深色封面把页面染灰 */
 body.bg-faded:not(.dark-theme):before {
     opacity: calc(var(--bg-opacity) * 0.14) !important; /* 白天阅读页背景图透明度，比夜间更淡 */
     filter: blur(var(--bg-blur)) saturate(1.5) brightness(1.5);
 }
-body.bg-baked.bg-faded:not(.dark-theme):before { filter: saturate(1.5) brightness(1.5); }
+body.bg-baked.bg-faded:not(.dark-theme):before,
+html.bg-prebaked body.bg-faded:not(.dark-theme):before { filter: saturate(1.5) brightness(1.5); }
 
 /* 白天模式 body 滚动条轨道 */
 body:not(.dark-theme)::-webkit-scrollbar {
@@ -4446,10 +4532,8 @@ body.post-page:not(.dark-theme) main {
 
 /* 白天模式卡片投影：带一点暖色，与晚霞底色融合 */
 body:not(.dark-theme) .post-item.cw-card {
-    box-shadow: 0 10px 30px rgba(70, 45, 30, 0.30);
-}
-body:not(.dark-theme) .post-item.cw-card:hover {
-    box-shadow: 0 15px 40px rgba(70, 45, 30, 0.42);
+    --card-shadow: 0 10px 30px rgba(70, 45, 30, 0.30);
+    --card-shadow-hover: 0 15px 40px rgba(70, 45, 30, 0.42);
 }
 body:not(.dark-theme) .post-item.card-style:not(.cw-card) {
     --card-shadow:

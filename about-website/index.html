@@ -74,6 +74,7 @@
     
     <style>body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
     
+    
 
     <!-- 思源黑体（Noto Sans SC）：国内镜像优先 + 本机字体名回退 -->
     <link rel="preconnect" href="https://fonts.loli.net">
@@ -84,6 +85,7 @@
     <link rel="stylesheet"
           href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
           media="print" onload="this.media='all'; this.onload=null;">
+    
     
     
     <noscript>
@@ -1348,10 +1350,15 @@
                 document.head.appendChild(script);
             }
 
+            // 从首页卡片一镜到底进来时，等过渡结束再加载：脚本解析执行与加载动画都不与过渡抢主线程（vtSettled 见 _partial/post-vt.ejs）
+            function __start() {
+                if (window.vtSettled) window.vtSettled.then(__loadTwikoo);
+                else __loadTwikoo();
+            }
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', __loadTwikoo);
+                document.addEventListener('DOMContentLoaded', __start);
             } else {
-                __loadTwikoo();
+                __start();
             }
         })();
     </script>

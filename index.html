@@ -74,6 +74,7 @@
     
     <style>body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
     
+    
 
     <!-- 思源黑体（Noto Sans SC）：国内镜像优先 + 本机字体名回退 -->
     <link rel="preconnect" href="https://fonts.loli.net">
@@ -84,6 +85,207 @@
     <link rel="stylesheet"
           href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
           media="print" onload="this.media='all'; this.onload=null;">
+    
+    
+<script>
+    window.vtFlip = (function () {
+        var root = document.documentElement;
+
+        function bezier(x1, y1, x2, y2) {
+            function at(a, b, t) { return ((1 - 3 * b + 3 * a) * t + (3 * b - 6 * a)) * t * t + 3 * a * t; }
+            return function (x) {
+                if (x <= 0 || x >= 1) return x <= 0 ? 0 : 1;
+                var lo = 0, hi = 1, t = x;
+                for (var i = 0; i < 24; i++) {
+                    var d = at(x1, x2, t) - x;
+                    if (Math.abs(d) < 1e-6) break;
+                    if (d > 0) hi = t; else lo = t;
+                    t = (lo + hi) / 2;
+                }
+                return at(y1, y2, t);
+            };
+        }
+        // linear(0, 0.2 10%, …)：按规范补齐缺省的位置后分段线性
+        function linearFn(body) {
+            var pts = [];
+            body.split(',').forEach(function (part) {
+                var tok = part.trim().split(/\s+/);
+                var v = parseFloat(tok[0]);
+                if (tok.length === 1) pts.push({ v: v, x: null });
+                for (var k = 1; k < tok.length; k++) pts.push({ v: v, x: parseFloat(tok[k]) / 100 });
+            });
+            if (pts.length < 2) return null;
+            if (pts[0].x === null) pts[0].x = 0;
+            if (pts[pts.length - 1].x === null) pts[pts.length - 1].x = Math.max(1, pts[pts.length - 2].x || 0);
+            var max = 0;
+            for (var i = 0; i < pts.length; i++) {
+                if (pts[i].x !== null) { pts[i].x = Math.max(pts[i].x, max); max = pts[i].x; continue; }
+                var j = i;
+                while (pts[j].x === null) j++;
+                for (var k2 = i; k2 < j; k2++) pts[k2].x = pts[i - 1].x + (pts[j].x - pts[i - 1].x) * (k2 - i + 1) / (j - i + 1);
+                i = j - 1;
+            }
+            return function (x) {
+                if (x <= pts[0].x) return pts[0].v;
+                for (var i = 1; i < pts.length; i++) {
+                    if (x > pts[i].x) continue;
+                    var a = pts[i - 1], b = pts[i];
+                    return b.x === a.x ? b.v : a.v + (b.v - a.v) * (x - a.x) / (b.x - a.x);
+                }
+                return pts[pts.length - 1].v;
+            };
+        }
+        var NAMED = { linear: [0, 0, 1, 1], ease: [.25, .1, .25, 1], 'ease-in': [.42, 0, 1, 1], 'ease-out': [0, 0, .58, 1], 'ease-in-out': [.42, 0, .58, 1] };
+        function easing(s) {
+            s = String(s || '').trim();
+            if (NAMED[s]) return bezier.apply(null, NAMED[s]);
+            var m = s.match(/^cubic-bezier\(([^)]+)\)$/);
+            if (m) return bezier.apply(null, m[1].split(',').map(parseFloat));
+            m = s.match(/^linear\((.+)\)$/);
+            return m ? linearFn(m[1]) : null;
+        }
+
+        function find(pseudo) {
+            var list = document.getAnimations();
+            for (var i = 0; i < list.length; i++) {
+                var ef = list[i].effect;
+                if (ef && ef.target === root && ef.pseudoElement === pseudo) return list[i];
+            }
+            return null;
+        }
+        // 组在屏幕上的矩形：盒子 w×h 经 transform（绕变换原点）投影后的外接矩形
+        function rectOf(transform, w, h, fx, fy) {
+            var m = new DOMMatrix(transform && transform !== 'none' ? transform : undefined);
+            var ox = fx * w, oy = fy * h;
+            var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+            [[0, 0], [w, 0], [0, h], [w, h]].forEach(function (c) {
+                var p = m.transformPoint(new DOMPoint(c[0] - ox, c[1] - oy));
+                var x = p.x / p.w + ox, y = p.y / p.w + oy;
+                x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
+            });
+            return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+        }
+        // 变换原点占盒子的比例（计算值已换成 px，按同一时刻的宽高折回比例）
+        function originFrac(cs) {
+            var o = cs.transformOrigin.split(' ').map(parseFloat);
+            var w = parseFloat(cs.width), h = parseFloat(cs.height);
+            return [w ? o[0] / w : .5, h ? o[1] / h : .5];
+        }
+        function cover(w, h, a) { return w / h > a ? [w, w / a] : [h * a, h]; }
+        function px(n) { return Math.round(n * 1000) / 1000; }
+
+        function flip(name, spec) {
+            var gp = '::view-transition-group(' + name + ')';
+            var group = find(gp);
+            if (!group) return;
+            var kf = group.effect.getKeyframes();
+            var from = kf[0], to = kf[kf.length - 1];
+            if (kf.length !== 2 || !from.width || !to.width || from.transform === undefined) return;
+            var ease = easing(from.easing);
+            if (!ease) return;
+            var gcs = getComputedStyle(root, gp);
+            var gf = originFrac(gcs);
+            var w0 = parseFloat(from.width), h0 = parseFloat(from.height);
+            var W = parseFloat(to.width), H = parseFloat(to.height);
+            if (!(w0 > 0 && h0 > 0 && W > 0 && H > 0)) return;
+            var A = rectOf(from.transform, w0, h0, gf[0], gf[1]);
+            var Z = rectOf(to.transform, W, H, gf[0], gf[1]);
+            var timing = group.effect.getTiming();
+            var dur = +timing.duration;
+            if (!(dur > 0)) return;
+            var n = Math.max(12, Math.ceil(dur / 11));
+
+            // 逐帧：组的矩形 B，由此得组的缩放与各快照的反向缩放
+            var frames = [];
+            for (var i = 0; i <= n; i++) {
+                var p = ease(i / n);
+                var b = {
+                    x: A.x + (Z.x - A.x) * p, y: A.y + (Z.y - A.y) * p,
+                    w: Math.max(A.w + (Z.w - A.w) * p, .01), h: Math.max(A.h + (Z.h - A.h) * p, .01)
+                };
+                b.sx = b.w / W;
+                b.sy = b.h / H;
+                frames.push(b);
+            }
+            var gox = gf[0] * W, goy = gf[1] * H;
+            var groupFrames = frames.map(function (b, i) {
+                // 盒子左上角落到 (b.x, b.y)：绕原点缩放后再平移
+                return {
+                    offset: i / n,
+                    transform: 'matrix(' + px(b.sx) + ',0,0,' + px(b.sy) + ',' + px(b.x - gox + b.sx * gox) + ',' + px(b.y - goy + b.sy * goy) + ')'
+                };
+            });
+
+            // 快照：盒子尺寸按模式直接推出（auto 宽同组、高按比例；cover 铺满组），不必等组改写后再量
+            var opts = { duration: dur, delay: +timing.delay || 0, fill: 'both', pseudoElement: '' };
+            var anims = [];
+            ['old', 'new'].forEach(function (side) {
+                var mode = spec[side];
+                if (mode !== 'auto' && mode !== 'cover') return;
+                var ip = '::view-transition-' + side + '(' + name + ')';
+                var ics = getComputedStyle(root, ip);
+                if (ics.display === 'none') return;
+                var aspect = side === 'old' ? w0 / h0 : W / H;
+                var iw = W, ih = mode === 'auto' ? W / aspect : H;
+                var f = originFrac(ics), ox = f[0] * iw, oy = f[1] * ih;
+                var local = cover(iw, ih, aspect);
+                anims.push([ip, frames.map(function (b, i) {
+                    var kx, ky, tx, ty;
+                    if (mode === 'auto') {
+                        // 宽度随组、高度按快照比例：纵向补偿 sx / sy，顶端不动
+                        kx = 1; ky = b.sx / b.sy;
+                        tx = 0; ty = ky * oy - oy;
+                    } else {
+                        // 屏幕上应有的裁切铺满尺寸 ÷ 盒子里实际铺满尺寸 ÷ 组的缩放；以盒子中心为不动点
+                        var s = cover(b.w, b.h, aspect);
+                        kx = s[0] / (local[0] * b.sx); ky = s[1] / (local[1] * b.sy);
+                        tx = (kx - 1) * (ox - iw / 2); ty = (ky - 1) * (oy - ih / 2);
+                    }
+                    return { offset: i / n, transform: 'matrix(' + px(kx) + ',0,0,' + px(ky) + ',' + px(tx) + ',' + px(ty) + ')' };
+                })]);
+            });
+
+            // 圆角：CSS 写在 image-pair 上（屏幕上的半径），改成按组的缩放分别折算的椭圆半径
+            var pairFrames = null, pair = null, pp = '::view-transition-image-pair(' + name + ')';
+            if (spec.radius) {
+                pair = find(pp);
+                var pt = pair && pair.effect.getTiming();
+                var pe = pair && easing(pair.effect.getKeyframes()[0].easing);
+                if (pair && pe && +pt.duration === dur && (+pt.delay || 0) === opts.delay) {
+                    pairFrames = frames.map(function (b, i) {
+                        var r = spec.radius * (1 - pe(i / n));
+                        return { offset: i / n, borderRadius: px(r / b.sx) + 'px / ' + px(r / b.sy) + 'px' };
+                    });
+                }
+            }
+
+            // 全部算好再一起换上：原有的组动画（及圆角动画）取消，换成新建的动画，与快照的动画同一刻创建、同步起跑
+            // 不用 setKeyframes 原地改：合成动画在等合成线程启动的那几帧里，浏览器会沿用改之前取样的样式，
+            // 组的盒子停在旧尺寸上，与已生效的快照动画错位
+            group.cancel();
+            anims.unshift([gp, groupFrames]);
+            if (pairFrames) {
+                pair.cancel();
+                anims.push([pp, pairFrames]);
+            }
+            anims.forEach(function (a) {
+                opts.pseudoElement = a[0];
+                root.animate(a[1], opts);
+            });
+        }
+
+        return function (vt, specs) {
+            if (!vt || !window.DOMMatrix || !document.getAnimations) return;
+            vt.ready.then(function () {
+                for (var name in specs) {
+                    try { flip(name, specs[name]); } catch (err) {}
+                }
+            }, function () {});
+        };
+    })();
+</script>
+
+    
     
     <!-- 卡片标题用内联的子集字体，不再外链 Cormorant Garamond -->
     
@@ -145,6 +347,8 @@
                     if (r.bottom <= 0 || r.top >= innerHeight) return false;
                     var title = cards[i].querySelector('.post-card-title span');
                     cards[i].classList.add('vt-active');
+                    // 倾斜摆正（快照按平面形变；最多 2.5°，被放大的动作盖住看不出来）
+                    cards[i].style.transform = '';
                     cards[i].style.viewTransitionName = 'post-cover';
                     if (title) title.style.viewTransitionName = 'post-title';
                     root.classList.add('post-leaving');
@@ -188,6 +392,13 @@
                 }
                 // cw-came-back 不随过渡结束移除：卡片的入场动画一旦恢复就会重播，造成落定后再闪一下
                 root.classList.add('cw-back', 'cw-came-back');
+                // 形变改为只动 transform，交给合成线程（见 _partial/vt-flip.ejs）
+                vtFlip(e.viewTransition, {
+                    'cw-stage': {},
+                    'cw-hero-wave': {},
+                    'cw-hero-title': { old: 'auto', new: 'auto' },
+                    'cw-hero-sub': { old: 'auto', new: 'auto' }
+                });
                 e.viewTransition.finished.finally(function () { root.classList.remove('cw-back'); });
             });
 
@@ -848,9 +1059,18 @@
         
         
         <a class="post-item card-style" href="/posts/8/">
-            <div class="post-card-bg" style="background-image: url('/images/webp/f910d16ced734b76.webp');"></div>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" style="background-image: url('/images/webp/f910d16ced734b76.webp');"></div>
+                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/f910d16ced734b76.webp');"></div>
+                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/f910d16ced734b76.webp');"></div>
+                </div>
+            </div>
 
             <div class="post-card-overlay">
+                <span class="post-card-sheen" aria-hidden="true"></span>
                 <h2 class="post-card-title">
                     <span>2026-02-16 除夕</span>
                 </h2>
@@ -877,9 +1097,18 @@
         
         
         <a class="post-item card-style" href="/posts/7/">
-            <div class="post-card-bg" style="background-image: url('/images/webp/010219a9ecd02464.webp');"></div>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" style="background-image: url('/images/webp/010219a9ecd02464.webp');"></div>
+                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/010219a9ecd02464.webp');"></div>
+                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/010219a9ecd02464.webp');"></div>
+                </div>
+            </div>
 
             <div class="post-card-overlay">
+                <span class="post-card-sheen" aria-hidden="true"></span>
                 <h2 class="post-card-title">
                     <span>1月14日：失败了</span>
                 </h2>
@@ -906,9 +1135,18 @@
         
         
         <a class="post-item card-style" href="/posts/6/">
-            <div class="post-card-bg" style="background-image: url('/images/webp/b2b8c739cc0476f3.webp');"></div>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" style="background-image: url('/images/webp/b2b8c739cc0476f3.webp');"></div>
+                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/b2b8c739cc0476f3.webp');"></div>
+                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/b2b8c739cc0476f3.webp');"></div>
+                </div>
+            </div>
 
             <div class="post-card-overlay">
+                <span class="post-card-sheen" aria-hidden="true"></span>
                 <h2 class="post-card-title">
                     <span>我们的时间从什么时候起停下来了</span>
                 </h2>
@@ -935,9 +1173,18 @@
         
         
         <a class="post-item card-style" href="/posts/5/">
-            <div class="post-card-bg" style="background-image: url('/images/webp/0c3f4b2439c160b9.webp');"></div>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" style="background-image: url('/images/webp/0c3f4b2439c160b9.webp');"></div>
+                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/0c3f4b2439c160b9.webp');"></div>
+                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/0c3f4b2439c160b9.webp');"></div>
+                </div>
+            </div>
 
             <div class="post-card-overlay">
+                <span class="post-card-sheen" aria-hidden="true"></span>
                 <h2 class="post-card-title">
                     <span>『Q君与世界的外侧』</span>
                 </h2>
@@ -964,9 +1211,18 @@
         
         
         <a class="post-item card-style" href="/posts/3/">
-            <div class="post-card-bg" style="background-image: url('/images/webp/9a359fe1fd267021.webp');"></div>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" style="background-image: url('/images/webp/9a359fe1fd267021.webp');"></div>
+                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/9a359fe1fd267021.webp');"></div>
+                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/9a359fe1fd267021.webp');"></div>
+                </div>
+            </div>
 
             <div class="post-card-overlay">
+                <span class="post-card-sheen" aria-hidden="true"></span>
                 <h2 class="post-card-title">
                     <span>『Shamrock』</span>
                 </h2>
@@ -993,9 +1249,18 @@
         
         
         <a class="post-item card-style" href="/posts/2/">
-            <div class="post-card-bg" style="background-image: url('/images/webp/b090dd5e0a7e6958.webp');"></div>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" style="background-image: url('/images/webp/b090dd5e0a7e6958.webp');"></div>
+                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/b090dd5e0a7e6958.webp');"></div>
+                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/b090dd5e0a7e6958.webp');"></div>
+                </div>
+            </div>
 
             <div class="post-card-overlay">
+                <span class="post-card-sheen" aria-hidden="true"></span>
                 <h2 class="post-card-title">
                     <span>『末班花火』</span>
                 </h2>
@@ -1022,9 +1287,18 @@
         
         
         <a class="post-item card-style" href="/posts/1/">
-            <div class="post-card-bg" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
+                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
+                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
+                </div>
+            </div>
 
             <div class="post-card-overlay">
+                <span class="post-card-sheen" aria-hidden="true"></span>
                 <h2 class="post-card-title">
                     <span>『原点』</span>
                 </h2>

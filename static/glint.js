@@ -90,16 +90,62 @@ var Glint = function (config) {
         });
     }, { passive: true });
 
-    // 手机端：把背景图的模糊「烤」成一张静态图（canvas 模糊一次），body:before 不再挂 filter: blur
-    // 全屏固定层带模糊滤镜、上面再叠毛玻璃时，手机 GPU 每帧滚动都要重算，是卡顿的主因
+    // 把背景图的模糊「烤」成一张静态图（canvas 模糊一次），body:before 不再挂 filter: blur
+    // 全屏固定层带模糊滤镜时，上面任何东西在动（滚动、卡片悬停、跨页过渡），GPU 每帧都要把整屏模糊重算一遍
+    // 原先只在手机端烤，现在桌面端同样处理；模糊过的图不需要满分辨率，按模糊半径降低画布密度，烤得快、占内存也少
     // 模糊度要变（拖设置滑块）时先退回 CSS 模糊实时预览，松手后再重新烘焙；水波纹读到的是烤好的图 + 无模糊，结果一致
+    // 首页指针移上文章卡片时，还会按文章页的模糊度把那张封面预先烤好（prebake），文章页首帧就直接用上（见 head.ejs），
+    // 一镜到底的全程都没有实时的全屏模糊
     var bgBake = (function () {
-        var media = window.matchMedia("(max-width: 599px)");
+        var PREBAKE_KEY = "glint-bg-prebake";   // 与 head.ejs 中文章页读取的键一致
         var seq = 0;                // 每次烘焙 / 撤销都加一，过期的异步结果直接丢弃
         var timer = null;
         var bakedUrl = "";          // 当前在用的 blob 地址
         var rawInline = null;       // 烘焙前 body 上 --page-bg-image 的内联值（"" 表示来自样式表）
         var lastWidth = window.innerWidth;
+
+        // 按当前视口 cover 铺满时的尺寸，把图模糊成一张画布并导出；cb(blob | null)
+        function blurBlob(img, blur, cb) {
+            try {
+                var dpr = Math.min(window.devicePixelRatio || 1, 2);
+                var cover = Math.max(window.innerWidth / img.naturalWidth, window.innerHeight / img.naturalHeight); // 原图 1px 显示成多少 CSS px
+                var density = Math.min(dpr, 4 / blur);      // 画布每 CSS px 的像素数：模糊半径至少留 4 个画布像素，再高也看不出差别
+                var k = Math.min(1, cover * density);       // 画布相对原图的缩放
+                var w = Math.max(1, Math.round(img.naturalWidth * k));
+                var h = Math.max(1, Math.round(img.naturalHeight * k));
+                var r = blur * k / cover;                    // CSS 模糊半径换算成画布像素
+                var c = document.createElement("canvas");
+                c.width = w;
+                c.height = h;
+                var ctx = c.getContext("2d");
+                ctx.filter = "blur(" + r + "px)";
+                if (ctx.filter && ctx.filter.indexOf("blur") !== -1) {
+                    ctx.drawImage(img, 0, 0, w, h);
+                } else {
+                    // 不支持 canvas 滤镜（旧版 Safari）：先缩小再放大，近似模糊
+                    var f = Math.max(1, r * 1.5);
+                    var s = document.createElement("canvas");
+                    s.width = Math.max(1, Math.round(w / f));
+                    s.height = Math.max(1, Math.round(h / f));
+                    var sctx = s.getContext("2d");
+                    sctx.imageSmoothingQuality = "high";
+                    sctx.drawImage(img, 0, 0, s.width, s.height);
+                    ctx.imageSmoothingQuality = "high";
+                    ctx.drawImage(s, 0, 0, w, h);
+                }
+                c.toBlob(function (blob) { cb(blob || null); }, "image/webp", 0.9);
+            } catch (e) {
+                cb(null);           // 跨域图片等无法导出时，保持 CSS 模糊
+            }
+        }
+        function loadImage(src, cb) {
+            var img = new Image();
+            img.onload = function () {
+                (img.decode ? img.decode() : Promise.resolve()).then(function () { cb(img); }, function () { cb(img); });
+            };
+            img.onerror = function () { cb(null); };
+            img.src = src;
+        }
 
         // 换图 / 换滤镜的那一帧不要过渡（否则会从模糊动画到清晰再变回来）
         function withoutTransition(fn) {
@@ -118,7 +164,7 @@ var Glint = function (config) {
                 else body.style.removeProperty("--page-bg-image");
                 rawInline = null;
             }
-            if (bakedUrl && bakedUrl !== url) URL.revokeObjectURL(bakedUrl);
+            if (bakedUrl && bakedUrl !== url && bakedUrl.indexOf("blob:") === 0) URL.revokeObjectURL(bakedUrl);
             bakedUrl = url || "";
         }
 
@@ -134,7 +180,6 @@ var Glint = function (config) {
 
         function bake() {
             var my = ++seq;
-            if (!media.matches) { unbake(); return; }
             var blur = parseFloat(getComputedStyle(body).getPropertyValue("--bg-blur")) || 0;
             // 已烘焙时要从原图重新烤，不能拿烤过的图再模糊一遍
             var raw;
@@ -160,53 +205,68 @@ var Glint = function (config) {
                 return;
             }
 
-            var img = new Image();
-            img.onload = function () {
-                if (my !== seq) return;
-                try {
-                    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-                    var cover = Math.max(window.innerWidth / img.naturalWidth, window.innerHeight / img.naturalHeight); // 原图 1px 显示成多少 CSS px
-                    var k = Math.min(1, cover * dpr);           // 画布相对原图的缩放：够屏幕清晰度即可
-                    var w = Math.max(1, Math.round(img.naturalWidth * k));
-                    var h = Math.max(1, Math.round(img.naturalHeight * k));
-                    var r = blur * k / cover;                    // CSS 模糊半径换算成画布像素
-                    var c = document.createElement("canvas");
-                    c.width = w;
-                    c.height = h;
-                    var ctx = c.getContext("2d");
-                    ctx.filter = "blur(" + r + "px)";
-                    if (ctx.filter && ctx.filter.indexOf("blur") !== -1) {
-                        ctx.drawImage(img, 0, 0, w, h);
-                    } else {
-                        // 不支持 canvas 滤镜（旧版 Safari）：先缩小再放大，近似模糊
-                        var f = Math.max(1, r * 1.5);
-                        var s = document.createElement("canvas");
-                        s.width = Math.max(1, Math.round(w / f));
-                        s.height = Math.max(1, Math.round(h / f));
-                        var sctx = s.getContext("2d");
-                        sctx.imageSmoothingQuality = "high";
-                        sctx.drawImage(img, 0, 0, s.width, s.height);
-                        ctx.imageSmoothingQuality = "high";
-                        ctx.drawImage(s, 0, 0, w, h);
-                    }
-                    c.toBlob(function (blob) {
-                        if (my !== seq || !blob) return;
-                        var url = URL.createObjectURL(blob);
-                        var pre = new Image();
-                        pre.src = url;
-                        (pre.decode ? pre.decode() : Promise.resolve()).then(function () {
-                            if (my !== seq) { URL.revokeObjectURL(url); return; }
-                            withoutTransition(function () {
-                                setImage(url);
-                                body.classList.add("bg-baked");
-                            });
-                        }, function () { URL.revokeObjectURL(url); });
-                    }, "image/webp", 0.9);
-                } catch (e) {
-                    // 跨域图片等无法导出时，保持 CSS 模糊
-                }
-            };
-            img.src = m[1];
+            loadImage(m[1], function (img) {
+                if (my !== seq || !img) return;
+                blurBlob(img, blur, function (blob) {
+                    if (my !== seq || !blob) return;
+                    var url = URL.createObjectURL(blob);
+                    var pre = new Image();
+                    pre.src = url;
+                    (pre.decode ? pre.decode() : Promise.resolve()).then(function () {
+                        if (my !== seq) { URL.revokeObjectURL(url); return; }
+                        withoutTransition(function () {
+                            setImage(url);
+                            body.classList.add("bg-baked");
+                        });
+                    }, function () { URL.revokeObjectURL(url); });
+                });
+            });
+        }
+
+        // 预烤：src 为文章页将用的背景图，blur 为文章页的模糊度；结果以 data URL 存进 sessionStorage，供下一页首帧使用
+        var prebaking = "";
+        function prebake(src, blur) {
+            if (!src || !(blur > 0)) return;
+            var tag = src + "|" + blur + "|" + window.innerWidth + "x" + window.innerHeight;
+            if (prebaking === tag) return;
+            try {
+                var p = JSON.parse(sessionStorage.getItem(PREBAKE_KEY));
+                if (p && p.src + "|" + p.blur + "|" + p.w + "x" + p.h === tag) return;
+            } catch (e) {}
+            prebaking = tag;
+            loadImage(src, function (img) {
+                if (!img) { prebaking = ""; return; }
+                blurBlob(img, blur, function (blob) {
+                    if (!blob) { prebaking = ""; return; }
+                    var fr = new FileReader();
+                    fr.onload = function () {
+                        prebaking = "";
+                        try {
+                            sessionStorage.setItem(PREBAKE_KEY, JSON.stringify({
+                                src: src, blur: blur, w: window.innerWidth, h: window.innerHeight, url: fr.result
+                            }));
+                        } catch (e) {}
+                    };
+                    fr.onerror = function () { prebaking = ""; };
+                    fr.readAsDataURL(blob);
+                });
+            });
+        }
+
+        // 文章页首帧已用上预烤的图（head.ejs 挂 html.bg-prebaked + #bg-prebake 样式）：换成与自己烤好时相同的状态，不必再烤
+        var prebakeStyle = document.getElementById("bg-prebake");
+        var adopted = false;
+        if (prebakeStyle && document.documentElement.classList.contains("bg-prebaked")) {
+            var pm = prebakeStyle.textContent.match(/url\("([^"]+)"\)/);
+            if (pm) {
+                rawInline = "";     // 原图仍在 head.ejs 的样式里
+                body.style.setProperty("--page-bg-image", 'url("' + pm[1] + '")');
+                bakedUrl = pm[1];
+                body.classList.add("bg-baked");
+                adopted = true;
+            }
+            prebakeStyle.remove();
+            document.documentElement.classList.remove("bg-prebaked");
         }
 
         // DOM 就绪（文章封面已换上，见 post.ejs）后等切页过渡（模糊 0.8s）走完再烤；不等 load，外部脚本慢时也不耽误
@@ -215,16 +275,36 @@ var Glint = function (config) {
             timer = setTimeout(bake, delay || 0);
         }
 
-        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { schedule(1000); });
-        else schedule(1000);
+        if (!adopted) {
+            if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { schedule(1000); });
+            else schedule(1000);
+        }
         window.addEventListener("resize", function () {
             if (window.innerWidth === lastWidth) return; // 只理会宽度变化（地址栏伸缩只改高度）
             lastWidth = window.innerWidth;
             schedule(300);
         });
 
-        return { schedule: schedule, unbake: unbake };
+        return { schedule: schedule, unbake: unbake, prebake: prebake };
     })();
+
+    // 首页：指针移上（或按下、聚焦）文章卡片时，按文章页的模糊度预烤它的背景（见上方 bgBake.prebake）
+    // 只有首页（含分页，都有 .home-hero）的卡片会一镜到底进文章，归档 / 标签页不必
+    function setupBgPrebake() {
+        if (!document.querySelector(".home-hero")) return;
+        ks(".post-item.card-style:not(.cw-card)").each(function (card) {
+            var layer = card.querySelector(".post-card-img:not(.post-card-blur)");
+            if (!layer) return;
+            function go() {
+                var m = layer.style.backgroundImage.match(/url\(\s*["']?([^"')]+)["']?\s*\)/);
+                var blur = typeof currentSettings.bgBlur === "number" ? currentSettings.bgBlur : defaultSettings.bgBlur;
+                if (m) bgBake.prebake(m[1], Math.max(0, Math.min(20, blur)));
+            }
+            ["pointerenter", "pointerdown", "focus"].forEach(function (t) {
+                card.addEventListener(t, go, { passive: true });
+            });
+        });
+    }
 
     function applyReadingSettings() {
         // 背景可见度（统一映射到 CSS 变量）
@@ -632,33 +712,191 @@ var Glint = function (config) {
         onScrollFrame(update);
     }
 
-    // 首页封面卡片的悬浮感：指针在卡片上移动时写 --mx/--my（高光位置）与 --rx/--ry（轻微倾斜），样式在 glint.css 卡片一节
+    // 首页封面卡片的悬浮感：轻微倾斜 + 指针处的光斑，样式在 glint.css 卡片一节
+    // 倾斜用弹簧逐帧直接写内联 transform（不经 CSS 变量，只重算卡片自身样式）：指针连续移动时目标连续变化，速度也连续，
+    // 不像过渡那样每次移动都从零速度重新起步；光斑只改 transform，不重画渐变
     // 只在有精确指针、且未要求减少动效时启用；触屏上只有 CSS 的上浮
     function setupCardFloat() {
         if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
         var TILT = 2.5;             // deg：最大倾斜角
+        var SPOT = 100;             // px：光斑元素的半径，须与 glint.css .post-card-spot 一致
+        var REACH = 0.55;           // 光斑半径 = 指针到最远角距离的 55%（原 radial-gradient 的 transparent 55%）
+        var OMEGA = 12, ZETA = 0.85; // 弹簧的固有频率（rad/s）与阻尼比：约 0.3s 到位，几乎不过冲
         ks(".post-item.card-style:not(.cw-card)").each(function (card) {
-            var frame = 0, px = 0, py = 0;
-            function apply() {
-                frame = 0;
+            var sheen = card.querySelector(".post-card-sheen");
+            if (!sheen) return;
+            var spot = document.createElement("span");
+            spot.className = "post-card-spot";
+            sheen.appendChild(spot);
+
+            var rx = { x: 0, v: 0, to: 0 }, ry = { x: 0, v: 0, to: 0 };
+            var frame = 0, last = 0, px = 0, py = 0, moved = false;
+
+            // 指针位置 → 倾斜目标与光斑
+            function aim() {
+                moved = false;
                 var r = card.getBoundingClientRect();
                 var x = Math.min(Math.max((px - r.left) / r.width, 0), 1);
                 var y = Math.min(Math.max((py - r.top) / r.height, 0), 1);
-                card.style.setProperty("--mx", (x * 100).toFixed(1) + "%");
-                card.style.setProperty("--my", (y * 100).toFixed(1) + "%");
-                card.style.setProperty("--rx", ((0.5 - y) * TILT).toFixed(2) + "deg");
-                card.style.setProperty("--ry", ((x - 0.5) * TILT).toFixed(2) + "deg");
+                rx.to = (0.5 - y) * TILT;
+                ry.to = (x - 0.5) * TILT;
+                var w = card.offsetWidth, h = card.offsetHeight;
+                var sx = x * w, sy = y * h;
+                var far = Math.sqrt(Math.pow(Math.max(sx, w - sx), 2) + Math.pow(Math.max(sy, h - sy), 2));
+                spot.style.transform = "translate(" + sx.toFixed(1) + "px," + sy.toFixed(1) + "px) scale(" + (far * REACH / SPOT).toFixed(3) + ")";
             }
+            function spring(s, dt) {
+                var a = -OMEGA * OMEGA * (s.x - s.to) - 2 * ZETA * OMEGA * s.v;
+                s.v += a * dt;
+                s.x += s.v * dt;
+                if (Math.abs(s.x - s.to) < 0.002 && Math.abs(s.v) < 0.01) { s.x = s.to; s.v = 0; return false; }
+                return true;
+            }
+            function step(now) {
+                frame = 0;
+                // 被点进文章（一镜到底的快照已摆正）后不再写
+                if (card.classList.contains("vt-active")) return;
+                if (moved) aim();
+                var dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
+                last = now;
+                // 分几小步积分，帧间隔长时也稳定
+                var busy = false;
+                for (var i = 0; i < 4; i++) {
+                    var bx = spring(rx, dt / 4), by = spring(ry, dt / 4);
+                    busy = bx || by;
+                }
+                card.style.transform = rx.x || ry.x
+                    ? "perspective(1000px) rotateX(" + rx.x.toFixed(3) + "deg) rotateY(" + ry.x.toFixed(3) + "deg)"
+                    : "";
+                if (busy) frame = requestAnimationFrame(step);
+                else last = 0;
+            }
+            function kick() {
+                if (!frame) frame = requestAnimationFrame(step);
+            }
+            card.addEventListener("pointerenter", function (e) {
+                px = e.clientX; py = e.clientY;
+                aim();              // 光斑先就位再淡入，不从默认位置滑过来
+                kick();
+            });
             card.addEventListener("pointermove", function (e) {
                 px = e.clientX; py = e.clientY;
-                if (!frame) frame = requestAnimationFrame(apply);
+                moved = true;
+                kick();
             });
             card.addEventListener("pointerleave", function () {
-                if (frame) { cancelAnimationFrame(frame); frame = 0; }
-                card.style.setProperty("--rx", "0deg");
-                card.style.setProperty("--ry", "0deg");
+                moved = false;
+                rx.to = 0; ry.to = 0;
+                kick();
             });
+        });
+    }
+
+    // 首页封面卡片悬停时的模糊层：用 canvas 把「模糊 + 压暗」烤成一张小图（每张卡片一次），
+    // 悬停时只做透明度与缩放；原先逐帧改 filter: blur 半径，每帧都要对放大后的整张封面重算模糊
+    // 触屏上点按时卡片同样会短暂进入悬停态，也一并烤（卡片小、半分辨率，成本很低）；卡片接近视口时在空闲时间逐张处理
+    function setupCardBlur() {
+        if (!("IntersectionObserver" in window)) return;
+        // 各层的模糊半径、亮度与 glint.css 中的 filter 一致；q 为画布每 CSS px 的像素数：模糊过的图不需要满分辨率
+        var LAYERS = {
+            "post-card-blur": { blur: 10, bright: 0.8, q: 0.5 },
+            "post-card-soft": { blur: 3, bright: 0.94, q: 1 }
+        };
+        var els = [].slice.call(document.querySelectorAll(".post-item.card-style:not(.cw-card) .post-card-blur, .post-item.card-style:not(.cw-card) .post-card-soft"));
+        if (!els.length) return;
+        var queue = [], busy = false;
+        var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 60); };
+
+        function pump() {
+            if (busy || !queue.length) return;
+            busy = true;
+            idle(function () {
+                bake(queue.shift(), function () { busy = false; pump(); });
+            }, { timeout: 1500 });
+        }
+        function bake(el, done) {
+            var src = el.dataset.src || el.style.backgroundImage;
+            el.dataset.src = src;       // 原图地址：重新烤时要从原图来，不能拿烤过的图再模糊
+            var m = src.match(/url\(\s*["']?([^"')]+)["']?\s*\)/);
+            var w = el.offsetWidth, h = el.offsetHeight;   // 不用中间层的浏览器里它是 display: none，宽高为 0，跳过
+            var L = LAYERS[el.classList.contains("post-card-soft") ? "post-card-soft" : "post-card-blur"];
+            var BLUR = L.blur, BRIGHT = L.bright, Q = L.q;
+            if (!m || !w || !h) { done(); return; }
+            var img = new Image();
+            img.onerror = done;
+            img.onload = function () {
+                try {
+                    var c = Math.max(w / img.naturalWidth, h / img.naturalHeight); // 原图 1px 显示成多少 CSS px（cover）
+                    var k = c * Q;
+                    var cw = Math.max(1, Math.round(img.naturalWidth * k));
+                    var ch = Math.max(1, Math.round(img.naturalHeight * k));
+                    var r = BLUR * Q;
+                    var canvas = document.createElement("canvas");
+                    canvas.width = cw;
+                    canvas.height = ch;
+                    var ctx = canvas.getContext("2d");
+                    ctx.filter = "blur(" + r + "px) brightness(" + BRIGHT + ")";
+                    if (ctx.filter && ctx.filter.indexOf("blur") !== -1) {
+                        ctx.drawImage(img, 0, 0, cw, ch);
+                    } else {
+                        // 不支持 canvas 滤镜（旧版 Safari）：先缩小再放大近似模糊，再叠一层黑压暗
+                        var f = Math.max(1, r * 1.5);
+                        var s = document.createElement("canvas");
+                        s.width = Math.max(1, Math.round(cw / f));
+                        s.height = Math.max(1, Math.round(ch / f));
+                        var sctx = s.getContext("2d");
+                        sctx.imageSmoothingQuality = "high";
+                        sctx.drawImage(img, 0, 0, s.width, s.height);
+                        ctx.imageSmoothingQuality = "high";
+                        ctx.drawImage(s, 0, 0, cw, ch);
+                        ctx.globalCompositeOperation = "source-atop";
+                        ctx.fillStyle = "rgba(0, 0, 0, " + (1 - BRIGHT) + ")";
+                        ctx.fillRect(0, 0, cw, ch);
+                    }
+                    canvas.toBlob(function (blob) {
+                        if (!blob) { done(); return; }
+                        var url = URL.createObjectURL(blob);
+                        var pre = new Image();
+                        pre.src = url;
+                        (pre.decode ? pre.decode() : Promise.resolve()).then(function () {
+                            var old = el.dataset.blurUrl;
+                            el.style.backgroundImage = 'url("' + url + '")';
+                            el.classList.add("is-baked");
+                            el.dataset.blurUrl = url;
+                            el.dataset.blurWidth = w;
+                            if (old) URL.revokeObjectURL(old);
+                            done();
+                        }, function () { URL.revokeObjectURL(url); done(); });
+                    }, "image/webp", 0.85);
+                } catch (e) {
+                    done();     // 无法导出时保持 CSS 滤镜
+                }
+            };
+            img.src = m[1];
+        }
+
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                io.unobserve(entry.target);
+                queue.push(entry.target);
+            });
+            pump();
+        }, { rootMargin: "400px 0px" });
+        els.forEach(function (el) { io.observe(el); });
+
+        // 卡片宽度变化较大时（cover 的缩放随之变化，模糊半径会走样）重新烤
+        var timer = null;
+        window.addEventListener("resize", function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                els.forEach(function (el) {
+                    var bw = +el.dataset.blurWidth;
+                    if (bw && Math.abs(el.offsetWidth - bw) / bw > 0.12 && queue.indexOf(el) === -1) queue.push(el);
+                });
+                pump();
+            }, 300);
         });
     }
 
@@ -1064,6 +1302,8 @@ var Glint = function (config) {
     this.header();
     setupImmersive();
     setupCardFloat();
+    setupCardBlur();
+    setupBgPrebake();
 
     if(content){
         this.tree();

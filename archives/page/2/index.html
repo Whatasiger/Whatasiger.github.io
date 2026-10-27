@@ -74,6 +74,7 @@
     
     <style>body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
     
+    
 
     <!-- 思源黑体（Noto Sans SC）：国内镜像优先 + 本机字体名回退 -->
     <link rel="preconnect" href="https://fonts.loli.net">
@@ -84,6 +85,7 @@
     <link rel="stylesheet"
           href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
           media="print" onload="this.media='all'; this.onload=null;">
+    
     
     
     <noscript>
@@ -447,9 +449,18 @@
         
         
         <a class="post-item card-style" href="/posts/1/">
-            <div class="post-card-bg" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
+                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
+                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
+                </div>
+            </div>
 
             <div class="post-card-overlay">
+                <span class="post-card-sheen" aria-hidden="true"></span>
                 <h2 class="post-card-title">
                     <span>『原点』</span>
                 </h2>
