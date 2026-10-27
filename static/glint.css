@@ -1339,12 +1339,85 @@ main img {
     transform: translateY(-8px);                  /* 悬停上移距离，调整可改变上浮幅度 */
 }
 
-/* 夜间模式卡片投影：颜色更深 */
-.dark-theme .post-item.card-style {
+/* 夜间模式卡片投影：颜色更深（封面卡片另有分层投影，见下） */
+.dark-theme .post-item.cw-card {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
-.dark-theme .post-item.card-style:hover {
+.dark-theme .post-item.cw-card:hover {
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+}
+
+/* 封面卡片的层次：分层投影 + 上亮下暗的细边 + 悬停时跟随指针的高光与轻微倾斜
+   - 投影分三层：贴地的接触影（定住卡片的「底」）、中距离的主投影、大而淡的环境影；悬停时接触影变淡、远处两层拉长，像卡片离开桌面
+   - 细边画在 ::after（封面图层会盖住卡片自身的 inset 阴影），用 mask 挖空只留 1px，顶边最亮、往下渐暗，模拟光从上方照在卡片边沿
+   - 高光画在 ::before，位置 --mx/--my 与倾斜 --rx/--ry 由 glint.js setupCardFloat() 写入；触屏 / 减少动效时不写，停在默认值
+   - 配色变量白天在第 8 节覆盖 */
+.post-item.card-style:not(.cw-card) {
+    --card-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.45),
+        0 6px 14px -4px rgba(0, 0, 0, 0.45),
+        0 18px 40px -10px rgba(0, 0, 0, 0.55);
+    --card-shadow-hover:
+        0 2px 4px rgba(0, 0, 0, 0.25),
+        0 22px 40px -12px rgba(0, 0, 0, 0.6),
+        0 44px 80px -20px rgba(0, 0, 0, 0.55),
+        0 30px 70px -30px color-mix(in srgb, var(--tc-main) 45%, transparent);
+    --card-edge-top: rgba(255, 255, 255, 0.34);         /* 细边顶部亮度 */
+    --card-edge-mid: rgba(255, 255, 255, 0.07);         /* 细边两侧中段 */
+    --card-edge-bottom: rgba(255, 255, 255, 0.14);      /* 细边底部（略回亮，免得下沿与背景糊在一起） */
+    --card-sheen: rgba(255, 255, 255, 0.16);            /* 指针高光 */
+    display: block;                 /* 整张卡片是 <a> */
+    color: #fff;
+    text-decoration: none;
+    box-shadow: var(--card-shadow);
+    transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+}
+.post-item.card-style:not(.cw-card):hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: perspective(1000px) translateY(-10px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); /* 上浮距离 */
+}
+
+/* 细边：上亮下暗的 1px 渐变描边 */
+.post-item.card-style:not(.cw-card)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    padding: 1px;                   /* 描边粗细 */
+    border-radius: inherit;
+    background: linear-gradient(to bottom, var(--card-edge-top), var(--card-edge-mid) 45%, var(--card-edge-mid) 70%, var(--card-edge-bottom));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: .85;
+    transition: opacity 0.8s var(--ease-spring);
+}
+.post-item.card-style:not(.cw-card):hover::after { opacity: 1; }
+.post-item.card-style:not(.cw-card):focus-visible {
+    outline: 2px solid var(--tc-main);
+    outline-offset: 3px;
+}
+
+/* 高光：悬停时在指针处浮起一团柔光，顶部再带一抹天光 */
+.post-item.card-style:not(.cw-card)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: inherit;
+    background:
+        radial-gradient(circle at var(--mx, 50%) var(--my, 0%), var(--card-sheen), transparent 55%),
+        linear-gradient(to bottom, color-mix(in srgb, var(--card-sheen) 60%, transparent), transparent 35%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.8s var(--ease-spring);
+}
+.post-item.card-style:not(.cw-card):hover::before { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+    .post-item.card-style:not(.cw-card):hover { transform: translateY(-6px); }
 }
 
 /* 卡片背景图层：铺满卡片区域，悬停时缩放并模糊 */
@@ -1382,8 +1455,9 @@ main img {
     transition: transform 0.8s var(--ease-spring);
 }
 
-/* 卡片标题链接：白色文字 + 阴影提升可读性 */
-.post-item.card-style .post-card-title a {
+/* 卡片标题文字：白色文字 + 阴影提升可读性（整张卡片是链接，标题只是文字） */
+.post-item.card-style .post-card-title span {
+    display: inline-block;          /* 盒子只包住文字：一镜到底时标题按文字本身形变 */
     color: #fff;
     font-size: 1.3em;              /* 卡片标题字号，影响标题大小 */
     font-weight: 600;               /* 卡片标题字重 */
@@ -1617,6 +1691,56 @@ html.cw-back::view-transition-new(root) {
 @keyframes cw-back-fade-in { from { opacity: 0; } }
 /* 新页面快照是实时的，整屏 blur 每帧都要重算，只用透明度和缩放 */
 @keyframes cw-back-home-in { from { opacity: 0; transform: scale(.96); } }
+
+/* 文章卡片一镜到底：首页卡片放大铺满全屏，沉入文章页的背景，标题飞到正文标题处（只做进入方向）
+   - 首页 pageswap（head.ejs）只给被点的那张卡片挂名：卡片 post-cover、卡片标题文字 post-title，并给 html 挂 post-leaving
+   - 文章页 pagereveal（_partial/post-vt.ejs）确认来自首页后挂 vt-from-card：全屏的空层 .vt-cover（post.ejs）接 post-cover，正文标题接 post-title
+   - 封面全程只用离场时那张「悬停态」的卡片快照（模糊 + 压暗）：一张静态位图放大，不在新页实时重绘大图，开销小；
+     模糊的图放大也看不出糊，且与文章页的模糊背景同一调子，不会「模糊 → 清晰 → 模糊」来回跳。末段淡出，露出 root 里的最终背景
+   - 标题挂在文字本身（行内块）上，两端的盒子都只包住文字，形变时字号按比例过渡，新旧快照几乎重合；新标题早早接手，落定时是清晰的实物 */
+/* 离场快照前：卡片一律定格在悬停态（触屏没有悬停，也补上模糊）；摘要、高光、细边不进快照 */
+html.post-leaving .post-item.vt-active .post-card-bg { transform: scale(1.45); filter: blur(10px) brightness(.8); transition: none; }
+html.post-leaving .post-item.vt-active .post-card-info { opacity: 0; transition: none; }
+html.post-leaving .post-item.vt-active::before,
+html.post-leaving .post-item.vt-active::after { opacity: 0; transition: none; }
+
+.vt-cover { display: none; }
+html.vt-from-card .vt-cover {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;                    /* 排在正文之下，标题组才会叠在封面组上面 */
+    pointer-events: none;
+    view-transition-name: post-cover;
+}
+html.vt-from-card .post-title h2 { view-transition-name: post-title; }
+/* 过渡期间背景层直接落到阅读状态（淡化 + 模糊），不再另走一遍「清晰 → 淡化」：封面淡出时露出的就是最终的样子 */
+html.vt-from-card body:before { transition: none !important; }
+
+html.vt-from-card::view-transition-group(*) {
+    animation-duration: .8s;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+/* 封面：卡片快照按 cover 裁切铺满（圆角随放大被裁到画面外）；新页一侧是空层，不画 */
+html.vt-from-card::view-transition-image-pair(post-cover) { overflow: clip; }
+html.vt-from-card::view-transition-old(post-cover) {
+    height: 100%;
+    object-fit: cover;
+    animation: post-vt-out .4s ease-in .4s both;
+}
+html.vt-from-card::view-transition-new(post-cover) { animation: none; opacity: 0; }
+/* 标题：叠在封面上；旧的（卡片里的小字）很快淡出，新的（正文标题）早早接手，形变后半程看到的都是缩放到位的新标题 */
+html.vt-from-card::view-transition-group(post-title) {
+    z-index: 1;
+    animation-timing-function: cubic-bezier(.33, 1, .68, 1); /* 比封面的缓动更匀，飞行过程看得清 */
+}
+html.vt-from-card::view-transition-old(post-title) { animation: post-vt-out .2s linear both; }
+html.vt-from-card::view-transition-new(post-title) { animation: post-vt-in .2s linear both; }
+/* 正文在封面铺满后再浮现（大部分时间被封面盖着） */
+html.vt-from-card::view-transition-old(root) { animation: post-vt-out .25s ease-out both; }
+html.vt-from-card::view-transition-new(root) { animation: post-vt-in .35s ease-out .3s both; }
+@keyframes post-vt-out { to { opacity: 0; } }
+@keyframes post-vt-in { from { opacity: 0; } }
 
 /* 文章列表分页导航 */
 /* - 换页 */
@@ -3810,7 +3934,7 @@ html.nav-switching .header-logo, html.nav-switching .toggle-btn:before { transit
     }
 
     /* 手机端卡片标题字号略小 */
-    .post-item.card-style .post-card-title a {
+    .post-item.card-style .post-card-title span {
         font-size: 1.1em;           /* 手机端卡片标题字号 */
         line-height: 1.3;
     }
@@ -4321,11 +4445,26 @@ body.post-page:not(.dark-theme) main {
 }
 
 /* 白天模式卡片投影：带一点暖色，与晚霞底色融合 */
-body:not(.dark-theme) .post-item.card-style {
+body:not(.dark-theme) .post-item.cw-card {
     box-shadow: 0 10px 30px rgba(70, 45, 30, 0.30);
 }
-body:not(.dark-theme) .post-item.card-style:hover {
+body:not(.dark-theme) .post-item.cw-card:hover {
     box-shadow: 0 15px 40px rgba(70, 45, 30, 0.42);
+}
+body:not(.dark-theme) .post-item.card-style:not(.cw-card) {
+    --card-shadow:
+        0 1px 2px rgba(70, 45, 30, 0.28),
+        0 6px 14px -4px rgba(70, 45, 30, 0.26),
+        0 18px 40px -10px rgba(70, 45, 30, 0.34);
+    --card-shadow-hover:
+        0 2px 4px rgba(70, 45, 30, 0.16),
+        0 22px 40px -12px rgba(70, 45, 30, 0.38),
+        0 44px 80px -20px rgba(70, 45, 30, 0.34),
+        0 30px 70px -30px color-mix(in srgb, var(--tc-main) 40%, transparent);
+    --card-edge-top: rgba(255, 255, 255, 0.7);      /* 白天细边更亮，与阅读页玻璃底板的白描边同一路子 */
+    --card-edge-mid: rgba(255, 255, 255, 0.22);
+    --card-edge-bottom: rgba(255, 255, 255, 0.36);
+    --card-sheen: rgba(255, 240, 225, 0.2);         /* 高光带一点暖色 */
 }
 
 /* 白天模式目录：卡片沿用 --glass-* 毛玻璃，轨道与文字换成暖灰，强调取天空蓝 */

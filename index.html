@@ -71,6 +71,7 @@
 
 
     
+    
     <style>body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
     
 
@@ -90,9 +91,11 @@
 
     <!-- 预渲染目录页：指针停在卡片上（或按下）时就在后台把它完整加载好，点击即刻切换、过渡立即开始，不必等网络与字体 -->
     <script type="speculationrules">{"prerender": [{"urls": ["/carrier_wave/"], "eagerness": "moderate"}]}</script>
+    <!-- 文章卡片只预取 HTML（不预渲染：预渲染会执行文章页脚本，不蒜子会多计一次阅读）；样式与封面首页已加载过，新页能及时出首帧接上一镜到底 -->
+    <script type="speculationrules">{"prefetch": [{"source": "document", "where": {"selector_matches": "a.post-item.card-style:not(.cw-card)"}, "eagerness": "moderate"}]}</script>
     <!-- 卡片副题「载波·短篇辑」与目录页同用思源宋体；只取这几个字，字体文件很小 -->
     <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@300&text=%E8%BD%BD%E6%B3%A2%E7%9F%AD%E7%AF%87%E8%BE%91&display=swap">
-    <!-- 跨页面过渡只用于「首页 ↔ CARRiER WAVE.」，其余跳转一律跳过 -->
+    <!-- 跨页面过渡只用于「首页 ↔ CARRiER WAVE.」与「首页 → 文章」（文章卡片一镜到底），其余跳转一律跳过 -->
     <style>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
     <script>
         (function () {
@@ -106,6 +109,7 @@
                 // 给目录页留一份来源记录：它拿不到 navigation.activation.from 时据此判断是否从首页来
                 try { sessionStorage.setItem('cw-vt-hop', JSON.stringify({ from: norm(location.href), to: to ? norm(to) : '', t: Date.now() })); } catch (err) {}
                 if (!e.viewTransition) return;
+                if (to && norm(to) !== target && leaveToPost(norm(to))) return;
                 if (!to || norm(to) !== target) { e.viewTransition.skipTransition(); return; }
                 // 快照前把卡片收回静止状态：悬停时标题字距变宽、载波鼓起变色，与目录页首屏对不上，交叉淡化时会出现重影
                 root.classList.add('cw-leaving');
@@ -131,6 +135,32 @@
                 main.style.transform = 'scaleY(' + ((narrow ? 4 : 5.5) / 3.6) + ')'; // 卡片振幅约 3.6px，放大到画布振幅
                 try { sessionStorage.setItem('cw-wave-hop', JSON.stringify({ x: axisL, t: Date.now() })); } catch (err) {}
             }
+            // 文章卡片一镜到底：只给被点的那张卡片挂名（名字须唯一），卡片放大成文章页的背景、标题飞到正文标题处
+            // 卡片不在视口内（如用键盘从屏外聚焦后回车）就不做；样式见 glint.css「文章卡片一镜到底」
+            function leaveToPost(path) {
+                var cards = document.querySelectorAll('a.post-item.card-style:not(.cw-card)');
+                for (var i = 0; i < cards.length; i++) {
+                    if (norm(cards[i].href) !== path) continue;
+                    var r = cards[i].getBoundingClientRect();
+                    if (r.bottom <= 0 || r.top >= innerHeight) return false;
+                    var title = cards[i].querySelector('.post-card-title span');
+                    cards[i].classList.add('vt-active');
+                    cards[i].style.viewTransitionName = 'post-cover';
+                    if (title) title.style.viewTransitionName = 'post-title';
+                    root.classList.add('post-leaving');
+                    return true;
+                }
+                return false;
+            }
+            function resetPostCard() {
+                root.classList.remove('post-leaving');
+                var card = document.querySelector('.post-item.vt-active');
+                if (!card) return;
+                card.classList.remove('vt-active');
+                card.style.viewTransitionName = '';
+                var title = card.querySelector('.post-card-title span');
+                if (title) title.style.viewTransitionName = '';
+            }
             function resetWave() {
                 var svg = document.querySelector('.cw-card-wave');
                 if (svg) svg.style.cssText = '';
@@ -145,6 +175,7 @@
                 revealed = true;
                 root.classList.remove('cw-back', 'cw-leaving');
                 resetWave();
+                resetPostCard();
                 if (!e.viewTransition) return;
                 if (!restored) { e.viewTransition.skipTransition(); return; }
                 var act = window.navigation && navigation.activation;
@@ -314,6 +345,7 @@
     })();
 </script>
 
+    
     
     <noscript>
         <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
@@ -814,12 +846,13 @@
     
     
         
-        <div class="post-item card-style" onclick="window.location.href='/posts/8/'">
+        
+        <a class="post-item card-style" href="/posts/8/">
             <div class="post-card-bg" style="background-image: url('/images/webp/f910d16ced734b76.webp');"></div>
 
             <div class="post-card-overlay">
                 <h2 class="post-card-title">
-                    <a href="/posts/8/">2026-02-16 除夕</a>
+                    <span>2026-02-16 除夕</span>
                 </h2>
 
                 <div class="post-card-info">
@@ -838,16 +871,17 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
         
     
         
-        <div class="post-item card-style" onclick="window.location.href='/posts/7/'">
+        
+        <a class="post-item card-style" href="/posts/7/">
             <div class="post-card-bg" style="background-image: url('/images/webp/010219a9ecd02464.webp');"></div>
 
             <div class="post-card-overlay">
                 <h2 class="post-card-title">
-                    <a href="/posts/7/">1月14日：失败了</a>
+                    <span>1月14日：失败了</span>
                 </h2>
 
                 <div class="post-card-info">
@@ -866,16 +900,17 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
         
     
         
-        <div class="post-item card-style" onclick="window.location.href='/posts/6/'">
+        
+        <a class="post-item card-style" href="/posts/6/">
             <div class="post-card-bg" style="background-image: url('/images/webp/b2b8c739cc0476f3.webp');"></div>
 
             <div class="post-card-overlay">
                 <h2 class="post-card-title">
-                    <a href="/posts/6/">我们的时间从什么时候起停下来了</a>
+                    <span>我们的时间从什么时候起停下来了</span>
                 </h2>
 
                 <div class="post-card-info">
@@ -894,16 +929,17 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
         
     
         
-        <div class="post-item card-style" onclick="window.location.href='/posts/5/'">
+        
+        <a class="post-item card-style" href="/posts/5/">
             <div class="post-card-bg" style="background-image: url('/images/webp/0c3f4b2439c160b9.webp');"></div>
 
             <div class="post-card-overlay">
                 <h2 class="post-card-title">
-                    <a href="/posts/5/">『Q君与世界的外侧』</a>
+                    <span>『Q君与世界的外侧』</span>
                 </h2>
 
                 <div class="post-card-info">
@@ -922,16 +958,17 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
         
     
         
-        <div class="post-item card-style" onclick="window.location.href='/posts/3/'">
+        
+        <a class="post-item card-style" href="/posts/3/">
             <div class="post-card-bg" style="background-image: url('/images/webp/9a359fe1fd267021.webp');"></div>
 
             <div class="post-card-overlay">
                 <h2 class="post-card-title">
-                    <a href="/posts/3/">『Shamrock』</a>
+                    <span>『Shamrock』</span>
                 </h2>
 
                 <div class="post-card-info">
@@ -950,16 +987,17 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
         
     
         
-        <div class="post-item card-style" onclick="window.location.href='/posts/2/'">
+        
+        <a class="post-item card-style" href="/posts/2/">
             <div class="post-card-bg" style="background-image: url('/images/webp/b090dd5e0a7e6958.webp');"></div>
 
             <div class="post-card-overlay">
                 <h2 class="post-card-title">
-                    <a href="/posts/2/">『末班花火』</a>
+                    <span>『末班花火』</span>
                 </h2>
 
                 <div class="post-card-info">
@@ -978,16 +1016,17 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
         
     
         
-        <div class="post-item card-style" onclick="window.location.href='/posts/1/'">
+        
+        <a class="post-item card-style" href="/posts/1/">
             <div class="post-card-bg" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
 
             <div class="post-card-overlay">
                 <h2 class="post-card-title">
-                    <a href="/posts/1/">『原点』</a>
+                    <span>『原点』</span>
                 </h2>
 
                 <div class="post-card-info">
@@ -1008,7 +1047,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
         
     
 </section>
@@ -1159,7 +1198,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=2111740365" target="_blank" rel="noopener">
                         <span class="todo-rank">1</span>
-                        <img src="https://p2.music.126.net/19xlS-oxqi3yG7890PEehA==/109951173986849987.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/19xlS-oxqi3yG7890PEehA==/109951173986849987.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">itsuka</span>
                             <span class="todo-meta">ひとひら</span>
@@ -1170,7 +1209,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=26405133" target="_blank" rel="noopener">
                         <span class="todo-rank">2</span>
-                        <img src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">Girl meets NUMBER GIRL</span>
                             <span class="todo-meta">きのこ帝国</span>
@@ -1181,7 +1220,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=26405131" target="_blank" rel="noopener">
                         <span class="todo-rank">3</span>
-                        <img src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">スクールフィクション</span>
                             <span class="todo-meta">きのこ帝国</span>
@@ -1192,7 +1231,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=2722426126" target="_blank" rel="noopener">
                         <span class="todo-rank">4</span>
-                        <img src="https://p2.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">おとぎ</span>
                             <span class="todo-meta">RAY</span>
@@ -1203,7 +1242,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=2712589107" target="_blank" rel="noopener">
                         <span class="todo-rank">5</span>
-                        <img src="https://p2.music.126.net/jd5vRmlAEaJ40ao4HK2Wag==/109951171268447043.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/jd5vRmlAEaJ40ao4HK2Wag==/109951171268447043.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">春の嵐</span>
                             <span class="todo-meta">羊文学</span>
@@ -1214,7 +1253,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=2066755272" target="_blank" rel="noopener">
                         <span class="todo-rank">6</span>
-                        <img src="https://p2.music.126.net/cGIdZW4EEtPhd3rB775SaQ==/109951168857920159.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/cGIdZW4EEtPhd3rB775SaQ==/109951168857920159.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">飞松</span>
                             <span class="todo-meta">陈粒</span>
@@ -1225,7 +1264,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=2600524616" target="_blank" rel="noopener">
                         <span class="todo-rank">7</span>
-                        <img src="https://p2.music.126.net/TZyy6V0geCU5zP0j9lLDZg==/109951169703704961.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/TZyy6V0geCU5zP0j9lLDZg==/109951169703704961.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">流れゆく季節</span>
                             <span class="todo-meta">Haruka Nakamura</span>
@@ -1236,7 +1275,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=3428529559" target="_blank" rel="noopener">
                         <span class="todo-rank">8</span>
-                        <img src="https://p2.music.126.net/R6Gm6V1C_abBY3f_XbKIug==/109951173855089233.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/R6Gm6V1C_abBY3f_XbKIug==/109951173855089233.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">EP07M07 从哪里开始才是现实</span>
                             <span class="todo-meta">StJimmyL / Ray1-睿壹 / 小欣Xier</span>
@@ -1247,7 +1286,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=2748701151" target="_blank" rel="noopener">
                         <span class="todo-rank">9</span>
-                        <img src="https://p2.music.126.net/hTnLSH8R5Wj0_seLnUw_0A==/109951172051293982.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/hTnLSH8R5Wj0_seLnUw_0A==/109951172051293982.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">doll</span>
                             <span class="todo-meta">羊文学</span>
@@ -1258,7 +1297,7 @@
                 <li>
                     <a href="https://music.163.com/#/song?id=2055877719" target="_blank" rel="noopener">
                         <span class="todo-rank">10</span>
-                        <img src="https://p2.music.126.net/ePjJOVKbnCIOh9xmwaGiwQ==/109951169954583836.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p1.music.126.net/ePjJOVKbnCIOh9xmwaGiwQ==/109951169954583836.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">死にゆく季節のきみへ</span>
                             <span class="todo-meta">麻枝准 / やなぎなぎ</span>

@@ -632,6 +632,36 @@ var Glint = function (config) {
         onScrollFrame(update);
     }
 
+    // 首页封面卡片的悬浮感：指针在卡片上移动时写 --mx/--my（高光位置）与 --rx/--ry（轻微倾斜），样式在 glint.css 卡片一节
+    // 只在有精确指针、且未要求减少动效时启用；触屏上只有 CSS 的上浮
+    function setupCardFloat() {
+        if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var TILT = 2.5;             // deg：最大倾斜角
+        ks(".post-item.card-style:not(.cw-card)").each(function (card) {
+            var frame = 0, px = 0, py = 0;
+            function apply() {
+                frame = 0;
+                var r = card.getBoundingClientRect();
+                var x = Math.min(Math.max((px - r.left) / r.width, 0), 1);
+                var y = Math.min(Math.max((py - r.top) / r.height, 0), 1);
+                card.style.setProperty("--mx", (x * 100).toFixed(1) + "%");
+                card.style.setProperty("--my", (y * 100).toFixed(1) + "%");
+                card.style.setProperty("--rx", ((0.5 - y) * TILT).toFixed(2) + "deg");
+                card.style.setProperty("--ry", ((x - 0.5) * TILT).toFixed(2) + "deg");
+            }
+            card.addEventListener("pointermove", function (e) {
+                px = e.clientX; py = e.clientY;
+                if (!frame) frame = requestAnimationFrame(apply);
+            });
+            card.addEventListener("pointerleave", function () {
+                if (frame) { cancelAnimationFrame(frame); frame = 0; }
+                card.style.setProperty("--rx", "0deg");
+                card.style.setProperty("--ry", "0deg");
+            });
+        });
+    }
+
     // 关灯切换 (使用 sessionStorage 记忆单次会话)
     this.night = function () {
         if(body.classList.contains("dark-theme")){
@@ -1033,6 +1063,7 @@ var Glint = function (config) {
 
     this.header();
     setupImmersive();
+    setupCardFloat();
 
     if(content){
         this.tree();

@@ -75,7 +75,8 @@
 
 
     
-    <style>body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
+    
+    <style>body{ --page-bg-image: url(/images/webp/1517c17bafc5c814.webp) }</style>
     
 
     <!-- 思源黑体（Noto Sans SC）：国内镜像优先 + 本机字体名回退 -->
@@ -87,6 +88,155 @@
     <link rel="stylesheet"
           href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
           media="print" onload="this.media='all'; this.onload=null;">
+    
+    
+    
+
+<link rel="expect" href="#vt-post-title" blocking="render">
+<style>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
+<script>
+    (function () {
+        var root = document.documentElement;
+        var home = '/';
+        function norm(u) {
+            try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+        }
+        function isHome(p) {
+            return p === home || (p.indexOf(home + 'page/') === 0);
+        }
+        // 来源页：优先用 navigation.activation；拿不到时退回首页在 pageswap 里写下的记录（cw-vt-hop）
+        function fromHome() {
+            var act = window.navigation && navigation.activation;
+            var from = act && act.from && act.from.url;
+            if (from) return isHome(norm(from));
+            try {
+                var hop = JSON.parse(sessionStorage.getItem('cw-vt-hop'));
+                return !!hop && Date.now() - hop.t < 10000 && hop.to === norm(location.href) && isHome(hop.from);
+            } catch (err) { return false; }
+        }
+        window.addEventListener('pagereveal', function (e) {
+            if (!e.viewTransition) return;
+            if (!fromHome()) { e.viewTransition.skipTransition(); return; }
+            root.classList.add('vt-from-card');
+            e.viewTransition.finished.finally(function () { root.classList.remove('vt-from-card'); });
+        });
+        // 离开文章页：不做过渡
+        window.addEventListener('pageswap', function (e) {
+            if (e.viewTransition) e.viewTransition.skipTransition();
+        });
+    })();
+</script>
+
+    
+<script>
+    (function () {
+        var on = false;
+        try { on = localStorage.getItem('cw-vt-debug') === '1'; } catch (err) {}
+        if (!on) return;
+
+        var LOG_KEY = 'cw-vt-log';
+        var MAX = 60;
+        function read() {
+            try { return JSON.parse(sessionStorage.getItem(LOG_KEY)) || []; } catch (err) { return []; }
+        }
+        function write(list) {
+            try { sessionStorage.setItem(LOG_KEY, JSON.stringify(list.slice(-MAX))); } catch (err) {}
+        }
+        function push(entry) {
+            var list = read();
+            entry.i = list.length ? list[list.length - 1].i + 1 : 1;
+            list.push(entry);
+            write(list);
+            console.info('[cw-vt]', entry);
+            return entry.i;
+        }
+        function patch(i, fields) {
+            var list = read();
+            for (var k = list.length - 1; k >= 0; k--) {
+                if (list[k].i !== i) continue;
+                for (var f in fields) list[k][f] = fields[f];
+                write(list);
+                console.info('[cw-vt] #' + i, fields);
+                return;
+            }
+        }
+        function path(u) {
+            try { return new URL(u, location.href).pathname; } catch (err) { return String(u); }
+        }
+        // 当前带过渡名的元素，及其是否在视口内
+        function names() {
+            var out = [];
+            var all = document.querySelectorAll('*');
+            for (var k = 0; k < all.length; k++) {
+                var n = getComputedStyle(all[k]).viewTransitionName;
+                if (!n || n === 'none') continue;
+                var r = all[k].getBoundingClientRect();
+                out.push(n + (r.bottom > 0 && r.top < innerHeight && r.width && r.height ? '' : '(视口外)'));
+            }
+            return out.join(' ');
+        }
+        function vp() {
+            var d = document.documentElement;
+            var v = window.visualViewport;
+            return innerWidth + 'x' + innerHeight + ' client ' + d.clientWidth + 'x' + d.clientHeight +
+                (v ? ' vv ' + Math.round(v.width) + 'x' + Math.round(v.height) + ' z' + v.scale : '') +
+                ' dpr ' + devicePixelRatio + ' sh ' + d.scrollHeight;
+        }
+        function track(i, vt) {
+            if (!vt) return;
+            var t0 = performance.now();
+            vt.ready.then(function () {
+                patch(i, { ready: 'ok' });
+            }, function (err) {
+                patch(i, { ready: (err && err.name) + ': ' + (err && err.message) });
+            });
+            vt.finished.then(function () {
+                patch(i, { finished: Math.round(performance.now() - t0) + 'ms' });
+            });
+        }
+
+        window.addEventListener('pageswap', function (e) {
+            var to = e.activation && e.activation.entry && e.activation.entry.url;
+            var i = push({
+                ev: 'pageswap',
+                page: location.pathname,
+                to: to ? path(to) : null,
+                type: e.activation && e.activation.navigationType,
+                vt: !!e.viewTransition,
+                vp: vp(),
+                cls: document.documentElement.className,
+                names: e.viewTransition ? names() : ''
+            });
+            track(i, e.viewTransition);
+        });
+        window.addEventListener('pagereveal', function (e) {
+            var act = window.navigation && navigation.activation;
+            var hop = null;
+            try { hop = sessionStorage.getItem('cw-vt-hop'); } catch (err) {}
+            var i = push({
+                ev: 'pagereveal',
+                page: location.pathname,
+                from: act && act.from ? path(act.from.url) : null,
+                type: act && act.navigationType,
+                vt: !!e.viewTransition,
+                hop: hop,
+                sinceNav: Math.round(performance.now()) + 'ms',
+                vp: vp(),
+                cls: document.documentElement.className,
+                names: e.viewTransition ? names() : ''
+            });
+            track(i, e.viewTransition);
+        });
+
+        window.cwVtLog = function () {
+            var list = read();
+            console.table(list);
+            return JSON.stringify(list, null, 1);
+        };
+        window.cwVtClear = function () { write([]); };
+    })();
+</script>
+
     
     <noscript>
         <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
@@ -432,12 +582,14 @@
     })();
 </script>
 
-    <main>
+    
+<div class="vt-cover" aria-hidden="true"></div>
+<main>
     <div class="wrap min">
         
         <div class="reading-sheet">
         <section class="post-title">
-            <h2>2026-02 ~ 2026-04 随笔</h2>
+            <h2 id="vt-post-title">2026-02 ~ 2026-04 随笔</h2>
             <div class="post-meta">
                 <time class="date">2026.02.23</time>
 
@@ -1145,32 +1297,6 @@
 
     </div>
 </main>
-
-<script>
-    (function () {
-        // 文章有封面图时，将整站背景替换为该封面
-        // 但"关于网站"页面使用主页背景
-        var cover = "/images/webp/1517c17bafc5c814.webp";
-        var pageTitle = "2026-02 ~ 2026-04 随笔";
-        
-        if (!cover) return;
-        
-        // 如果是"关于网站"页面，不使用封面图，使用主页背景
-        if (pageTitle === "关于网站") {
-            document.body.style.removeProperty("--page-bg-image");
-            return;
-        }
-
-        // 等待 DOM 就绪后再修改 CSS 变量，避免和首屏样式冲突
-        if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", function () {
-                document.body.style.setProperty("--page-bg-image", "url(" + cover + ")");
-            });
-        } else {
-            document.body.style.setProperty("--page-bg-image", "url(" + cover + ")");
-        }
-    })();
-</script>
 
     <footer>
     <div class="wrap min">
