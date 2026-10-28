@@ -625,6 +625,12 @@ body {
     --hd-muted: rgba(255, 255, 255, 0.45);            /* 占位符 */
 }
 
+/* 顶栏字体：固定文字先用内联的思源黑体子集 Glint UI（_partial/ui-font.ejs，只有 600 一档，顶栏文字都是 550–600），首帧不再先露出微软雅黑
+   子集里没有的字（如搜索框里输入的内容）逐字回退到后面的思源黑体；设置里选了系统字体时 html 挂 font-system，不用它 */
+html:not(.font-system) :is(header, .head-menu) {
+    font-family: "Glint UI", "Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif;
+}
+
 /* 顶部导航栏：固定在顶部的毛玻璃条；页顶时更通透，往下滚动时由 :before 叠上一层更实的玻璃和投影 */
 header {
     position: fixed;
@@ -1940,6 +1946,30 @@ body.post-page main .post-comments:before { animation-delay: .15s; }
 /* 评论区原本整体淡入（改透明度），会让它自己的玻璃在动画期间失去模糊；改为只让里面的内容淡入 */
 body.post-page main .post-comments { animation: none; }
 body.post-page main .post-comments > * { animation: fade-in-top .3s .4s backwards; }
+
+/* 阅读页等字体（head.ejs 挂 html.page-loading）：正文先隐藏，入场动画停在起点，思源黑体就绪后从头播，不再先显示微软雅黑再整页跳字体
+   隐藏用 visibility（不能动祖先透明度，玻璃会失去模糊）；等超过 300ms 才浮出转圈，缓存命中时一闪而过看不到 */
+html.page-loading body.post-page main,
+html.page-loading .toc-mini { visibility: hidden; }
+html.page-loading body.post-page main,
+html.page-loading body.post-page main *,
+html.page-loading body.post-page main *::before,
+html.page-loading body.post-page main *::after { animation-play-state: paused !important; }
+html.page-loading body.post-page:after {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--tc-main) 22%, transparent);
+    border-top-color: var(--tc-main);
+    pointer-events: none;
+    animation: fade-in .3s .3s both, page-loading-spin .8s linear infinite;
+}
+@keyframes page-loading-spin { to { transform: rotate(1turn); } }
 
 @media screen and (max-width: 599px) {
     /* 手机端不用玻璃底板（两侧的描边贴着正文，干扰阅读）：正文与评论直接铺在背景上，
@@ -3989,6 +4019,24 @@ html.nav-collapsed .dark-theme .head-menu a.current { color: var(--tc-soft); bac
 html.nav-collapsed .dark-theme .head-menu a.current .fa { color: #1e1e20; background: var(--tc-soft); }
 html.nav-collapsed .dark-theme .head-menu a:hover { color: var(--tc-soft); }
 
+/* Gizmo 入口：四块磁贴下方横占一整排，图标在左、名称与简介横排，卡片保持矩形 */
+html:not(.nav-collapsed) .head-menu > .head-menu-gizmo { display: none; } /* 桌面端的入口是首页右侧的叶片 */
+html.nav-collapsed .head-menu a.head-menu-gizmo {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.75em;
+    padding: 0.6em 0.9em 0.6em 0.6em;
+    text-align: left;
+}
+html.nav-collapsed .head-menu a.head-menu-gizmo small {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
+}
+
 /* 收起式导航在桌面端：汉堡按钮占据最左侧，Logo 右移让位 */
 html.nav-collapsed .header-logo { left: 3em; }
 
@@ -4461,6 +4509,210 @@ body.hide-todo .todo-drawer { display: none; }
 }
 
 /* =========================================
+   Gizmo（首页右侧水面上的叶片入口 + /gizmo/ 陈列页）
+   ========================================= */
+
+/* 叶片：位置由 gizmo-leaf.js 逐帧写 transform（锚点 translate，叶身 rotate / scale），只动合成属性。
+   盖在背景与水波画布之上、页眉与浮层之下；顶栏导航收起时隐藏（入口在导航卡片里） */
+.gizmo-leaf {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9000;                  /* 低于 TODO 抽屉 (9001)、页眉与设置面板 */
+    width: 64px;                    /* 与 gizmo-leaf.js 的 CFG.len / height 一致 */
+    height: 40px;
+    color: inherit;
+    text-decoration: none;
+    opacity: 0;
+    pointer-events: none;
+    will-change: transform;
+    -webkit-tap-highlight-color: transparent;
+}
+/* 叶片配色（首页叶片与 Gizmo 页标题处的叶片共用，夜间；白天见第 8 节） */
+.gizmo-leaf, .gizmo-emblem {
+    --leaf-a: var(--tc-glow);       /* 叶面渐变：受光处 → 背光处 */
+    --leaf-b: var(--tc-dim);
+    --leaf-vein: rgba(255, 255, 255, 0.45);
+    --leaf-shadow: rgba(0, 0, 0, 0.45);
+}
+html.nav-collapsed .gizmo-leaf { display: none; }
+.gizmo-leaf.is-landed { opacity: 1; pointer-events: auto; transition: opacity .5s ease; }
+
+/* 落下 / 悬停 / 按下：只动 scale、translate 独立属性，不碰脚本写的 transform；平时随水轻轻摇摆 */
+.gizmo-leaf-float {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transition: scale .45s var(--ease-spring);
+}
+.gizmo-leaf.is-landed .gizmo-leaf-float { animation: gizmo-leaf-land .65s cubic-bezier(.3, .7, .4, 1) backwards; }
+@keyframes gizmo-leaf-land {
+    from { translate: -10px -26px; scale: 1.35; opacity: 0; }
+    70%  { scale: .96; opacity: 1; }
+    to   { translate: 0 0; scale: 1; }
+}
+@media (hover: hover) {
+    .gizmo-leaf:hover .gizmo-leaf-float { scale: 1.12; }
+}
+.gizmo-leaf:active .gizmo-leaf-float { scale: .94; transition-duration: .12s; }
+
+.gizmo-leaf-body {
+    display: block;
+    width: 100%;
+    height: 100%;
+    will-change: transform;
+}
+.gizmo-leaf svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 4px 5px var(--leaf-shadow)); /* 静态滤镜，随叶片层一起合成，不逐帧重算 */
+    animation: gizmo-leaf-sway 7s ease-in-out infinite alternate;
+    transform-origin: 50% 55%;
+}
+@keyframes gizmo-leaf-sway {
+    from { rotate: -3deg; }
+    to   { rotate: 3deg; }
+}
+.gizmo-emblem svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 6px 8px var(--leaf-shadow));
+    animation: gizmo-leaf-sway 7s ease-in-out infinite alternate;
+    transform-origin: 50% 55%;
+}
+.gizmo-leaf-stop-a { stop-color: var(--leaf-a); stop-opacity: .95; }
+.gizmo-leaf-stop-b { stop-color: var(--leaf-b); stop-opacity: .9; }
+.gizmo-leaf-blade { stroke: color-mix(in srgb, var(--tc-ice) 55%, transparent); stroke-width: .8; }
+.gizmo-leaf-vein, .gizmo-leaf-gloss { fill: none; stroke-linecap: round; }
+.gizmo-leaf-vein { stroke: var(--leaf-vein); stroke-width: .9; }
+.gizmo-leaf-gloss { stroke: rgba(255, 255, 255, 0.55); stroke-width: 1.2; opacity: .7; }
+
+/* 名称标签：悬停 / 聚焦时在叶片下方浮现（叶片在动，不用毛玻璃，实色底） */
+.gizmo-leaf-tag {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    padding: .25em .7em;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    line-height: 1.5;
+    white-space: nowrap;
+    color: var(--tc-ice);
+    background: color-mix(in srgb, var(--tc-ink) 82%, transparent);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    translate: -50% -4px;
+    pointer-events: none;
+    transition: opacity .2s ease, translate .35s var(--ease-spring);
+}
+.gizmo-leaf:hover .gizmo-leaf-tag,
+.gizmo-leaf:focus-visible .gizmo-leaf-tag { opacity: 1; translate: -50% 0; }
+
+@media (prefers-reduced-motion: reduce) {
+    .gizmo-leaf svg, .gizmo-emblem svg, .gizmo-leaf.is-landed .gizmo-leaf-float { animation: none; }
+}
+
+/* 叶片一镜到底（首页 → Gizmo）：首页 pageswap 给叶身挂 gizmo-leaf（head.ejs leaveToGizmo），Gizmo 页标题处的 .gizmo-emblem 常驻同名。
+   背景两边一样，root 只做淡入淡出；Gizmo 页内容在 gizmo-from-leaf 期间藏着，叶片落定后浮现（_partial/gizmo-vt.ejs） */
+html.gizmo-leaving .gizmo-leaf-tag { opacity: 0; transition: none; }
+.gizmo-emblem { view-transition-name: gizmo-leaf; }
+::view-transition-group(gizmo-leaf) { animation-duration: .75s; animation-timing-function: cubic-bezier(.3, .9, .3, 1.04); }
+::view-transition-old(gizmo-leaf), ::view-transition-new(gizmo-leaf) { animation-duration: .75s; }
+html.gizmo-from-leaf::view-transition-old(root) { animation-duration: .3s; }
+html.gizmo-from-leaf::view-transition-new(root) { animation-duration: .3s; }
+html.gizmo-from-leaf .gizmo-emblem svg { animation: none; }   /* 带过渡名的元素保持静止 */
+html.gizmo-leaf-in .gizmo-head, html.gizmo-leaf-in .gizmo-shelf { animation: none; }
+/* 只在浮现时过渡；藏起来是一瞬间的事（否则首帧前会从 1 淡到 0，过渡中途隐约可见） */
+html.gizmo-leaf-in:not(.gizmo-from-leaf) .gizmo-head > :not(.gizmo-emblem), html.gizmo-leaf-in:not(.gizmo-from-leaf) .gizmo-intro, html.gizmo-leaf-in:not(.gizmo-from-leaf) .gizmo-shelf {
+    transition: opacity .5s ease, translate .6s var(--ease-spring);
+}
+html.gizmo-leaf-in:not(.gizmo-from-leaf) .gizmo-head > :not(.gizmo-emblem):nth-child(n+3), html.gizmo-leaf-in:not(.gizmo-from-leaf) .gizmo-intro { transition-delay: .06s; }
+html.gizmo-leaf-in:not(.gizmo-from-leaf) .gizmo-shelf { transition-delay: .12s; }
+html.gizmo-from-leaf .gizmo-head > :not(.gizmo-emblem), html.gizmo-from-leaf .gizmo-intro, html.gizmo-from-leaf .gizmo-shelf {
+    opacity: 0;
+    translate: 0 14px;
+}
+
+/* 陈列页：标题区 + 卡片墙（篇目来自 source/_data/gizmo.yml） */
+.gizmo-head {
+    margin: 1em 0 2em;
+    text-align: center;
+    animation: fade-in-top .4s backwards;
+}
+.gizmo-emblem {
+    display: block;
+    width: 112px;                   /* 首页叶片（64 × 40）的 1.75 倍 */
+    height: 70px;
+    margin: 0 auto .5em;
+    rotate: -12deg;
+}
+.gizmo-head h2 { margin: 0; font-size: 2em; letter-spacing: .08em; }
+.gizmo-head p { margin: .4em 0 0; font-size: .92em; letter-spacing: .1em; opacity: .65; }
+.gizmo-intro { margin-bottom: 1.5em; }
+.gizmo-page footer .sub-footer:before { display: none; } /* 上方没有卡片，分隔线也不要了 */
+
+.gizmo-shelf {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15em, 1fr));
+    gap: 1em;
+    margin-bottom: 3em;
+    animation: fade-in-top .4s .12s backwards;
+}
+.gizmo-card {
+    display: flex;
+    flex-direction: column;
+    gap: .8em;
+    padding: 1.1em 1.2em;
+    border-radius: 18px;
+    corner-shape: squircle;
+    color: inherit;
+    text-decoration: none;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    transition: translate .35s var(--ease-spring), border-color .25s;
+}
+@media (hover: hover) {
+    .gizmo-card:hover { translate: 0 -3px; border-color: color-mix(in srgb, var(--tc-soft) 45%, transparent); }
+}
+.gizmo-card-icon {
+    display: grid;
+    place-items: center;
+    width: 2.4em;
+    height: 2.4em;
+    border-radius: 12px;
+    color: var(--tc-soft);
+    background: color-mix(in srgb, var(--tc-soft) 14%, transparent);
+}
+.gizmo-card-text { display: flex; flex-direction: column; gap: .3em; min-width: 0; }
+.gizmo-card-name { font-weight: 600; font-size: 1.05em; }
+.gizmo-card-desc { font-size: .88em; line-height: 1.5; opacity: .75; }
+.gizmo-card-meta { display: flex; align-items: center; gap: .6em; margin-top: auto; font-size: .75em; opacity: .7; }
+.gizmo-card-type {
+    padding: .1em .6em;
+    border-radius: 999px;
+    color: var(--tc-soft);
+    background: color-mix(in srgb, var(--tc-soft) 12%, transparent);
+}
+.gizmo-empty {
+    grid-column: 1 / -1;
+    padding: 3em 1em;
+    border-radius: 18px;
+    corner-shape: squircle;
+    text-align: center;
+    border: 1px dashed color-mix(in srgb, var(--tc-soft) 35%, transparent);
+}
+.gizmo-empty p { margin: 0; letter-spacing: .1em; opacity: .6; }
+
+/* =========================================
    8 - 白天模式配色（暮光）
    取色自首页背景图：上方澄蓝天空 → 中段暖白云层 → 下方落日橙。
    全部以 body:not(.dark-theme) 限定，只影响白天模式，夜间模式不受影响。
@@ -4626,3 +4878,14 @@ body:not(.dark-theme) footer .footer-tags a { border-color: rgba(120, 90, 60, 0.
 body:not(.dark-theme) .quote-box {
     background: rgba(110, 80, 50, .07);
 }
+
+/* 白天模式 Gizmo：叶片取更深一级的主题色，投影更淡；陈列页的强调色同理 */
+body:not(.dark-theme) .gizmo-leaf, body:not(.dark-theme) .gizmo-emblem {
+    --leaf-a: var(--tc-main);
+    --leaf-b: var(--tc-deep);
+    --leaf-vein: rgba(255, 255, 255, 0.55);
+    --leaf-shadow: rgba(60, 40, 20, 0.28);
+}
+body:not(.dark-theme) .gizmo-leaf-tag { color: #fff; background: color-mix(in srgb, var(--tc-deep) 88%, transparent); }
+body:not(.dark-theme) .gizmo-card-icon,
+body:not(.dark-theme) .gizmo-card-type { color: var(--blue); }

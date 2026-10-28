@@ -335,6 +335,7 @@ var Glint = function (config) {
         } else {
             body.style.fontFamily = SYSTEM_FONT_STACK;
         }
+        document.documentElement.classList.toggle("font-system", fontFamily !== "noto-sans-sc"); // 顶栏的内联字体随之撤掉（glint.css「顶栏字体」）
 
         // 沉浸模式：开启时由 setupImmersive() 根据滚动收起 / 唤出顶栏；关闭时立即复位
         body.classList.toggle("immersive", !!currentSettings.immersive);
@@ -960,7 +961,8 @@ var Glint = function (config) {
         const tocBody = trees.querySelector(".article-list-body");
 
         ks.each(headings, (t, index) => {
-            const text = t.innerText;
+            // 用 textContent：等字体期间正文是 visibility: hidden（head.ejs 的 page-loading），innerText 会跳过不可见的文字取到空串
+            const text = t.textContent.replace(/\s+/g, " ").trim();
 
             t.id = "title-" + index;
 

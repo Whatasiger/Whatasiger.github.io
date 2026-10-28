@@ -541,15 +541,12 @@
             speed: 1.7,
             alpha: .5
         });
-        var axisTop = 0;
         var stuckY = narrow ? 58 : 76;
         var stuck = false;
 
         function measure() {
             narrow = window.innerWidth < 640;
             stuckY = narrow ? 58 : 76;
-            var r = axis.getBoundingClientRect();
-            axisTop = r.top + r.height / 2 + window.scrollY;
             carrier.opts.wavelength = narrow ? 46 : 58;
             carrier.opts.amplitude = narrow ? 4 : 5.5;
             carrier.resize();
@@ -600,8 +597,11 @@
         };
 
         // 载波此刻的中线与缩放：随轴线滚动，滚到顶部后吸住（stuckY），越接近吸顶振幅越小
+        // 轴线位置每帧实测，不缓存：手机上目录页是预渲染的，预渲染时的视口高度（首屏 100svh 居中）、字体与真正打开时不同，
+        // 激活后轴线会移位却不一定触发 resize，缓存的坐标会让载波落到大标题上
         function line() {
-            var raw = axisTop - window.scrollY;
+            var r = axis.getBoundingClientRect();
+            var raw = r.top + r.height / 2;
             return { raw: raw, y: Math.max(stuckY, raw), scale: .55 + .45 * clamp((raw - stuckY) / 260, 0, 1) };
         }
         // 画布上载波此刻在屏幕上的样子（轴线的宽、按振幅缩放的高）：从首页卡片进来时，卡片载波按它定终点（carrier-wave-head.ejs）

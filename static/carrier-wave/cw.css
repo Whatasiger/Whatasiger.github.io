@@ -867,7 +867,7 @@ html.cw-from-home::view-transition-new(root) {
 
 @media (max-width: 640px) {
     .cw-corner, .cw-tuner { top: 18px; left: 20px; right: 20px; font-size: 14px; }
-    .cw-title { font-size: clamp(32px, 10vw, 46px); } /* 原下限 46px 在手机上几乎撑满屏宽 */
+    .cw-title { font-size: clamp(36px, 12vw, 48px); } /* 原下限 46px 在手机上几乎撑满屏宽 */
     .cw-tuner { left: auto; }
     .cw-list { padding: 14vh 20px 4vh; }
     .cw-track-link {

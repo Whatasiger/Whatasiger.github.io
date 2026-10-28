@@ -12,6 +12,9 @@
  *   - 物理按固定 60Hz 步进，高刷屏下波速不变；不支持 WebGL2 / 偏好减少动画时直接不启用
  *   - 物理通道用 texelFetch 精确取相邻格（不经线性过滤），系数低于稳定极限且高度/速度钳位，
  *     避免个别 GPU 上误差累积成高频发散（满屏泛白）
+ *   - 对外接口 window.waterRipple（首页 Gizmo 叶片在用，见 gizmo-leaf.js）：
+ *     drop() 在任意位置激发水波；probe 指定一块区域，水波运行时每帧把该区域的水面
+ *     经 PBO + fence 异步读回（不阻塞 GPU），sample() 取其中某点的高度 / 坡度 / 起伏速度
  */
 (function () {
     "use strict";
@@ -160,6 +163,11 @@
     var activePointers = {};
     var activePointerCount = 0;
 
+    // 水面读回：probe = { x, y, r }（CSS px，视口坐标）由外部设置；field 为最近一次读回的结果
+    var probe = null;
+    var field = null;      // { x0, y0, w, h, data }：格坐标（y 轴向上）下的一块 RGBA 浮点数据
+    var readPbo = null, readSync = null, readRect = null;
+
     /* ── 初始化 ──────────────────────────────────────────── */
     function init() {
         if (document.getElementById("water-ripple-canvas")) return;
@@ -264,6 +272,7 @@
         cur = 0;
         amp = 0;
         bgKey = "";
+        field = null;
         if (visible) stop();
     }
 
@@ -376,6 +385,59 @@
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
+    /* ── 水面读回 ────────────────────────────────────────── */
+    // 上一次的读取完成了才取数据并发起下一次，GPU 不必为此停下来等 CPU
+    function readField() {
+        if (readSync) {
+            if (gl.getSyncParameter(readSync, gl.SYNC_STATUS) !== gl.SIGNALED) return;
+            gl.deleteSync(readSync);
+            readSync = null;
+            var rr = readRect;
+            var data = new Float32Array(rr.w * rr.h * 4);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, readPbo);
+            gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, data);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+            field = { x0: rr.x, y0: rr.y, w: rr.w, h: rr.h, data: data };
+        }
+        if (!probe) return;
+        var cx = vw / simW, cy = vh / simH;
+        var x0 = Math.max(0, Math.floor((probe.x - probe.r) / cx) - 1);
+        var x1 = Math.min(simW, Math.ceil((probe.x + probe.r) / cx) + 1);
+        var y0 = Math.max(0, Math.floor((vh - probe.y - probe.r) / cy) - 1);
+        var y1 = Math.min(simH, Math.ceil((vh - probe.y + probe.r) / cy) + 1);
+        if (x1 - x0 < 3 || y1 - y0 < 3) return;
+        readRect = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+        if (!readPbo) readPbo = gl.createBuffer();
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, readPbo);
+        gl.bufferData(gl.PIXEL_PACK_BUFFER, readRect.w * readRect.h * 16, gl.STREAM_READ);
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, state[cur].fbo);
+        gl.readPixels(x0, y0, readRect.w, readRect.h, gl.RGBA, gl.FLOAT, 0);
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+        readSync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    }
+
+    // 某点（CSS px）的水面：h 高度、v 每步起伏速度、gx / gy 每 CSS px 的坡度（y 轴向下）；不在读回范围内返回 null
+    function sample(x, y) {
+        if (!field) return null;
+        var cx = vw / simW, cy = vh / simH;
+        var fx = x / cx - 0.5 - field.x0, fy = (vh - y) / cy - 0.5 - field.y0;
+        if (fx < 1 || fy < 1 || fx > field.w - 2 || fy > field.h - 2) return null;
+        function at(ch, px, py) {
+            var ix = Math.floor(px), iy = Math.floor(py), tx = px - ix, ty = py - iy;
+            var d = field.data, w = field.w;
+            var a = d[(iy * w + ix) * 4 + ch], b = d[(iy * w + ix + 1) * 4 + ch];
+            var c = d[((iy + 1) * w + ix) * 4 + ch], e = d[((iy + 1) * w + ix + 1) * 4 + ch];
+            return (a + (b - a) * tx) + ((c + (e - c) * tx) - (a + (b - a) * tx)) * ty;
+        }
+        return {
+            h: at(0, fx, fy),
+            v: at(1, fx, fy),
+            gx: (at(0, fx + 1, fy) - at(0, fx - 1, fy)) / (2 * cx),
+            gy: -(at(0, fx, fy + 1) - at(0, fx, fy - 1)) / (2 * cy)
+        };
+    }
+
     /* ── 动画主循环 ──────────────────────────────────────── */
     function frame(now) {
         rafId = null;
@@ -398,6 +460,7 @@
         }
 
         draw();
+        readField();
         if (!visible) {
             visible = true;
             canvas.style.visibility = "visible";
@@ -418,6 +481,7 @@
             acc = 1000 / 60;
         }
         rafId = requestAnimationFrame(frame);
+        if (window.waterRipple.onStart) window.waterRipple.onStart();
     }
 
     function stop() {
@@ -426,6 +490,8 @@
         visible = false;
         canvas.style.visibility = "hidden";
         amp = 0;
+        field = null;
+        if (readSync) { gl.deleteSync(readSync); readSync = null; }
         pendingDrops.length = 0;
         state.forEach(function (st) {
             gl.bindFramebuffer(gl.FRAMEBUFFER, st.fbo);
@@ -567,6 +633,16 @@
             timer = setTimeout(fn, ms);
         };
     }
+
+    /* ── 对外接口 ────────────────────────────────────────── */
+    window.waterRipple = {
+        drop: function (x, y, r, s) { if (gl) queueDrop(x, y, x, y, r || CFG.dropRadius, s == null ? CFG.dropStrength : s); },
+        stroke: function (ax, ay, bx, by, r, s) { if (gl) queueDrop(ax, ay, bx, by, r || CFG.strokeRadius, s == null ? CFG.strokeStrength : s); },
+        setProbe: function (p) { probe = p; },
+        sample: sample,
+        isActive: function () { return !!rafId; },
+        onStart: null       // 水波从静止开始运行时调用（叶片据此醒来随波漂动）
+    };
 
     /* ── 启动 ──────────────────────────────────────────── */
     if (document.readyState === "loading") {
