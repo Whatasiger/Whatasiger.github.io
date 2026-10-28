@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://whatasiger.xyz/about-website/index.html</loc>
+    
+    <lastmod>2026-10-28</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://whatasiger.xyz/gizmo/index.html</loc>
     
     <lastmod>2026-10-28</lastmod>
@@ -12,15 +21,6 @@
   
   <url>
     <loc>https://whatasiger.xyz/friend/index.html</loc>
-    
-    <lastmod>2026-10-27</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://whatasiger.xyz/about-website/index.html</loc>
     
     <lastmod>2026-10-27</lastmod>
     
