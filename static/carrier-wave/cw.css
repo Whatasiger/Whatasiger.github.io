@@ -108,6 +108,10 @@ body.cw::after {
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 body.cw-reader::after { opacity: .03; }
+/* 手机 Chrome 快速滑动时地址栏随之收起，固定层要等滑动停下才长高，期间底部会露出一道深色带：直接按大视口高度铺 */
+@supports (height: 100lvh) {
+    .cw-stage, body.cw::after { bottom: auto; height: 100lvh; }
+}
 
 ::selection { background: color-mix(in srgb, var(--tint) 42%, transparent); color: var(--ink); }
 

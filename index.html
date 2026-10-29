@@ -64,7 +64,7 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=d54ed825">
+    <link rel="stylesheet" href="/static/glint.css?v=e95365f6">
     
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -712,6 +712,29 @@
         var isFromArticle = sessionStorage.getItem("is_from_article") === "true";
         var theme = sessionStorage.getItem("theme");
 
+        // 手机端锁定背景层高度（glint.css 的 --bg-lock-h），首帧前就定好：工具栏伸缩只改视口高度，
+        // Via 这类 WebView 浏览器连 100lvh 也会跟着变，背景随之重算 cover 就会上下跳。
+        // 同一宽度下取 100lvh、视口高度、屏幕高度中的最大者、只增不减（算上屏幕高度，工具栏第一次收起时也不必再长高）；宽度变化（转屏）时重新取
+        try {
+            if (window.matchMedia("(pointer: coarse)").matches && CSS.supports("height", "100lvh")) {
+                var lockRoot = document.documentElement, lockWidth = -1, lockHeight = 0;
+                var lockBgHeight = function () {
+                    if (window.innerWidth !== lockWidth) {
+                        lockWidth = window.innerWidth;
+                        lockRoot.style.removeProperty("--bg-lock-h");
+                        var sw = screen.width || 0, sh = screen.height || 0;
+                        lockHeight = window.innerWidth < window.innerHeight ? Math.max(sw, sh) : Math.min(sw, sh);
+                    }
+                    var h = Math.max(lockHeight, window.innerHeight, parseFloat(getComputedStyle(document.body, "::before").height) || 0);
+                    if (h === lockHeight && lockRoot.style.getPropertyValue("--bg-lock-h")) return;
+                    lockHeight = h;
+                    lockRoot.style.setProperty("--bg-lock-h", h + "px");
+                };
+                lockBgHeight();
+                window.addEventListener("resize", lockBgHeight);
+            }
+        } catch (e) {}
+
         // 0. 立即应用字体设置，避免字体闪烁
         try {
             var SETTINGS_KEY = "whatasiger_reader_settings";
@@ -731,24 +754,15 @@
         }
 
         // 0.1 背景可见度：与设置面板共用唯一数据源 whatasiger_reader_settings.bgOpacity
-        var targetBgOpacity = 0.50; // 与 glint.js defaultSettings.bgOpacity=35 对应
-        var defaultBgOpacityValue = 50; // 默认档位（0~100），用于“从文章回首页”时重置
+        var targetBgOpacity = 0.55; // 与 glint.js defaultSettings.bgOpacity=55 一致
         try {
             var readerSettings = JSON.parse(localStorage.getItem("whatasiger_reader_settings"));
             if (readerSettings && typeof readerSettings.bgOpacity === "number") {
                 var v = readerSettings.bgOpacity;
                 if (v >= 0 && v <= 100) targetBgOpacity = v / 100;
             }
-            // 从文章回到首页时：强制恢复为默认可见度，并写回设置
-            if (!isArticle && isFromArticle) {
-                targetBgOpacity = defaultBgOpacityValue / 100;
-                if (readerSettings && typeof readerSettings === "object") {
-                    readerSettings.bgOpacity = defaultBgOpacityValue;
-                    try { localStorage.setItem("whatasiger_reader_settings", JSON.stringify(readerSettings)); } catch (e) {}
-                }
-            }
         } catch (e) {
-            // 忽略错误，使用默认 0.35
+            // 忽略错误，使用默认 0.55
         }
 
         // 0.2 背景模糊度：文章页使用用户保存值（默认8px），首页始终为0
@@ -824,23 +838,24 @@
         </a>
     </div>
     <div class="head-action">
-        <div class="toggle-btn"></div>
-        <div class="light-btn"></div>
-        <div class="settings-btn"></div>
+        <button type="button" class="toggle-btn" aria-label="导航" aria-controls="header-menu" aria-expanded="false"></button>
+        <button type="button" class="light-btn" aria-label="切换日夜模式"></button>
+        <button type="button" class="settings-btn" aria-label="阅读设置" aria-controls="reader-settings-panel" aria-expanded="false"></button>
         
-            <div class="search-btn"></div>
+            <button type="button" class="search-btn" aria-label="搜索文章" aria-controls="header-search" aria-expanded="false"></button>
         
     </div>
 
     
-        <div class="head-search">
-            <input type="text" id="local-search-input" name="s" placeholder="标题 / 标签 / 正文">
-            <div id="local-search-result"></div>
+        <div class="head-search" id="header-search">
+            <label class="sr-only" for="local-search-input">搜索文章（标题 / 标签 / 正文）</label>
+            <input type="text" id="local-search-input" name="s" placeholder="标题 / 标签 / 正文" aria-controls="local-search-result" aria-expanded="false">
+            <div id="local-search-result" aria-live="polite"></div>
         </div>
     
 </header>
 
-<div class="settings-panel" id="reader-settings-panel">
+<div class="settings-panel" id="reader-settings-panel" inert aria-hidden="true">
     <div class="settings-panel-inner">
         <div class="settings-panel-header">
             <i class="fa fa-sliders"></i>
@@ -934,7 +949,7 @@
     </div>
 </div>
 
-<nav class="head-menu">
+<nav class="head-menu" id="header-menu" aria-label="主导航">
     <span class="head-menu-pill" aria-hidden="true"></span>
     <a href="/" class="current"><i class="fa fa-home"></i><span>首页</span></a>
     
@@ -1160,9 +1175,17 @@
                 a.addEventListener("pointerenter", function (e) {
                     if (e.pointerType === "touch") return;
                     clearTimeout(leaveTimer);
+                    dock.classList.remove("tip-off");
                     place(a);
                 });
-                a.addEventListener("focus", function () { place(a); });
+                a.addEventListener("focus", function () {
+                    clearTimeout(leaveTimer);
+                    // 键盘聚焦不出名称标签；鼠标点击带来的聚焦照旧（悬停时已显示）
+                    var keyboard = true;
+                    try { keyboard = a.matches(":focus-visible"); } catch (e) {}
+                    if (keyboard) dock.classList.add("tip-off");
+                    place(a);
+                });
             });
             // 图标之间有空隙，稍等再收起，免得划过空隙时闪一下
             function leave() {
@@ -1170,7 +1193,10 @@
                 leaveTimer = setTimeout(function () { dock.classList.remove("is-pointing"); }, 120);
             }
             dock.addEventListener("pointerleave", leave);
-            dock.addEventListener("focusout", leave);
+            dock.addEventListener("focusout", function (e) {
+                if (dock.contains(e.relatedTarget)) return;
+                leave();
+            });
             dock.addEventListener("pointerenter", function () { clearTimeout(leaveTimer); });
         })();
     </script>
@@ -1687,30 +1713,8 @@
                 </li>
                 
                 <li>
-                    <a href="https://music.163.com/#/song?id=2600524616" target="_blank" rel="noopener">
-                        <span class="todo-rank">7</span>
-                        <img src="https://p2.music.126.net/TZyy6V0geCU5zP0j9lLDZg==/109951169703704961.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">流れゆく季節</span>
-                            <span class="todo-meta">Haruka Nakamura</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
-                    <a href="https://music.163.com/#/song?id=3428529559" target="_blank" rel="noopener">
-                        <span class="todo-rank">8</span>
-                        <img src="https://p2.music.126.net/R6Gm6V1C_abBY3f_XbKIug==/109951173855089233.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">EP07M07 从哪里开始才是现实</span>
-                            <span class="todo-meta">StJimmyL / Ray1-睿壹 / 小欣Xier</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li>
                     <a href="https://music.163.com/#/song?id=2748701151" target="_blank" rel="noopener">
-                        <span class="todo-rank">9</span>
+                        <span class="todo-rank">7</span>
                         <img src="https://p2.music.126.net/hTnLSH8R5Wj0_seLnUw_0A==/109951172051293982.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">doll</span>
@@ -1720,12 +1724,34 @@
                 </li>
                 
                 <li>
-                    <a href="https://music.163.com/#/song?id=1997152503" target="_blank" rel="noopener">
-                        <span class="todo-rank">10</span>
-                        <img src="https://p2.music.126.net/Ou3mKy2eeUUWngLJvdTDWg==/109951169954567646.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                    <a href="https://music.163.com/#/song?id=3445011911" target="_blank" rel="noopener">
+                        <span class="todo-rank">8</span>
+                        <img src="https://p2.music.126.net/eSdq3aeLpbCjnwMzjiX8xA==/109951174070142556.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">夏気球</span>
-                            <span class="todo-meta">麻枝准 / やなぎなぎ</span>
+                            <span class="todo-title">チェイス</span>
+                            <span class="todo-meta">ひとひら</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://music.163.com/#/song?id=3428529559" target="_blank" rel="noopener">
+                        <span class="todo-rank">9</span>
+                        <img src="https://p2.music.126.net/R6Gm6V1C_abBY3f_XbKIug==/109951173855089233.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">EP07M07 从哪里开始才是现实</span>
+                            <span class="todo-meta">StJimmyL / Ray1-睿壹 / 小欣Xier</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://music.163.com/#/song?id=2600524616" target="_blank" rel="noopener">
+                        <span class="todo-rank">10</span>
+                        <img src="https://p2.music.126.net/TZyy6V0geCU5zP0j9lLDZg==/109951169703704961.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">流れゆく季節</span>
+                            <span class="todo-meta">Haruka Nakamura</span>
                         </span>
                     </a>
                 </li>
@@ -1733,7 +1759,7 @@
             
         </ol>
         
-            <p class="todo-note">更新于 2026-10-28</p>
+            <p class="todo-note">更新于 2026-10-29</p>
         
     </section>
 </aside>
@@ -1743,9 +1769,9 @@
 </button>
 </div>
 
-<script src="/static/todo-sidebar.js?v=dfe1440a"></script>
+<script src="/static/todo-sidebar.js?v=88c6f262"></script>
 
-<script src="/static/water-ripple.js?v=e27f7b3b"></script>
+<script src="/static/water-ripple.js?v=6d38346f"></script>
 
 <a class="gizmo-leaf" href="/gizmo/" aria-label="Gizmo：随手做的小玩意">
     <span class="gizmo-leaf-float">
@@ -1801,7 +1827,7 @@
 <div class="buttons"></div>
 
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=5d032d45"></script>
+<script src="/static/glint.js?v=6cb09311"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 

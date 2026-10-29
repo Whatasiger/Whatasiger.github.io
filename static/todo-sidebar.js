@@ -55,13 +55,23 @@
         if (savedPos >= 0 && savedPos <= 1) togglePos = savedPos;
     } catch (e) {}
 
+    // 比例换算的基准高度只在宽度变化（转屏）时更新：手机地址栏 / 工具栏伸缩只改视口高度，按实时高度换算标签会上下跳
+    var baseWidth = window.innerWidth, baseHeight = window.innerHeight;
+    function baseH() {
+        if (window.innerWidth !== baseWidth) {
+            baseWidth = window.innerWidth;
+            baseHeight = window.innerHeight;
+        }
+        return baseHeight;
+    }
+
     function placeToggle() {
         var vh = window.innerHeight;
         var half = toggle.offsetHeight / 2;
         var header = document.querySelector("header");
         var min = (header ? header.getBoundingClientRect().bottom : 0) + half + 8;
-        var max = vh - half - 8;
-        var y = Math.min(Math.max(togglePos * vh, min), Math.max(min, max));
+        var max = vh - half - 8;                    // 仍按实际视口夹紧，标签不会被工具栏遮住
+        var y = Math.min(Math.max(togglePos * baseH(), min), Math.max(min, max));
         toggle.style.top = y + "px";
     }
 
@@ -79,10 +89,10 @@
             toggle.setPointerCapture(e.pointerId);
             toggle.classList.add("dragging");
         }
-        togglePos = drag.startPos + dy / window.innerHeight;
+        togglePos = drag.startPos + dy / baseH();
         placeToggle();
         // 夹紧后回写实际位置，避免拖出边界后再拖回时“空走”
-        togglePos = parseFloat(toggle.style.top) / window.innerHeight;
+        togglePos = parseFloat(toggle.style.top) / baseH();
     });
 
     function endDrag(e) {

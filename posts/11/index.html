@@ -68,7 +68,7 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=d54ed825">
+    <link rel="stylesheet" href="/static/glint.css?v=e95365f6">
     
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -634,6 +634,29 @@
         var isFromArticle = sessionStorage.getItem("is_from_article") === "true";
         var theme = sessionStorage.getItem("theme");
 
+        // 手机端锁定背景层高度（glint.css 的 --bg-lock-h），首帧前就定好：工具栏伸缩只改视口高度，
+        // Via 这类 WebView 浏览器连 100lvh 也会跟着变，背景随之重算 cover 就会上下跳。
+        // 同一宽度下取 100lvh、视口高度、屏幕高度中的最大者、只增不减（算上屏幕高度，工具栏第一次收起时也不必再长高）；宽度变化（转屏）时重新取
+        try {
+            if (window.matchMedia("(pointer: coarse)").matches && CSS.supports("height", "100lvh")) {
+                var lockRoot = document.documentElement, lockWidth = -1, lockHeight = 0;
+                var lockBgHeight = function () {
+                    if (window.innerWidth !== lockWidth) {
+                        lockWidth = window.innerWidth;
+                        lockRoot.style.removeProperty("--bg-lock-h");
+                        var sw = screen.width || 0, sh = screen.height || 0;
+                        lockHeight = window.innerWidth < window.innerHeight ? Math.max(sw, sh) : Math.min(sw, sh);
+                    }
+                    var h = Math.max(lockHeight, window.innerHeight, parseFloat(getComputedStyle(document.body, "::before").height) || 0);
+                    if (h === lockHeight && lockRoot.style.getPropertyValue("--bg-lock-h")) return;
+                    lockHeight = h;
+                    lockRoot.style.setProperty("--bg-lock-h", h + "px");
+                };
+                lockBgHeight();
+                window.addEventListener("resize", lockBgHeight);
+            }
+        } catch (e) {}
+
         // 0. 立即应用字体设置，避免字体闪烁
         try {
             var SETTINGS_KEY = "whatasiger_reader_settings";
@@ -653,24 +676,15 @@
         }
 
         // 0.1 背景可见度：与设置面板共用唯一数据源 whatasiger_reader_settings.bgOpacity
-        var targetBgOpacity = 0.50; // 与 glint.js defaultSettings.bgOpacity=35 对应
-        var defaultBgOpacityValue = 50; // 默认档位（0~100），用于“从文章回首页”时重置
+        var targetBgOpacity = 0.55; // 与 glint.js defaultSettings.bgOpacity=55 一致
         try {
             var readerSettings = JSON.parse(localStorage.getItem("whatasiger_reader_settings"));
             if (readerSettings && typeof readerSettings.bgOpacity === "number") {
                 var v = readerSettings.bgOpacity;
                 if (v >= 0 && v <= 100) targetBgOpacity = v / 100;
             }
-            // 从文章回到首页时：强制恢复为默认可见度，并写回设置
-            if (!isArticle && isFromArticle) {
-                targetBgOpacity = defaultBgOpacityValue / 100;
-                if (readerSettings && typeof readerSettings === "object") {
-                    readerSettings.bgOpacity = defaultBgOpacityValue;
-                    try { localStorage.setItem("whatasiger_reader_settings", JSON.stringify(readerSettings)); } catch (e) {}
-                }
-            }
         } catch (e) {
-            // 忽略错误，使用默认 0.35
+            // 忽略错误，使用默认 0.55
         }
 
         // 0.2 背景模糊度：文章页使用用户保存值（默认8px），首页始终为0
@@ -746,16 +760,16 @@
         </a>
     </div>
     <div class="head-action">
-        <div class="toggle-btn"></div>
-        <div class="light-btn"></div>
-        <div class="settings-btn"></div>
+        <button type="button" class="toggle-btn" aria-label="导航" aria-controls="header-menu" aria-expanded="false"></button>
+        <button type="button" class="light-btn" aria-label="切换日夜模式"></button>
+        <button type="button" class="settings-btn" aria-label="阅读设置" aria-controls="reader-settings-panel" aria-expanded="false"></button>
         
     </div>
 
     
 </header>
 
-<div class="settings-panel" id="reader-settings-panel">
+<div class="settings-panel" id="reader-settings-panel" inert aria-hidden="true">
     <div class="settings-panel-inner">
         <div class="settings-panel-header">
             <i class="fa fa-sliders"></i>
@@ -849,7 +863,7 @@
     </div>
 </div>
 
-<nav class="head-menu">
+<nav class="head-menu" id="header-menu" aria-label="主导航">
     <span class="head-menu-pill" aria-hidden="true"></span>
     <a href="/"><i class="fa fa-home"></i><span>首页</span></a>
     
@@ -1737,7 +1751,7 @@
 <div class="buttons"></div>
 
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=5d032d45"></script>
+<script src="/static/glint.js?v=6cb09311"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 

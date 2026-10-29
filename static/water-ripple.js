@@ -301,8 +301,10 @@
         var opacity = parseFloat(beforeCS.opacity) || 0;
         var blurM = (beforeCS.filter || "").match(/blur\(([\d.]+)px\)/);
         var blur = blurM ? parseFloat(blurM[1]) : 0;
+        // 背景层的实际高度：手机端按大视口 / 锁定高度铺，比画布（当前视口）高，cover 要按它算，静水才与 CSS 背景对齐
+        var layerH = parseFloat(beforeCS.height) || vh;
 
-        var key = [canvas.width, canvas.height, color, opacity, blur, bgImg ? bgSrc : ""].join("|");
+        var key = [canvas.width, canvas.height, color, opacity, blur, layerH, bgImg ? bgSrc : ""].join("|");
         if (key === bgKey) return;
         bgKey = key;
 
@@ -314,11 +316,12 @@
         bgCtx.fillStyle = color;
         bgCtx.fillRect(0, 0, w, h);
         if (bgImg && opacity > 0) {
-            var s  = Math.max(w / bgImg.naturalWidth, h / bgImg.naturalHeight);
+            var lh = layerH * k;
+            var s  = Math.max(w / bgImg.naturalWidth, lh / bgImg.naturalHeight);
             var dw = bgImg.naturalWidth * s, dh = bgImg.naturalHeight * s;
             bgCtx.globalAlpha = Math.min(opacity, 1);
             if (blur > 0) bgCtx.filter = "blur(" + blur * k + "px)";
-            bgCtx.drawImage(bgImg, (w - dw) / 2, (h - dh) / 2, dw, dh);
+            bgCtx.drawImage(bgImg, (w - dw) / 2, (lh - dh) / 2, dw, dh);
         }
 
         gl.bindTexture(gl.TEXTURE_2D, bgTex);
