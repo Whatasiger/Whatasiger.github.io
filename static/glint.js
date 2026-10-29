@@ -663,6 +663,129 @@ var Glint = function (config) {
     }
 
     // 菜单按钮
+    // 首页背景切换（_data/backgrounds.yml）：首页右上角的按钮 + 浮层 .bg-picker，顶栏导航收起时入口在导航卡片的 .head-menu-bg
+    // 平时只放极缩略图，且要等打开浮层 / 导航卡片才加载；选中后才加载原图，解码好再淡出、换图、淡入
+    // 所选写进 head 里的 #bg-choice 样式（与 head.ejs 首帧套用的同一份），选回默认就撤掉；body 的类名变化会让水波纹重新合成静水画面
+    function setupBgSwitch() {
+        var BG_KEY = "whatasiger_home_bg";      // 与 head.ejs 首帧读取的键一致
+        var tiles = [].slice.call(document.querySelectorAll(".bg-tile[data-bg-id]"));
+        if (!tiles.length) return;
+        var btn = ks.select(".bg-switch");
+        var picker = document.getElementById("bg-picker");
+        var nav = document.querySelector(".head-menu");
+
+        function srcOf(id) {
+            for (var i = 0; i < tiles.length; i++) {
+                if (tiles[i].getAttribute("data-bg-id") === id) return tiles[i].getAttribute("data-bg-src");
+            }
+            return "";
+        }
+        var defaultTile = tiles.filter(function (t) { return t.hasAttribute("data-bg-default"); })[0] || tiles[0];
+        var defaultId = defaultTile.getAttribute("data-bg-id");
+        var shown = defaultId;                  // 屏上正显示的那张
+        try {
+            var saved = localStorage.getItem(BG_KEY);
+            if (saved && srcOf(saved)) shown = saved;
+        } catch (e) {}
+        var chosen = shown;                     // 刚选中的那张（原图可能还在加载）
+        var seq = 0;                            // 连点时只认最后一次
+
+        function mark() {
+            tiles.forEach(function (t) {
+                var id = t.getAttribute("data-bg-id");
+                t.classList.toggle("is-current", id === chosen);
+                t.classList.toggle("is-loading", id === chosen && id !== shown);
+                t.setAttribute("aria-checked", String(id === chosen));
+            });
+        }
+
+        var thumbsLoaded = false;
+        function loadThumbs() {
+            if (thumbsLoaded) return;
+            thumbsLoaded = true;
+            tiles.forEach(function (t) {
+                t.querySelector(".bg-tile-img").style.backgroundImage = 'url("' + t.getAttribute("data-bg-thumb") + '")';
+            });
+        }
+
+        function save(id) {
+            try {
+                if (id === defaultId) localStorage.removeItem(BG_KEY);
+                else localStorage.setItem(BG_KEY, id);
+            } catch (e) {}
+        }
+
+        function setChoice(id) {
+            var st = document.getElementById("bg-choice");
+            if (id === defaultId) { if (st) st.remove(); return; }
+            if (!st) {
+                st = document.createElement("style");
+                st.id = "bg-choice";
+                document.head.appendChild(st);
+            }
+            st.textContent = 'body{--page-bg-image:url("' + srcOf(id) + '")}';
+        }
+
+        function choose(id) {
+            if (id === chosen) return;
+            var my = ++seq;
+            chosen = id;
+            mark();
+            var img = new Image();
+            var ready = new Promise(function (resolve, reject) {
+                img.onload = resolve;
+                img.onerror = reject;
+            }).then(function () { return img.decode ? img.decode().catch(function () {}) : null; });
+            img.src = srcOf(id);
+            ready.then(function () {
+                if (my !== seq) return;
+                save(id);
+                var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                body.classList.add("bg-swapping");      // 先淡出（body:before 自带透明度过渡）
+                setTimeout(function () {
+                    if (my !== seq) return;
+                    bgBake.unbake();                    // 烤过的图是旧背景，撤掉后按新图重来
+                    setChoice(id);
+                    shown = id;
+                    mark();
+                    bgBake.schedule(0);
+                    requestAnimationFrame(function () { body.classList.remove("bg-swapping"); });
+                }, reduce ? 0 : 280);
+            }, function () {
+                if (my !== seq) return;
+                chosen = shown;                         // 原图没载下来：退回屏上那张
+                mark();
+            });
+        }
+
+        tiles.forEach(function (t) {
+            t.addEventListener("click", function () { choose(t.getAttribute("data-bg-id")); });
+        });
+        mark();
+
+        if (btn && picker) {
+            var setPickerOpen = bindDisclosure(picker, btn, "open");
+            btn.addEventListener("click", function (e) {
+                e.stopPropagation();
+                var open = !picker.classList.contains("open");
+                if (open) loadThumbs();
+                setPickerOpen(open);
+            });
+            document.addEventListener("click", function (e) {
+                if (!picker.classList.contains("open")) return;
+                if (picker.contains(e.target) || e.target === btn) return;
+                setPickerOpen(false);
+            });
+        }
+
+        // 导航卡片里的那排：卡片展开时才加载缩略图
+        if (nav && nav.querySelector(".head-menu-bg")) {
+            new MutationObserver(function () {
+                if (nav.classList.contains("active")) loadThumbs();
+            }).observe(nav, { attributes: true, attributeFilter: ["class"] });
+        }
+    }
+
     this.header = function () {
         var menu = document.getElementsByClassName("head-menu")[0];
         var toggleBtn = ks.select(".toggle-btn");
@@ -718,6 +841,7 @@ var Glint = function (config) {
 
         // 初始化右上角设置面板
         setupSettingsPanel();
+        setupBgSwitch();
     };
 
     // 沉浸模式：向下滚动即收起顶栏；向上滚动要够快才唤出（慢慢往回翻不会打扰阅读）
@@ -732,7 +856,7 @@ var Glint = function (config) {
 
         // 有浮层打开或正在搜索时不收起，免得面板没了依托
         function busy() {
-            return !!document.querySelector(".settings-panel.open, .head-menu.active, .head-search.active") ||
+            return !!document.querySelector(".settings-panel.open, .bg-picker.open, .head-menu.active, .head-search.active") ||
                 (document.activeElement && document.activeElement.id === "local-search-input");
         }
 

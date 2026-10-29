@@ -151,6 +151,9 @@ body.bg-faded:before {
     opacity: calc(var(--bg-opacity) * 0.2) !important;
 }
 
+/* 切换首页背景（glint.js setupBgSwitch）：新图解码好后先淡出，换上再淡入 */
+body.bg-swapping:before { opacity: 0 !important; }
+
 /* 背景模糊已由 glint.js 烤进图片（bgBake），不再挂模糊滤镜；白天的提亮 / 饱和见第 8 节
    html.bg-prebaked：文章页首帧直接用首页预烤的图（head.ejs），glint.js 载入后转成 body.bg-baked */
 body.bg-baked:before,
@@ -795,9 +798,9 @@ header:after {
 /* 辅助技术可读名称，不占用原有顶栏空间 */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 /* inert 立即隔离焦点；visibility 延迟到收起动效后隐藏，旧浏览器也不会 Tab 进透明控件 */
-.settings-panel[aria-hidden="true"], .head-menu[aria-hidden="true"],
+.settings-panel[aria-hidden="true"], .head-menu[aria-hidden="true"], .bg-picker[aria-hidden="true"],
 .head-search[aria-hidden="true"], .article-list[aria-hidden="true"] { visibility: hidden; }
-.settings-panel[aria-hidden="false"], .head-menu[aria-hidden="false"],
+.settings-panel[aria-hidden="false"], .head-menu[aria-hidden="false"], .bg-picker[aria-hidden="false"],
 .head-search[aria-hidden="false"], .article-list[aria-hidden="false"] { visibility: visible; }
 
 /* 导航栏圆形图标按钮（汉堡菜单、日夜切换、搜索、设置）：悬停浮出玻璃底，按下回缩 */
@@ -825,7 +828,8 @@ header:after {
     .head-action button:focus-visible, .head-menu a:focus-visible,
     .settings-panel button:focus-visible, [data-search-retry]:focus-visible,
     .article-list button:focus-visible, .article-list a:focus-visible,
-    .toc-mini:focus-visible, .home-social a:focus-visible { outline: 2px solid Highlight; }
+    .toc-mini:focus-visible, .home-social a:focus-visible,
+    .bg-switch:focus-visible, .bg-tile:focus-visible { outline: 2px solid Highlight; }
 }
 
 /* 汉堡菜单按钮（手机端）：不需右边距 */
@@ -3154,7 +3158,7 @@ html {
 }
 
 /* 设置面板与手机端导航卡片同时打开时，后打开的那个在上（由 glint.js 挂 .on-top） */
-.settings-panel.on-top, html.nav-collapsed .head-menu.on-top { z-index: 100003; } /* 选择器须压过 html.nav-collapsed .head-menu */
+.settings-panel.on-top, .bg-picker.on-top, html.nav-collapsed .head-menu.on-top { z-index: 100003; } /* 选择器须压过 html.nav-collapsed .head-menu */
 
 /* 设置面板内容容器 */
 .settings-panel-inner { width: 100%; }
@@ -4067,6 +4071,185 @@ html.nav-collapsed .head-menu a.head-menu-gizmo small {
     letter-spacing: 0.05em;
     opacity: 0.6;
 }
+
+/* 首页背景切换（只在首页）：导航横排时是顶栏下方右上角的圆形按钮 + 浮层，收起时是导航卡片最下方的一整排缩略图
+   缩略图磁贴两处共用（_partial/bg-tiles.ejs），逻辑见 glint.js setupBgSwitch */
+html:not(.nav-collapsed) .head-menu > .head-menu-bg,
+html.nav-collapsed .bg-switch, html.nav-collapsed .bg-picker { display: none; }
+
+/* 右上角按钮：自带一小块毛玻璃（浮在背景上，不在 header 里），配色跟顶栏走 --hd-* */
+.bg-switch {
+    appearance: none;
+    position: fixed;
+    top: 3.7rem;                    /* 与设置面板顶边对齐 */
+    right: 1.2em;
+    z-index: 9500;                  /* 高于叶片 (9000) 与 TODO 抽屉，低于页眉与浮层 */
+    width: 2.4em;
+    height: 2.4em;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    font: inherit;
+    color: var(--hd-ink);
+    background: var(--hd-bg);
+    box-shadow: inset 0 0 0 1px var(--hd-line), 0 4px 14px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .3s, translate .55s var(--ease-spring), scale .5s var(--ease-spring);
+    animation: bg-switch-in .6s var(--ease-spring) .4s backwards; /* 入场动画挂在玻璃元素自身 */
+}
+.bg-switch:before {
+    content: "\f03e";               /* FontAwesome picture-o */
+    display: block;
+    font: 1em/2.4em "FontAwesome";
+    text-align: center;
+    transition: transform .6s var(--ease-spring);
+}
+.bg-switch:hover, .bg-switch:focus-visible, body:has(.bg-picker.open) .bg-switch { color: var(--hd-accent); }
+.bg-switch:hover:before { transform: rotate(-8deg) scale(1.1); }
+.bg-switch:active { scale: .88; transition-duration: .3s, .55s, .12s; }
+@keyframes bg-switch-in {
+    from { opacity: 0; scale: .7; }
+}
+/* 沉浸模式收起顶栏时跟着上移 */
+html.header-hidden body.immersive .bg-switch { translate: 0 calc(1em - 3.7rem); }
+
+/* 浮层：与设置面板同款毛玻璃卡片，从按钮处展开 */
+.bg-picker {
+    position: fixed;
+    top: calc(3.7rem + 2.4em + 0.6em);
+    right: 1.2em;
+    width: 15em;
+    max-width: 92vw;
+    padding: 0.9em 1em 1em;
+    border-radius: var(--glass-radius);
+    corner-shape: squircle;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #333;
+    z-index: 100001;
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+    transform-origin: calc(100% - 1.2em) -0.6em;
+    pointer-events: none;
+    transition: opacity 0.2s var(--ease-exit), transform 0.25s var(--ease-exit), visibility 0s .25s; /* 收起：快速利落 */
+}
+.bg-picker.open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition: opacity 0.3s var(--ease-spring), transform 0.55s var(--ease-spring); /* 展开：先快后缓 */
+}
+.dark-theme .bg-picker { color: #ddd; }
+.bg-picker-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin: 0 0.15em 0.7em;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+.bg-picker-head .fa { color: var(--blue); }
+.dark-theme .bg-picker-head .fa { color: var(--tc-soft); }
+
+/* 导航卡片里的一整排：标题 + 缩略图，随卡片最后浮现 */
+html.nav-collapsed .head-menu-bg {
+    grid-column: 1 / -1;
+    padding: 0.6em 0.6em 0.5em;
+    border-radius: calc(var(--glass-radius) - 0.5em);
+    corner-shape: squircle;
+    background: var(--glass-tile);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.15s var(--ease-exit), transform 0.15s var(--ease-exit);
+}
+html.nav-collapsed .head-menu.active .head-menu-bg {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.35s var(--ease-spring) 200ms, transform 0.5s var(--ease-spring) 200ms;
+}
+html.nav-collapsed .dark-theme .head-menu-bg { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04); }
+.head-menu-bg-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin: 0 0.15em 0.55em;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    opacity: 0.75;
+}
+.head-menu-bg-title .fa { color: var(--blue); }
+.dark-theme .head-menu-bg-title .fa { color: var(--tc-soft); }
+
+/* 缩略图磁贴：浮层里两列、导航卡片里三列 */
+.bg-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6em; }
+.head-menu-bg .bg-tiles { grid-template-columns: repeat(3, 1fr); gap: 0.45em; }
+.bg-tile {
+    appearance: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35em;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.bg-tile-img {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 10;
+    border-radius: 10px;
+    corner-shape: squircle;
+    background: var(--glass-tile) center / cover no-repeat; /* 极缩略图由 glint.js 写进内联 background-image */
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    transition: box-shadow .25s, transform .45s var(--ease-spring);
+}
+.bg-tile-name { font-size: 0.75rem; letter-spacing: 0.05em; opacity: 0.7; transition: color .25s, opacity .25s; }
+@media (hover: hover) {
+    .bg-tile:hover .bg-tile-img { transform: scale(1.04); }
+}
+.bg-tile:active .bg-tile-img { transform: scale(.95); transition-duration: .25s, .12s; }
+/* 当前所选：主题色描边 + 名称点亮 */
+.bg-tile.is-current .bg-tile-img { box-shadow: 0 0 0 2px var(--blue); }
+.bg-tile.is-current .bg-tile-name { color: var(--blue); opacity: 1; }
+.dark-theme .bg-tile.is-current .bg-tile-img { box-shadow: 0 0 0 2px var(--tc-soft); }
+.dark-theme .bg-tile.is-current .bg-tile-name { color: var(--tc-soft); }
+/* 原图加载中：压暗缩略图，中间转圈 */
+.bg-tile.is-loading .bg-tile-img:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(0, 0, 0, 0.35);
+}
+.bg-tile.is-loading .bg-tile-img:after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 1.1em;
+    height: 1.1em;
+    margin: auto;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    animation: bg-tile-spin .8s linear infinite;
+}
+@keyframes bg-tile-spin { to { transform: rotate(360deg); } }
 
 /* 收起式导航在桌面端：汉堡按钮占据最左侧，Logo 右移让位 */
 html.nav-collapsed .header-logo { left: 3em; }

@@ -513,7 +513,7 @@
     function isContentTarget(el) {
         if (!el || !el.closest) return false;
         return !!el.closest(
-            "header, footer, .settings-panel, " +
+            "header, footer, .settings-panel, .bg-picker, " +
             ".home-social, .home-profile-link, " +
             ".post-item, .page-navigator, " +
             "nav, a, button, input, select, textarea, label, img"
