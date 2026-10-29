@@ -64,7 +64,7 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=379c0b69">
+    <link rel="stylesheet" href="/static/glint.css?v=774a9640">
     
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -965,6 +965,26 @@
     <a href="/gizmo/" class="head-menu-gizmo"><i class="fa fa-leaf"></i><span>Gizmo</span><small>随手做的小玩意</small></a>
     
     
+    <div class="head-menu-music">
+        <div class="head-menu-music-row">
+            <i class="fa fa-music"></i>
+            <span class="head-menu-music-name music-now">首页音乐</span>
+            <button type="button" class="music-play" aria-label="播放音乐" aria-pressed="false"></button>
+            <button type="button" class="music-more" aria-label="选择音乐" aria-expanded="false"></button>
+        </div>
+        <div class="head-menu-music-list">
+            <div class="music-list" role="radiogroup" aria-label="首页音乐">
+
+
+    <div class="music-empty">还没有放音乐</div>
+
+
+</div>
+        </div>
+    </div>
+    
+    
+    
     <div class="head-menu-bg">
         <div class="head-menu-bg-title"><i class="fa fa-picture-o"></i><span>首页背景</span></div>
         <div class="bg-tiles" role="radiogroup" aria-label="首页背景">
@@ -1788,7 +1808,7 @@
 
 <script src="/static/todo-sidebar.js?v=88c6f262"></script>
 
-<script src="/static/water-ripple.js?v=a749eeca"></script>
+<script src="/static/water-ripple.js?v=cfcb3ccb"></script>
 
 <a class="gizmo-leaf" href="/gizmo/" aria-label="Gizmo：随手做的小玩意">
     <span class="gizmo-leaf-float">
@@ -1814,9 +1834,10 @@
 
 
 <button type="button" class="bg-switch" aria-label="切换首页背景" aria-controls="bg-picker" aria-expanded="false"></button>
-<div class="bg-picker" id="bg-picker" inert aria-hidden="true">
-    <div class="bg-picker-head"><i class="fa fa-picture-o"></i><span>首页背景</span></div>
-    <div class="bg-tiles" role="radiogroup" aria-label="首页背景">
+
+<div class="bg-picker corner-morph" id="bg-picker" inert aria-hidden="true">
+    <div class="corner-morph-inner">
+        <div class="bg-tiles" role="radiogroup" aria-label="首页背景">
 
     
     <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="Afterglow" data-bg-id="sunset" data-bg-src="/images/webp/44ccd674949c189c.webp" data-bg-thumb="/images/webp/thumb/44ccd674949c189c.webp" data-bg-default>
@@ -1825,8 +1846,25 @@
     </button>
 
 </div>
+    </div>
 </div>
 
+
+<div class="music-dock" role="group" aria-label="首页音乐">
+    <button type="button" class="music-play" aria-label="播放音乐" aria-pressed="false"></button>
+    <button type="button" class="music-more" aria-label="选择音乐" aria-controls="music-picker" aria-expanded="false"></button>
+</div>
+<div class="music-picker corner-morph" id="music-picker" inert aria-hidden="true">
+    <div class="corner-morph-inner">
+        <div class="music-list" role="radiogroup" aria-label="首页音乐">
+
+
+    <div class="music-empty">还没有放音乐</div>
+
+
+</div>
+    </div>
+</div>
 
     <footer>
     <div class="wrap min">
@@ -1860,7 +1898,7 @@
 <div class="buttons"></div>
 
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=26c70981"></script>
+<script src="/static/glint.js?v=6c5ca3a9"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 

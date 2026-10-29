@@ -662,7 +662,44 @@ var Glint = function (config) {
         }
     }
 
-    // 菜单按钮
+    // 首页右上角从按钮本身长出来的浮层（.corner-morph，见 glint.css「首页右上角浮层」）：
+    // 打开前量好起点（按钮 / 胶囊的布局尺寸，不含按下时的缩放）与终点高度写进 CSS 变量；两张卡可以同时开着，互不遮挡
+    // onToggle(open, 终点高度)：开合时回调（含 Esc 收起），音乐卡片用它让下方的背景按钮跟着让位
+    function cornerMorph(panel, trigger, anchor, onToggle) {
+        var inner = panel.querySelector(".corner-morph-inner");
+        var openH = 0;
+        function measure() {
+            panel.style.setProperty("--from-w", anchor.offsetWidth + "px");
+            panel.style.setProperty("--from-h", anchor.offsetHeight + "px");
+            openH = Math.max(inner ? inner.offsetHeight + 2 : 0, anchor.offsetHeight); // 加上下 1px 边框；至少与按钮竖栏一样高
+            panel.style.setProperty("--open-h", openH + "px");
+        }
+        var setOpen = bindDisclosure(panel, trigger, "open");
+        function set(open, restore) {
+            if (open) measure();
+            setOpen(open, restore);
+        }
+        measure();
+        if (onToggle) {
+            var was = null;
+            new MutationObserver(function () {
+                var open = panel.classList.contains("open");
+                if (open !== was) onToggle(was = open, openH);
+            }).observe(panel, { attributes: true, attributeFilter: ["class"] });
+        }
+        trigger.addEventListener("click", function (e) {
+            e.stopPropagation();
+            set(!panel.classList.contains("open"));
+        });
+        // 点浮层外面收起；点另一张卡或另一个按钮不算（两张卡可以同时开着）
+        document.addEventListener("click", function (e) {
+            if (!panel.classList.contains("open")) return;
+            if (e.target.closest && e.target.closest(".corner-morph, .music-dock, .bg-switch")) return;
+            set(false);
+        });
+        return set;
+    }
+
     // 首页背景切换（_data/backgrounds.yml）：首页右上角的按钮 + 浮层 .bg-picker，顶栏导航收起时入口在导航卡片的 .head-menu-bg
     // 平时只放极缩略图，且要等打开浮层 / 导航卡片才加载；选中后才加载原图，解码好再淡出、换图、淡入
     // 所选写进 head 里的 #bg-choice 样式（与 head.ejs 首帧套用的同一份），选回默认就撤掉；body 的类名变化会让水波纹重新合成静水画面
@@ -764,18 +801,9 @@ var Glint = function (config) {
         mark();
 
         if (btn && picker) {
-            var setPickerOpen = bindDisclosure(picker, btn, "open");
-            btn.addEventListener("click", function (e) {
-                e.stopPropagation();
-                var open = !picker.classList.contains("open");
-                if (open) loadThumbs();
-                setPickerOpen(open);
-            });
-            document.addEventListener("click", function (e) {
-                if (!picker.classList.contains("open")) return;
-                if (picker.contains(e.target) || e.target === btn) return;
-                setPickerOpen(false);
-            });
+            btn.addEventListener("pointerdown", loadThumbs);    // 按下就开始取缩略图，展开时多半已到
+            btn.addEventListener("click", loadThumbs);
+            cornerMorph(picker, btn, btn);
         }
 
         // 导航卡片里的那排：卡片展开时才加载缩略图
@@ -786,6 +814,182 @@ var Glint = function (config) {
         }
     }
 
+    // 首页轻音乐（_data/music.yml）：首页右上角的胶囊 .music-dock + 选曲浮层 .music-picker，顶栏导航收起时在导航卡片的 .head-menu-music
+    // 两处的播放键 / 曲目同步；平时不加载音频（preload none），按下播放才下载；播放 / 暂停有短促的音量渐变
+    // 所选曲目存 localStorage，播放状态与进度存 sessionStorage：本次浏览中回到首页（翻页、从文章返回）接着放，浏览器不许自动播放时就停在暂停
+    function setupHomeMusic() {
+        var MUSIC_KEY = "whatasiger_home_music";    // 所选曲目 id
+        var SESSION_KEY = "glint-home-music";       // { id, t, on }
+        var VOLUME = 0.6;
+        var plays = [].slice.call(document.querySelectorAll(".music-play"));
+        if (!plays.length) return;
+        var firstList = document.querySelector(".music-list");
+        var list = firstList ? [].map.call(firstList.querySelectorAll(".music-track"), function (t) {
+            return { id: t.getAttribute("data-music-id"), src: t.getAttribute("data-music-src"),
+                name: t.getAttribute("data-music-name"), artist: t.getAttribute("data-music-artist") };
+        }) : [];
+        var tracks = [].slice.call(document.querySelectorAll(".music-track[data-music-id]"));
+        var holders = [].slice.call(document.querySelectorAll(".music-dock, .head-menu-music"));
+        var nows = [].slice.call(document.querySelectorAll(".music-now"));
+        var picker = document.getElementById("music-picker");
+        var dockMore = ks.select(".music-dock .music-more");
+        var navMusic = document.querySelector(".head-menu-music");
+
+        function find(id) {
+            for (var i = 0; i < list.length; i++) if (list[i].id === id) return i;
+            return -1;
+        }
+        var index = 0;
+        try { index = Math.max(0, find(localStorage.getItem(MUSIC_KEY))); } catch (e) {}
+        var audio = new Audio();
+        audio.preload = "none";
+        var playing = false, loading = false, fadeRaf = 0;
+
+        function sync() {
+            var cur = list[index];
+            plays.forEach(function (b) {
+                b.classList.toggle("is-playing", playing);
+                b.classList.toggle("is-loading", playing && loading);
+                b.setAttribute("aria-pressed", String(playing));
+                b.setAttribute("aria-label", playing ? "暂停音乐" : "播放音乐");
+            });
+            holders.forEach(function (h) { h.classList.toggle("is-playing", playing); });
+            tracks.forEach(function (t) {
+                var on = !!cur && t.getAttribute("data-music-id") === cur.id;
+                t.classList.toggle("is-current", on);
+                t.classList.toggle("is-playing", on && playing && !loading);
+                t.setAttribute("aria-checked", String(on));
+            });
+            nows.forEach(function (n) { n.textContent = cur ? cur.name : "首页音乐"; });
+        }
+
+        // 音量渐变（iOS 不许脚本改音量，渐变无效，直接播 / 停）
+        function fade(to, ms, done) {
+            cancelAnimationFrame(fadeRaf);
+            var from = audio.volume, start = performance.now();
+            (function step(now) {
+                var k = Math.min(1, (now - start) / ms);
+                audio.volume = from + (to - from) * k;
+                if (k < 1) fadeRaf = requestAnimationFrame(step);
+                else if (done) done();
+            })(start);
+        }
+
+        function load(i) {
+            index = i;
+            var cur = list[index];
+            if (audio.getAttribute("src") !== cur.src) audio.src = cur.src;
+            audio.loop = list.length === 1;
+            try { localStorage.setItem(MUSIC_KEY, cur.id); } catch (e) {}
+            if ("mediaSession" in navigator && window.MediaMetadata) {
+                navigator.mediaSession.metadata = new MediaMetadata({ title: cur.name, artist: cur.artist || "Whatasiger" });
+            }
+        }
+
+        function play(from) {
+            if (!list.length) { openList(); return; }
+            load(index);
+            if (from > 0) {
+                var seek = function () { try { audio.currentTime = from; } catch (e) {} };
+                if (audio.readyState >= 1) seek(); else audio.addEventListener("loadedmetadata", seek, { once: true });
+            }
+            playing = true;
+            loading = audio.readyState < 3;
+            sync();
+            audio.volume = 0;
+            var p = audio.play();
+            if (p && p.then) p.then(function () { if (playing) fade(VOLUME, 600); }, function () { playing = false; loading = false; sync(); });
+            else fade(VOLUME, 600);
+        }
+        function pause() {
+            playing = false;
+            loading = false;
+            sync();
+            fade(0, 350, function () { if (!playing) audio.pause(); });
+        }
+
+        audio.addEventListener("waiting", function () { if (playing) { loading = true; sync(); } });
+        audio.addEventListener("playing", function () { loading = false; sync(); });
+        audio.addEventListener("ended", function () {     // 只有一首时由 loop 单曲循环，不会走到这里
+            index = (index + 1) % list.length;
+            play(0);
+        });
+        audio.addEventListener("error", function () { if (playing) { playing = false; loading = false; sync(); } });
+
+        plays.forEach(function (b) {
+            b.addEventListener("click", function (e) {
+                e.stopPropagation();
+                if (playing) pause(); else play(audio.currentTime);
+            });
+        });
+        tracks.forEach(function (t) {
+            t.addEventListener("click", function () {
+                var i = find(t.getAttribute("data-music-id"));
+                if (i < 0) return;
+                if (i === index && playing) return;
+                var from = i === index ? audio.currentTime : 0;   // 点暂停中的当前曲目：接着放
+                index = i;
+                play(from);
+            });
+        });
+        if ("mediaSession" in navigator) {
+            try {
+                navigator.mediaSession.setActionHandler("play", function () { play(audio.currentTime); });
+                navigator.mediaSession.setActionHandler("pause", pause);
+                navigator.mediaSession.setActionHandler("nexttrack", function () { if (list.length > 1) { index = (index + 1) % list.length; play(0); } });
+            } catch (e) {}
+        }
+
+        // 选曲：桌面是浮层，导航卡片里是就地展开的一列
+        var dock = document.querySelector(".music-dock");
+        // 音乐那一块此刻的高度（胶囊或展开后的卡片）写到根上，背景按钮 / 卡片排在它下方（glint.css --music-stack）
+        function setStack(h) { document.documentElement.style.setProperty("--music-stack", h + "px"); }
+        if (dock) setStack(dock.offsetHeight);
+        var setPickerOpen = picker && dockMore && dock ? cornerMorph(picker, dockMore, dock, function (open, h) {
+            setStack(open ? h : dock.offsetHeight);
+        }) : null;
+        function openList() {
+            if (setPickerOpen && !document.documentElement.classList.contains("nav-collapsed")) setPickerOpen(true);
+            else if (navMusic) toggleNavList(true);
+        }
+        // 导航卡片里就地展开：高度按实测值过渡（不用 grid 行高，速率才是缓动曲线本身），曲目随后依次浮现
+        function toggleNavList(open) {
+            var box = navMusic.querySelector(".head-menu-music-list");
+            box.style.setProperty("--list-h", box.firstElementChild.offsetHeight + "px");
+            navMusic.classList.toggle("is-open", open);
+            navMusic.querySelector(".music-more").setAttribute("aria-expanded", String(open));
+            box.toggleAttribute("inert", !open); // 收着时不能 Tab 进去
+        }
+        if (navMusic) {
+            toggleNavList(false);
+            navMusic.querySelector(".music-more").addEventListener("click", function () {
+                toggleNavList(!navMusic.classList.contains("is-open"));
+            });
+        }
+
+        // 离开首页时记下进度；回来（含从文章后退、bfcache 恢复）时接着放
+        function remember() {
+            try {
+                var cur = list[index];
+                if (cur) sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id: cur.id, t: audio.currentTime || 0, on: playing }));
+            } catch (e) {}
+        }
+        window.addEventListener("pagehide", remember);
+        window.addEventListener("pageshow", function (e) {
+            if (e.persisted && playing) { audio.volume = 0; audio.play().then(function () { fade(VOLUME, 600); }, pause); }
+        });
+        function resume() {
+            try {
+                var s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+                if (s && s.on && list[index] && s.id === list[index].id) play(s.t || 0);
+            } catch (e) {}
+        }
+        sync();
+        if (document.prerendering) document.addEventListener("prerenderingchange", resume, { once: true });
+        else resume();
+    }
+
+    // 菜单按钮
     this.header = function () {
         var menu = document.getElementsByClassName("head-menu")[0];
         var toggleBtn = ks.select(".toggle-btn");
@@ -842,6 +1046,7 @@ var Glint = function (config) {
         // 初始化右上角设置面板
         setupSettingsPanel();
         setupBgSwitch();
+        setupHomeMusic();
     };
 
     // 沉浸模式：向下滚动即收起顶栏；向上滚动要够快才唤出（慢慢往回翻不会打扰阅读）
@@ -856,7 +1061,7 @@ var Glint = function (config) {
 
         // 有浮层打开或正在搜索时不收起，免得面板没了依托
         function busy() {
-            return !!document.querySelector(".settings-panel.open, .bg-picker.open, .head-menu.active, .head-search.active") ||
+            return !!document.querySelector(".settings-panel.open, .bg-picker.open, .music-picker.open, .head-menu.active, .head-search.active") ||
                 (document.activeElement && document.activeElement.id === "local-search-input");
         }
 
@@ -1817,6 +2022,148 @@ ks.image(CONTENT_IMG_SEL);
     }
     if (document.prerendering) document.addEventListener("prerenderingchange", layOut, { once: true });
     else layOut();
+})();
+
+// 续读位置：记住每篇文章读到哪一块（正文的直接子元素，按序号记，不记像素：字号 / 字体 / 视口变了也找得回），
+// 再打开时在底部浮出「上次读到……」，点「继续阅读」才跳过去（不自动跳：读者可能就是想从头看，也免得打断一镜到底）
+// 读到正文末尾即删掉记录；带锚点（目录 / 脚注 / 分享的链接）打开时不提示
+(function () {
+    var article = document.querySelector(".post-content:not(.is-special)");
+    if (!article) return;
+    var KEY = "whatasiger_read_progress";   // { 路径: { i: 块序号, f: 块内比例, p: 全文百分比, t: 时间 } }
+    var MAX = 60;                           // 最多记这么多篇，超出删最早的
+    var LINE = 0.3;                         // 阅读线：视口高度的 30% 处，越过它的那一块算「正在读」
+    var path = location.pathname;
+    var blocks = [].filter.call(article.children, function (el) {
+        return el.tagName !== "SCRIPT" && el.tagName !== "STYLE" && !el.classList.contains("footnotes");
+    });
+    if (blocks.length < 8) return;          // 太短的不必记
+
+    function load() {
+        try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+    }
+    function store(all) {
+        try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
+    }
+    var saved = load()[path];
+
+    // 当前读到哪：阅读线所在的那一块，以及阅读线落在它的几成处
+    function current() {
+        var line = window.innerHeight * LINE;
+        var lo = 0, hi = blocks.length - 1;
+        while (lo < hi) {                   // 二分：最后一块顶边在阅读线以上的
+            var mid = (lo + hi + 1) >> 1;
+            if (blocks[mid].getBoundingClientRect().top <= line) lo = mid; else hi = mid - 1;
+        }
+        var r = blocks[lo].getBoundingClientRect();
+        var a = article.getBoundingClientRect();
+        return {
+            i: lo,
+            f: r.height > 0 ? Math.max(0, Math.min(1, (line - r.top) / r.height)) : 0,
+            p: Math.max(0, Math.min(100, Math.round((line - a.top) / Math.max(1, a.height) * 100))),
+            end: a.bottom <= window.innerHeight * 0.9
+        };
+    }
+
+    // 记录：读者自己滚动过才开始（免得一进页就拿页顶覆盖掉旧记录），停下 600ms 再写
+    var dirty = false, timer = 0, started = false;
+    function save() {
+        clearTimeout(timer);
+        if (!dirty) return;
+        dirty = false;
+        var all = load();
+        var c = current();
+        if (c.end) {
+            delete all[path];               // 读完了：下次不再提示
+        } else if (c.i < 2 && c.f < 0.5) {
+            return;                         // 还在开头，不必记，也不覆盖旧记录
+        } else {
+            all[path] = { i: c.i, f: Math.round(c.f * 100) / 100, p: c.p, t: Date.now() };
+            var keys = Object.keys(all);
+            if (keys.length > MAX) {
+                keys.sort(function (x, y) { return all[x].t - all[y].t; });
+                for (var k = 0; k < keys.length - MAX; k++) delete all[keys[k]];
+            }
+        }
+        store(all);
+    }
+    window.addEventListener("scroll", function () {
+        if (!started) return;
+        dirty = true;
+        clearTimeout(timer);
+        timer = setTimeout(save, 600);
+    }, { passive: true });
+    window.addEventListener("pagehide", save);
+    document.addEventListener("visibilitychange", function () { if (document.hidden) save(); });
+
+    function begin() { started = true; }
+    var settled = window.vtSettled || Promise.resolve();
+
+    if (!saved || location.hash || !(saved.i >= 0) || saved.i >= blocks.length) {
+        settled.then(begin);
+        return;
+    }
+
+    // 浮条：段首摘一句 + 进度 + 继续阅读 / 关闭
+    var target = blocks[saved.i];
+    var excerpt = (target.textContent || "").replace(/\s+/g, " ").trim();
+    if (excerpt.length > 18) excerpt = excerpt.slice(0, 18) + "…";
+    var bar = document.createElement("div");
+    bar.className = "resume-bar";
+    bar.setAttribute("role", "status");
+    bar.innerHTML = '<i class="fa fa-bookmark"></i>' +
+        '<span class="resume-text"><span class="resume-label">上次读到 ' + saved.p + '%</span><span class="resume-excerpt"></span></span>' +
+        '<button type="button" class="resume-go">继续阅读</button>' +
+        '<button type="button" class="resume-close" aria-label="不用了"></button>';
+    bar.querySelector(".resume-excerpt").textContent = excerpt || "（图片或空段落）";
+
+    var hideTimer = 0;
+    function hide() {
+        clearTimeout(hideTimer);
+        bar.classList.remove("is-shown");
+        setTimeout(function () { bar.remove(); }, 400);
+    }
+    function go() {
+        hide();
+        article.classList.add("is-laid-out");   // 先整篇排好，位置才准（见上方 content-visibility）
+        requestAnimationFrame(function () {
+            var r = target.getBoundingClientRect();
+            var y = window.pageYOffset + r.top + r.height * (saved.f || 0) - window.innerHeight * LINE;
+            window.scrollTo({ top: Math.max(0, y), behavior: "instant" });
+            target.classList.remove("resume-mark");
+            void target.offsetWidth;
+            target.classList.add("resume-mark");    // 轻轻亮一下，告诉读者是哪一段
+            setTimeout(function () { target.classList.remove("resume-mark"); }, 2400);
+        });
+    }
+    bar.querySelector(".resume-go").addEventListener("click", go);
+    bar.querySelector(".resume-close").addEventListener("click", hide);
+
+    settled.then(function () {
+        setTimeout(function () {
+            document.body.appendChild(bar);
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () { bar.classList.add("is-shown"); });
+            });
+            hideTimer = setTimeout(hide, 12000);    // 一直不理会就自己收起
+            begin();
+            // 读者自己往下读过了上次的位置，浮条就没用了
+            onScrollFar();
+        }, 700);
+    });
+    function onScrollFar() {
+        var ticking = false;
+        var check = function () {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(function () {    // 每帧最多量一次
+                ticking = false;
+                if (!bar.isConnected) { window.removeEventListener("scroll", check); return; }
+                if (current().i >= saved.i) { hide(); window.removeEventListener("scroll", check); }
+            });
+        };
+        window.addEventListener("scroll", check, { passive: true });
+    }
 })();
 
 // 请保留版权说明
