@@ -64,7 +64,7 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=774a9640">
+    <link rel="stylesheet" href="/static/glint.css?v=71060e33">
     
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -74,6 +74,21 @@
     <style>body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
     
     
+    
+    <script>
+        (function () {
+            try {
+                var choices = {"sunset":"/images/webp/44ccd674949c189c.webp","blue-night":"/images/webp/124089112_p0.webp","ice-bloom":"/images/webp/118435175_p0.webp","summer-cloud":"/images/webp/144486189_p0.webp","dusk-field":"/images/webp/21315033_p0.webp","checker-hall":"/images/webp/6095368_p0.webp","twilight-rail":"/images/webp/81829877_p0.webp"};
+                var id = localStorage.getItem('whatasiger_home_bg'); // 与 glint.js setupBgSwitch 的 BG_KEY 一致
+                var src = id && Object.prototype.hasOwnProperty.call(choices, id) ? choices[id] : '';
+                if (!src || src === "/images/webp/44ccd674949c189c.webp") return;
+                var st = document.createElement('style');
+                st.id = 'bg-choice';
+                st.textContent = 'body{--page-bg-image:url("' + src + '")}';
+                document.head.appendChild(st);
+            } catch (err) {}
+        })();
+    </script>
     
     
 

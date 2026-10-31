@@ -4080,6 +4080,16 @@ html:not(.nav-collapsed) .head-menu > .head-menu-music,
 html.nav-collapsed .bg-switch, html.nav-collapsed .bg-picker,
 html.nav-collapsed .music-dock, html.nav-collapsed .music-picker { display: none; }
 
+/* 右上角这一列的统一尺寸：按钮直径、卡片内边距；卡片圆角 = 按钮半径（收起 / 展开圆角不变，按钮正好嵌在卡片右上角），
+   卡片里的缩略图、曲目圆角 = 卡片圆角 − 内边距，与外框同心 */
+:root {
+    --corner-btn: 40px;
+    --corner-pad: 6px;
+    --corner-r: calc(var(--corner-btn) / 2);
+    --corner-in-r: calc(var(--corner-r) - var(--corner-pad));
+    --corner-gap: 8px;              /* 音乐胶囊与背景按钮之间 */
+}
+
 /* 右上角按钮：自带一小块毛玻璃（浮在背景上，不在 header 里），配色跟顶栏走 --hd-* */
 .bg-switch {
     appearance: none;
@@ -4087,8 +4097,8 @@ html.nav-collapsed .music-dock, html.nav-collapsed .music-picker { display: none
     top: var(--bg-switch-top);      /* 在音乐胶囊正下方；音乐卡片展开时跟着往下让（见下方 --music-stack） */
     right: 1.2em;
     z-index: 9700;                  /* 高于叶片 (9000)、TODO 抽屉与自己长出的浮层 (9600)，低于页眉与设置面板 */
-    width: 2.4em;
-    height: 2.4em;
+    width: var(--corner-btn);
+    height: var(--corner-btn);
     min-height: 0;
     padding: 0;
     border: 0;
@@ -4110,7 +4120,7 @@ html.nav-collapsed .music-dock, html.nav-collapsed .music-picker { display: none
 .bg-switch:before {
     content: "\f03e";               /* FontAwesome picture-o */
     display: block;
-    font: 1em/2.4em "FontAwesome";
+    font: 0.9em/calc(var(--corner-btn) / 0.9) "FontAwesome"; /* 图标比播放键宽，缩一点让两列视觉等重 */
     text-align: center;
     transition: transform .6s var(--ease-spring);
 }
@@ -4131,21 +4141,21 @@ html.header-hidden body.immersive :is(.bg-switch, .music-dock, .corner-morph) { 
     --morph-close: .34s;            /* 收起时长：浮层与按钮的换底时刻都按它对齐 */
     /* 右上角自上而下：音乐胶囊 → 背景按钮。--music-stack 是音乐那一块此刻的高度（胶囊，或展开后的卡片），由 glint.js 写入；
        背景按钮与背景卡片的 top 跟着它走，过渡与音乐卡片的高度同一条曲线，两张卡同时打开也不重叠 */
-    --bg-switch-top: calc(3.7rem + var(--music-stack, 4.5em) + 0.5em);
+    --bg-switch-top: calc(3.7rem + var(--music-stack, calc(var(--corner-btn) * 2)) + var(--corner-gap));
     --stack-d: var(--morph-close);
     --stack-t: var(--morph-close) cubic-bezier(.4, 0, .2, 1);
 }
 :root:has(.music-picker.open) { --stack-d: .6s; --stack-t: .6s var(--ease-glide); }
 .corner-morph {
-    --open-w: 240px;
+    --open-w: 248px;                /* 两张卡同宽 */
     position: fixed;
     top: 3.7rem;
     right: 1.2em;
     z-index: 9600;
     box-sizing: border-box;
-    width: var(--from-w, 2.4em);
-    height: var(--from-h, 2.4em);
-    border-radius: calc(var(--from-h, 2.4em) / 2);
+    width: var(--from-w, var(--corner-btn));
+    height: var(--from-h, var(--corner-btn));
+    border-radius: var(--corner-r); /* 收起 / 展开同一个圆角：右上角始终与按钮的圆重合 */
     border: 1px solid transparent;
     overflow: hidden;
     contain: layout paint;
@@ -4157,18 +4167,16 @@ html.header-hidden body.immersive :is(.bg-switch, .music-dock, .corner-morph) { 
     opacity: 0;
     pointer-events: none;
     --fold: var(--morph-close) cubic-bezier(.4, 0, .2, 1);  /* 收起：平稳收回，不加速甩走 */
-    transition: width var(--fold), height var(--fold), border-radius var(--fold),
+    transition: width var(--fold), height var(--fold),
                 background-color var(--fold), border-color var(--fold), box-shadow var(--fold),
                 backdrop-filter var(--fold), -webkit-backdrop-filter var(--fold),
                 translate .55s var(--ease-spring), top var(--stack-t), opacity 0s var(--morph-close), visibility 0s var(--morph-close);
 }
 /* 两张卡都向左长开，按钮（胶囊）留在右侧当竖栏；不再互相遮挡，按钮都叠在自己的卡片上 (9700 > 9600) */
-.bg-picker { top: var(--bg-switch-top); --open-w: 232px; }
-.music-picker { --open-w: 210px; }
+.bg-picker { top: var(--bg-switch-top); }
 .corner-morph.open {
     width: var(--open-w);
     height: var(--open-h, auto);
-    border-radius: 18px;
     border-color: var(--glass-border);
     background: var(--glass-bg);
     box-shadow: var(--glass-shadow);
@@ -4177,7 +4185,7 @@ html.header-hidden body.immersive :is(.bg-switch, .music-dock, .corner-morph) { 
     opacity: 1;
     pointer-events: auto;
     --unfold: .6s var(--ease-glide);                         /* 展开：带一点回弹的弹簧 */
-    transition: width var(--unfold), height var(--unfold), border-radius .45s var(--ease-spring),
+    transition: width var(--unfold), height var(--unfold),
                 background-color .3s ease, border-color .3s ease, box-shadow .45s ease,
                 backdrop-filter .3s ease, -webkit-backdrop-filter .3s ease,
                 translate .55s var(--ease-spring), top var(--stack-t), opacity 0s, visibility 0s;
@@ -4192,14 +4200,15 @@ body:has(.music-picker.open) .music-dock {
     -webkit-backdrop-filter: none;
     transition-delay: 0s;
 }
-/* 内容按终点尺寸排好、贴右上角，卡片长大时只是被逐渐露出来，不跟着重排 */
+/* 内容按终点尺寸排好、贴右上角，卡片长大时只是被逐渐露出来，不跟着重排
+   内边距扣掉 1px 边框，内容离卡片外沿正好 --corner-pad；右边让出按钮竖栏，内容右沿对齐竖栏左沿 */
 .corner-morph-inner {
     position: absolute;
     top: 0;
     right: 0;
     box-sizing: border-box;
     width: calc(var(--open-w) - 2px);
-    padding: 0.5em calc(var(--from-w, 2.4em) + 0.2em) 0.5em 0.5em; /* 右边让出按钮竖栏 */
+    padding: calc(var(--corner-pad) - 1px) calc(var(--from-w, var(--corner-btn)) - 1px) calc(var(--corner-pad) - 1px) calc(var(--corner-pad) - 1px);
     font-size: 0.9rem;
     line-height: 1.4;
     opacity: 0;
@@ -4211,7 +4220,6 @@ body:has(.music-picker.open) .music-dock {
     translate: none;
     transition: opacity .3s ease .08s, translate .5s var(--ease-spring) .08s;
 }
-/* 标题与按钮同一行：行高即按钮高度，右边空出按钮（胶囊）的宽度 */
 @media (prefers-reduced-motion: reduce) {
     .corner-morph, .corner-morph.open, .corner-morph-inner { transition-duration: 0s !important; transition-delay: 0s !important; }
 }
@@ -4246,45 +4254,77 @@ html.nav-collapsed .dark-theme .head-menu-bg { box-shadow: inset 0 0 0 1px rgba(
 .head-menu-bg-title .fa { color: var(--blue); }
 .dark-theme .head-menu-bg-title .fa { color: var(--tc-soft); }
 
-/* 缩略图磁贴：浮层里两列、导航卡片里三列 */
-.bg-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6em; }
+/* 缩略图磁贴：浮层里两列（单数时最后一张占满一排，不留空格）、导航卡片里三列
+   名称压在图片底部的渐变上，磁贴只是一块圆角矩形；所选的描边画在磁贴里面（::after），圆角与磁贴一致 */
+.bg-tiles {
+    --tile-r: calc(var(--glass-radius) - 0.5em - 0.6em); /* 导航卡片里：外框圆角 − 内边距（同心） */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--corner-pad);
+}
+.corner-morph .bg-tiles { --tile-r: var(--corner-in-r); grid-auto-rows: 64px; }
+.corner-morph .bg-tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .head-menu-bg .bg-tiles { grid-template-columns: repeat(3, 1fr); gap: 0.45em; }
 .bg-tile {
     appearance: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35em;
+    position: relative;
+    display: block;
     min-height: 0;
     margin: 0;
     padding: 0;
     border: 0;
-    background: none;
+    border-radius: var(--tile-r);
+    overflow: hidden;
+    background: var(--glass-tile);
     font: inherit;
-    color: inherit;
-    text-align: center;
+    color: #fff;
+    text-align: left;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    transition: scale .45s var(--ease-spring);
 }
+.head-menu-bg .bg-tile { aspect-ratio: 16 / 10; corner-shape: squircle; } /* 导航卡片本身是 squircle，磁贴跟着它 */
 .bg-tile-img {
-    position: relative;
+    position: absolute;
+    inset: 0;
     display: block;
-    aspect-ratio: 16 / 10;
-    border-radius: 10px;
-    corner-shape: squircle;
-    background: var(--glass-tile) center / cover no-repeat; /* 极缩略图由 glint.js 写进内联 background-image */
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
-    transition: box-shadow .25s, transform .45s var(--ease-spring);
+    background: center / cover no-repeat;    /* 极缩略图由 glint.js 写进内联 background-image */
+    transition: transform .6s var(--ease-spring);
 }
-.bg-tile-name { font-size: 0.75rem; letter-spacing: 0.05em; opacity: 0.7; transition: color .25s, opacity .25s; }
+.bg-tile-name {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 1.4em 0.75em 0.45em;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+    opacity: 0.88;
+    transition: opacity .25s;
+}
+.head-menu-bg .bg-tile-name { padding: 1.2em 0.55em 0.35em; font-size: 0.68rem; }
+/* 细边（未选）/ 主题色描边（所选）：内描边加一圈深色衬底，浅色缩略图上也看得清 */
+.bg-tile:after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    pointer-events: none;
+    transition: box-shadow .25s;
+}
 @media (hover: hover) {
-    .bg-tile:hover .bg-tile-img { transform: scale(1.04); }
+    .bg-tile:hover .bg-tile-img { transform: scale(1.06); }
+    .bg-tile:hover .bg-tile-name { opacity: 1; }
 }
-.bg-tile:active .bg-tile-img { transform: scale(.95); transition-duration: .25s, .12s; }
-/* 当前所选：主题色描边 + 名称点亮 */
-.bg-tile.is-current .bg-tile-img { box-shadow: 0 0 0 2px var(--blue); }
-.bg-tile.is-current .bg-tile-name { color: var(--blue); opacity: 1; }
-.dark-theme .bg-tile.is-current .bg-tile-img { box-shadow: 0 0 0 2px var(--tc-soft); }
-.dark-theme .bg-tile.is-current .bg-tile-name { color: var(--tc-soft); }
+.bg-tile:active { scale: .96; transition-duration: .12s; }
+.bg-tile.is-current:after { box-shadow: inset 0 0 0 2px var(--blue), inset 0 0 0 3px rgba(0, 0, 0, 0.25); }
+.dark-theme .bg-tile.is-current:after { box-shadow: inset 0 0 0 2px var(--tc-soft), inset 0 0 0 3px rgba(0, 0, 0, 0.3); }
+.bg-tile.is-current .bg-tile-name { opacity: 1; font-weight: 600; }
 /* 原图加载中：压暗缩略图，中间转圈 */
 .bg-tile.is-loading .bg-tile-img:before {
     content: "";
@@ -4316,9 +4356,8 @@ html.nav-collapsed .dark-theme .head-menu-bg { box-shadow: inset 0 0 0 1px rgba(
     z-index: 9700;                  /* 叠在自己长出的浮层 (9600) 上面 */
     display: flex;
     flex-direction: column;
-    width: 2.4em;
-    padding: 0.15em 0;
-    border-radius: 1.2em;
+    width: var(--corner-btn);       /* 两个整圆上下相接，与背景按钮同宽同圆 */
+    border-radius: var(--corner-r);
     color: var(--hd-ink);
     background: var(--hd-bg);
     box-shadow: inset 0 0 0 1px var(--hd-line), 0 4px 14px rgba(0, 0, 0, 0.18);
@@ -4349,8 +4388,11 @@ html.nav-collapsed .dark-theme .head-menu-bg { box-shadow: inset 0 0 0 1px rgba(
     -webkit-tap-highlight-color: transparent;
     transition: color .25s, background-color .25s, scale .45s var(--ease-spring);
 }
-.music-dock .music-play, .music-dock .music-more { width: 100%; height: 2.1em; }
-.music-play:before, .music-more:before { font: 0.85em/1 "FontAwesome"; }
+.music-dock .music-play, .music-dock .music-more { width: 100%; height: var(--corner-btn); }
+@media (hover: hover) {
+    .music-dock button:hover { background-color: color-mix(in srgb, currentColor 10%, transparent); }
+}
+.music-play:before, .music-more:before { font: 0.8em/1 "FontAwesome"; }
 .music-play:before { content: "\f04b"; translate: 0.08em 0; }   /* 播放三角形视觉重心偏左，右移一点 */
 .music-play.is-playing:before { content: "\f04c"; translate: none; }
 .music-play.is-loading:before { animation: music-loading 1s ease-in-out infinite alternate; }
@@ -4388,6 +4430,21 @@ body:has(.music-picker.open) .music-dock .music-more { color: var(--hd-accent); 
 .music-track-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .music-track-artist { flex: none; font-size: 0.75rem; opacity: 0.55; }
 .music-empty { padding: 0.8em 0.5em; font-size: 0.8rem; text-align: center; opacity: 0.55; }
+/* 浮层里：每首一枚胶囊（高 = 按钮 − 两倍内边距，圆角与卡片同心），行距让每一行与右侧按钮竖栏的一格对齐 */
+.corner-morph .music-list { gap: calc(var(--corner-pad) * 2); }
+.corner-morph .music-track {
+    height: calc(var(--corner-btn) - var(--corner-pad) * 2);
+    padding: 0 0.75em;
+    border-radius: var(--corner-in-r);
+    corner-shape: round;
+    font-size: 0.85rem;
+}
+.corner-morph .music-empty {
+    display: grid;
+    place-items: center;
+    height: calc(var(--corner-btn) * 2 - var(--corner-pad) * 2); /* 与胶囊等高，字落在两颗按钮中间 */
+    padding: 0;
+}
 
 /* 曲目前的三根小条：当前曲目静止显示，播放中跳动 */
 .music-eq { flex: none; display: flex; align-items: flex-end; gap: 2px; width: 0.85em; height: 0.8em; opacity: 0; transition: opacity .25s; }
