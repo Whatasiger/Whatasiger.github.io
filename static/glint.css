@@ -112,6 +112,9 @@ body {
    （html、body 同时 hidden 时 body 自成滚动盒，iOS 上会拖慢 / 打断惯性滚动） */
 html { overflow-x: hidden; }
 body { overflow-x: clip; }
+/* 始终给竖向滚动条留出位置：页面边下载边显示时，首帧常常还很短、没有滚动条，内容长出来后滚动条才冒出，
+   视口一下窄 8px——顶栏整体左跳、按 cover 铺的背景图跟着缩放（看起来背景颤了一下）。留好位置后宽度从首帧起就不变 */
+html { scrollbar-gutter: stable; }
 
 /* 全局背景图伪元素，固定铺满全屏、模糊处理，不影响页面交互 */
 body:before {
@@ -829,7 +832,7 @@ header:after {
     .settings-panel button:focus-visible, [data-search-retry]:focus-visible,
     .article-list button:focus-visible, .article-list a:focus-visible,
     .toc-mini:focus-visible, .home-social a:focus-visible,
-    .bg-switch:focus-visible, .bg-tile:focus-visible,
+    .bg-dock button:focus-visible, .head-menu-zen:focus-visible, .bg-tile:focus-visible,
     .music-dock button:focus-visible, .head-menu-music button:focus-visible, .music-track:focus-visible { outline: 2px solid Highlight; }
 }
 
@@ -948,6 +951,14 @@ main {
     padding: 3.5em 0;               /* 主内容上下内边距，影响内容与浏览器边缘的距离 */
     margin-top: 3.2em;              /* 顶部外边距，应与导航栏高度一致，防止内容被遮挡 */
 }
+
+/* 首页（index.ejs 的 main.home-main）与水面上的 Gizmo 叶片：文字不可选中、链接与图片不可拖出——
+   在首页拖动鼠标划水面时，不会选中一片标题 / 摘要 / 座右铭，也不会从卡片上拖出链接的残影 */
+.home-main, .gizmo-leaf {
+    -webkit-user-select: none;
+    user-select: none;
+}
+.home-main :is(a, img), .gizmo-leaf { -webkit-user-drag: none; }
 
 /* 主内容区域图片：高度自适应，带过渡动画 */
 main img {
@@ -1437,7 +1448,7 @@ main img {
    - 投影分三层：贴地的接触影（定住卡片的「底」）、中距离的主投影、大而淡的环境影；悬停时接触影变淡、远处两层拉长，像卡片离开桌面
    - 细边画在 .post-card-light 的 ::after，用 mask 挖空只留 1px，顶边最亮、往下渐暗，模拟光从上方照在卡片边沿
    - 高光：.post-card-sheen 的背景是顶部一抹天光，指针处的柔光是其中一枚光斑 .post-card-spot（glint.js 创建），
-     只用 transform 移到指针处、按到最远角的距离缩放（等同原先 radial-gradient 的 farthest-corner），不逐帧重画渐变
+     固定尺寸、按原生分辨率绘制，只用 transform 平移到指针处（不缩放：放大的合成层会发糊），不逐帧重画渐变
    - 倾斜（内联 transform）与光斑位置由 glint.js setupCardFloat() 写入；触屏 / 减少动效时不写，停在默认值
    - 配色变量白天在第 8 节覆盖 */
 .post-item.card-style:not(.cw-card) {
@@ -1453,11 +1464,12 @@ main img {
     --card-edge-top: rgba(255, 255, 255, 0.34);         /* 细边顶部亮度 */
     --card-edge-mid: rgba(255, 255, 255, 0.07);         /* 细边两侧中段 */
     --card-edge-bottom: rgba(255, 255, 255, 0.14);      /* 细边底部（略回亮，免得下沿与背景糊在一起） */
-    --card-sheen: rgba(255, 255, 255, 0.16);            /* 指针高光 */
+    --card-sheen: rgba(255, 255, 255, 0.16);            /* 顶部天光 */
+    --card-spot: rgba(255, 255, 255, 0.075);            /* 指针高光：一大片很淡的柔光（中心处的亮度） */
     display: block;                 /* 整张卡片是 <a> */
     color: #fff;
     text-decoration: none;
-    transform: perspective(1000px);  /* 倾斜由 glint.js 写成内联的 perspective(1000px) rotateX() rotateY() */
+    transform: perspective(900px);  /* 倾斜由 glint.js 写成内联的 perspective(900px) rotateX() rotateY()（PERSPECTIVE 须一致） */
 }
 .post-item.card-style:not(.cw-card):hover {
     translate: 0 -10px;             /* 上浮距离 */
@@ -1500,20 +1512,33 @@ main img {
     position: absolute;
     inset: 0;
     z-index: 2;
-    background: linear-gradient(to bottom, color-mix(in srgb, var(--card-sheen) 60%, transparent), transparent 35%);
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--card-sheen) 45%, transparent),
+                color-mix(in srgb, var(--card-sheen) 12%, transparent) 10%, transparent 26%);
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.8s var(--ease-spring);
 }
 .post-item.card-style:not(.cw-card):hover .post-card-sheen { opacity: 1; }
-/* 光斑：200px 的圆形渐变，中心在 (0, 0)，由 glint.js 平移到指针处并缩放到所需半径（半径须与 glint.js 的 SPOT 一致） */
+/* 光斑：中心在 (0, 0)，由 glint.js 平移到指针处（不缩放，保持原生分辨率）
+   只有一层大而淡的柔光：亮度曲线是平顶的钟形（近似 smoothstep），中心一带几乎一样亮、往外才慢慢化开，
+   所以看不出「中间一个小亮点」，也看不出边界；卡片大半被微微照亮，指针附近只是稍亮一些 */
 .post-card-spot {
+    --spot-r: 360px;
     position: absolute;
-    left: -100px;
-    top: -100px;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle closest-side, var(--card-sheen), transparent);
+    left: calc(var(--spot-r) * -1);
+    top: calc(var(--spot-r) * -1);
+    width: calc(var(--spot-r) * 2);
+    height: calc(var(--spot-r) * 2);
+    background: radial-gradient(circle closest-side,
+        var(--card-spot) 0%,
+        color-mix(in srgb, var(--card-spot) 97%, transparent) 12%,
+        color-mix(in srgb, var(--card-spot) 88%, transparent) 25%,
+        color-mix(in srgb, var(--card-spot) 72%, transparent) 38%,
+        color-mix(in srgb, var(--card-spot) 52%, transparent) 51%,
+        color-mix(in srgb, var(--card-spot) 32%, transparent) 64%,
+        color-mix(in srgb, var(--card-spot) 15%, transparent) 77%,
+        color-mix(in srgb, var(--card-spot) 4%, transparent) 89%,
+        transparent 100%);
 }
 .post-item.card-style:not(.cw-card):hover .post-card-spot { will-change: transform; }
 
@@ -3386,139 +3411,111 @@ div.settings-row { cursor: default; }
 .settings-panel.open .settings-panel-body > :nth-child(7) { transition-delay: 120ms; }
 .settings-panel.open .settings-panel-footer { transition-delay: 160ms; }
 
-/* ---- 设置面板 · 滑动条 ----
-   架构：input background 承载 JS 动态渐变（进度+轨道），
-         WebKit track 设为透明让渐变透出，
-         Firefox 用原生 ::-moz-range-progress 处理进度。 */
-
-/* 1. 滑动条容器：清除默认外观，背景由 JS 动态设置渐变 */
-.settings-row-range input[type="range"] {
+/* ---- 设置面板 · 无极滑动条「液态胶囊」（glint.js makeSlider）----
+   没有单独的手柄：主题色的「液体」填到当前位置，边缘一道白色细把手；悬停 / 按住时胶囊鼓起，数值浮在胶囊右端
+   原生 input 透明地叠在最上面（拖动 / 点按 / 键盘 / 读屏），<glint-slider> 的部件按 --p（0–1，JS 逐帧写）画出来；
+   部件用自定义元素名（gs-*），不会被 .settings-row span 等规则误伤；键盘焦点圈画在整条外面，不会被裁 */
+.settings-row-range glint-slider {
+    --gs-accent: var(--tc-main);
+    --gs-track: rgba(0, 0, 0, 0.08);
+    --gs-ink: #333;
+    position: relative;
+    display: block;
     flex: 1;
+    min-width: 0;
+    height: 28px;
+    -webkit-tap-highlight-color: transparent;
+}
+.dark-theme .settings-row-range glint-slider { --gs-accent: var(--tc-soft); --gs-track: rgba(255, 255, 255, 0.1); --gs-ink: #eee; }
+glint-slider :is(gs-track, gs-fill, gs-grip, gs-val) { position: absolute; display: block; }
+
+/* 原生 input：铺满、完全透明（清掉 kico.css 的 overflow / min-height 与外观）；手柄只留 2px 宽，按下处即数值处 */
+.settings-row-range glint-slider input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
-    height: 16px;                   /* 容得下手柄（kico.css 设了 overflow: hidden） */
-    min-height: 0;                  /* 覆盖 kico.css 的 1.5rem 最小高度 */
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     margin: 0;
-    background: transparent no-repeat center / 100% 6px; /* 渐变图由 JS 设置，只画在中间 6px 作为轨道 */
-    border-radius: 3px;
+    padding: 0;
+    opacity: 0;
+    background: none;
     outline: none;
     cursor: pointer;
+    touch-action: pan-y;            /* 竖向滑动照常滚动面板，横向交给滑动条 */
 }
+.settings-row-range glint-slider input[type="range"]::-webkit-slider-runnable-track { height: 100%; background: none; }
+.settings-row-range glint-slider input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 2px; height: 100%; background: none; }
+.settings-row-range glint-slider input[type="range"]::-moz-range-thumb { width: 2px; height: 100%; border: 0; background: none; }
+.settings-row-range glint-slider input[type="range"]::-moz-range-track,
+.settings-row-range glint-slider input[type="range"]::-moz-range-progress { background: none; }
 
-.settings-row-range input[type="range"]:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--tc-main) 35%, transparent);
-    outline-offset: 6px;
-}
-
-/* 2. WebKit 轨道：透明，让 input 背景渐变透出作为可见轨道 */
-.settings-row-range input[type="range"]::-webkit-slider-runnable-track {
-    height: 6px;
+/* 键盘焦点：整条外面一圈 */
+glint-slider::after {
+    content: "";
+    position: absolute;
+    inset: 1px -6px;
     border-radius: 999px;
-    background: transparent;
-    cursor: pointer;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--gs-accent) 45%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
 }
+glint-slider:has(input:focus-visible)::after { opacity: 1; }
 
-/* 3. WebKit 手柄 */
-.settings-row-range input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #fff;
-    border: none;
-    margin-top: -5px;           /* 垂直居中：(轨道高 6 − 手柄高 16) / 2 */
-    box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.3),
-                0 0 0 0.5px rgba(0, 0, 0, 0.04);
-    cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* 悬停：弹性过冲放大 + 浅蓝光晕 */
-.settings-row-range input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.25);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16),
-                0 0 0 4px color-mix(in srgb, var(--tc-main) 8%, transparent);
-}
-
-/* 按下：急速收缩 + 涟漪扩散 */
-.settings-row-range input[type="range"]:active::-webkit-slider-thumb {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--tc-main) 8%, transparent);
-    transition: transform 0.1s cubic-bezier(0.22, 1, 0.36, 1),
-                box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* 4. Firefox 轨道 */
-.settings-row-range input[type="range"]::-moz-range-track {
-    height: 6px;
+/* 胶囊轨道：悬停 / 按住时鼓起（弹簧） */
+glint-slider gs-track {
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 14px;
+    translate: 0 -50%;
     border-radius: 999px;
-    background: rgba(0, 0, 0, 0.045);
-    border: none;
+    background: var(--gs-track);
+    overflow: hidden;
+    transition: height .5s var(--ease-glide);
 }
-
-/* 5. Firefox 进度填充 */
-.settings-row-range input[type="range"]::-moz-range-progress {
-    height: 6px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--tc-main) 55%, transparent);
+glint-slider:is(.is-active, :hover, :has(input:focus-visible)) gs-track { height: 22px; }
+@media (hover: none) { glint-slider:hover:not(.is-active) gs-track { height: 14px; } }
+/* 液体：整条铺满，按 --p 从右边裁掉（裁切带圆角，液面边缘始终是圆的） */
+glint-slider gs-fill {
+    inset: 0;
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--gs-accent) 78%, #fff), var(--gs-accent));
+    clip-path: inset(0 calc((1 - var(--p, 0)) * 100%) 0 0 round 999px);
+    opacity: .9;
 }
-
-/* 6. Firefox 手柄 */
-.settings-row-range input[type="range"]::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #fff;
-    border: none;
-    box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.3),
-                0 0 0 0.5px rgba(0, 0, 0, 0.04);
-    cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+/* 液面边缘的白色细把手 */
+glint-slider gs-grip {
+    left: max(9px, calc(var(--p, 0) * 100%));
+    top: 50%;
+    width: 3px;
+    height: 50%;
+    translate: calc(-100% - 4px) -50%;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.15);
 }
-
-.settings-row-range input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.25);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16),
-                0 0 0 4px color-mix(in srgb, var(--tc-main) 8%, transparent);
+/* 数值：悬停 / 按住 / 键盘聚焦时浮现在右端 */
+glint-slider gs-val {
+    right: 9px;
+    top: 50%;
+    translate: 0 -50%;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--gs-ink);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
 }
-
-/* 7. 暗色模式 */
-.dark-theme .settings-row-range input[type="range"]::-moz-range-track {
-    background: rgba(255, 255, 255, 0.06);
-}
-
-.dark-theme .settings-row-range input[type="range"]::-moz-range-progress {
-    background: color-mix(in srgb, var(--tc-soft) 50%, transparent);
-}
-
-.dark-theme .settings-row-range input[type="range"]::-webkit-slider-thumb {
-    background: #444;
-    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.6),
-                0 0 0 0.5px rgba(255, 255, 255, 0.06);
-}
-
-.dark-theme .settings-row-range input[type="range"]::-webkit-slider-thumb:hover {
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5),
-                0 0 0 4px color-mix(in srgb, var(--tc-soft) 10%, transparent);
-}
-
-.dark-theme .settings-row-range input[type="range"]:active::-webkit-slider-thumb {
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--tc-soft) 8%, transparent);
-}
-
-.dark-theme .settings-row-range input[type="range"]::-moz-range-thumb {
-    background: #444;
-    box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.6),
-                0 0 0 0.5px rgba(255, 255, 255, 0.06);
-}
-
-.dark-theme .settings-row-range input[type="range"]::-moz-range-thumb:hover {
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5),
-                0 0 0 4px color-mix(in srgb, var(--tc-soft) 10%, transparent);
-}
+glint-slider:is(.is-active, :hover, :has(input:focus-visible)) gs-val { opacity: .75; }
+@media (hover: none) { glint-slider:hover:not(.is-active) gs-val { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { glint-slider gs-track { transition: none; } }
 
 /* 夜间模式设置面板样式 */
 .dark-theme .settings-panel {
@@ -3923,8 +3920,10 @@ html.nav-collapsed .head-menu {
     left: 0.6rem;
     right: auto;
     width: min(17em, calc(100vw - 1.2em)); /* 卡片宽度 */
-    max-height: 75vh;           /* 菜单最大高度（防止溢出屏幕） */
+    max-height: calc(100vh - 4.3rem);  /* 菜单最大高度：顶边 3.7rem 往下到离屏幕底边 0.6rem（与左右边距一致），放不下才在卡片里滚动 */
+    max-height: calc(100dvh - 4.3rem);
     overflow-y: auto;
+    scrollbar-width: none;      /* 不画滚动条：卡片很窄，滚动条会在右边占出一道深色轨道，触屏 / 滚轮照常可滚 */
     display: grid;
     grid-template-columns: 1fr 1fr; /* 两列磁贴 */
     gap: 0.5em;                 /* 磁贴间距 */
@@ -4040,12 +4039,8 @@ html.nav-collapsed .head-menu .sub-menu a {
     list-style-type: circle;
 }
 
-/* 手机端导航菜单内部滚动条 */
-html.nav-collapsed .head-menu::-webkit-scrollbar { width: 8px; height: 8px; }
-html.nav-collapsed .head-menu::-webkit-scrollbar-thumb {
-    border-radius: 5px;
-    background: rgba(0, 0, 0, .1); /* 滚动条颜色（菜单内部） */
-}
+/* 手机端导航菜单内部滚动条：不画（见上方 scrollbar-width: none，这里照顾不认它的旧 WebKit） */
+html.nav-collapsed .head-menu::-webkit-scrollbar { display: none; }
 
 /* 夜间模式手机端菜单 */
 html.nav-collapsed .dark-theme .head-menu { color: #ddd; } /* 毛玻璃底色与投影由 --glass-* 变量统一控制 */
@@ -4077,7 +4072,8 @@ html.nav-collapsed .head-menu a.head-menu-gizmo small {
    缩略图磁贴两处共用（_partial/bg-tiles.ejs），逻辑见 glint.js setupBgSwitch */
 html:not(.nav-collapsed) .head-menu > .head-menu-bg,
 html:not(.nav-collapsed) .head-menu > .head-menu-music,
-html.nav-collapsed .bg-switch, html.nav-collapsed .bg-picker,
+html:not(.nav-collapsed) .head-menu > .head-menu-zen,
+html.nav-collapsed .bg-dock, html.nav-collapsed .bg-picker,
 html.nav-collapsed .music-dock, html.nav-collapsed .music-picker { display: none; }
 
 /* 右上角这一列的统一尺寸：按钮直径、卡片内边距；卡片圆角 = 按钮半径（收起 / 展开圆角不变，按钮正好嵌在卡片右上角），
@@ -4090,48 +4086,65 @@ html.nav-collapsed .music-dock, html.nav-collapsed .music-picker { display: none
     --corner-gap: 8px;              /* 音乐胶囊与背景按钮之间 */
 }
 
-/* 右上角按钮：自带一小块毛玻璃（浮在背景上，不在 header 里），配色跟顶栏走 --hd-* */
-.bg-switch {
-    appearance: none;
+/* 右上角第二枚竖排胶囊（音乐胶囊下方）：上背景切换、下沉浸，与音乐胶囊同款；自带一小块毛玻璃（浮在背景上，不在 header 里），配色跟顶栏走 --hd-* */
+.bg-dock {
     position: fixed;
     top: var(--bg-switch-top);      /* 在音乐胶囊正下方；音乐卡片展开时跟着往下让（见下方 --music-stack） */
     right: 1.2em;
     z-index: 9700;                  /* 高于叶片 (9000)、TODO 抽屉与自己长出的浮层 (9600)，低于页眉与设置面板 */
+    display: flex;
+    flex-direction: column;
     width: var(--corner-btn);
-    height: var(--corner-btn);
-    min-height: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    font: inherit;
+    border-radius: var(--corner-r);
     color: var(--hd-ink);
     background: var(--hd-bg);
     box-shadow: inset 0 0 0 1px var(--hd-line), 0 4px 14px rgba(0, 0, 0, 0.18);
     backdrop-filter: blur(16px) saturate(140%);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    /* 底色 / 投影 / 毛玻璃：浮层收回成按钮的那一刻才换回来（见下方「首页右上角浮层」） */
-    transition: color .3s, translate .55s var(--ease-spring), scale .5s var(--ease-spring),
+    /* 底色 / 投影 / 毛玻璃：浮层收回成胶囊的那一刻才换回来（见下方「首页右上角浮层」） */
+    transition: translate .55s var(--ease-spring),
                 background-color 0s var(--morph-close), box-shadow 0s var(--morph-close), backdrop-filter 0s var(--morph-close),
                 top var(--stack-t);
     animation: bg-switch-in .6s var(--ease-spring) .4s backwards; /* 入场动画挂在玻璃元素自身 */
 }
-.bg-switch:before {
-    content: "\f03e";               /* FontAwesome picture-o */
-    display: block;
-    font: 0.9em/calc(var(--corner-btn) / 0.9) "FontAwesome"; /* 图标比播放键宽，缩一点让两列视觉等重 */
-    text-align: center;
-    transition: transform .6s var(--ease-spring);
+.bg-dock button {
+    appearance: none;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: var(--corner-btn);
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .3s, background-color .25s, scale .5s var(--ease-spring);
 }
-.bg-switch:hover, .bg-switch:focus-visible, body:has(.bg-picker.open) .bg-switch { color: var(--hd-accent); }
+@media (hover: hover) {
+    .bg-dock button:hover { background-color: color-mix(in srgb, currentColor 10%, transparent); }
+}
+.bg-dock button:before { display: block; transition: transform .6s var(--ease-spring); }
+.bg-switch:before {
+    content: "\f03e";              /* FontAwesome picture-o */
+    font: 0.9em/1 "FontAwesome";    /* 图标比播放键宽，缩一点让两列视觉等重 */
+}
+.bg-dock .zen-switch:before { content: "\f065"; font: 0.85em/1 "FontAwesome"; }   /* expand */
+.bg-dock .zen-switch[aria-pressed="true"]:before { content: "\f066"; }               /* compress：再点退出 */
+.bg-dock button:hover, .bg-dock button:focus-visible,
+body:has(.bg-picker.open) .bg-switch, .bg-dock .zen-switch[aria-pressed="true"] { color: var(--hd-accent); }
 .bg-switch:hover:before { transform: rotate(-8deg) scale(1.1); }
-.bg-switch:active { scale: .88; transition-duration: .3s, .55s, .12s, 0s, 0s, 0s, var(--stack-d); }
+.bg-dock .zen-switch:hover:before { transform: scale(1.15); }
+.bg-dock button:active { scale: .86; transition-duration: .3s, .25s, .12s; }
 @keyframes bg-switch-in {
     from { opacity: 0; scale: .7; }
 }
 /* 沉浸模式收起顶栏时跟着上移 */
-html.header-hidden body.immersive :is(.bg-switch, .music-dock, .corner-morph) { translate: 0 calc(1em - 3.7rem); }
+html.header-hidden body.immersive :is(.bg-dock, .music-dock, .corner-morph) { translate: 0 calc(1em - 3.7rem); }
 
 /* 首页右上角浮层（背景 / 音乐）：不另外浮出一张卡片，而是从按钮本身长出来（容器形变）。
    浮层平时与按钮（音乐是整条胶囊）同位置、同大小、同圆角、同底色，藏在按钮正下方；打开时宽高 / 圆角 / 底色过渡成卡片，
@@ -4192,7 +4205,7 @@ html.header-hidden body.immersive :is(.bg-switch, .music-dock, .corner-morph) { 
 }
 .dark-theme .corner-morph { color: #ddd; }
 /* 浮层打开期间，按钮撤掉自己的底（由浮层接着画），图标留在原处 */
-body:has(.bg-picker.open) .bg-switch,
+body:has(.bg-picker.open) .bg-dock,
 body:has(.music-picker.open) .music-dock {
     background-color: transparent;
     box-shadow: none;
@@ -4224,6 +4237,64 @@ body:has(.music-picker.open) .music-dock {
     .corner-morph, .corner-morph.open, .corner-morph-inner { transition-duration: 0s !important; transition-delay: 0s !important; }
 }
 
+/* 首页沉浸（右上角 .bg-dock 下半的按钮 / 导航卡片里的 .head-menu-zen，逻辑见 glint.js setupHomeZen）：
+   html.home-zen 时中央卡片（博主卡、文章卡片、分页）与 Gizmo 叶片淡出，只留背景、TODO 与右上角两枚胶囊；
+   淡出后 glint.js 再挂 home-zen-done，main 收成一屏高（margin-top 3.2em + 高度 = 100dvh），底栏正好在屏幕底边外，一下滑就露出来
+   淡出挂在各张玻璃卡片自身（祖先透明度 < 1 会让其中的毛玻璃失效）；卡片自带的入场动画先撤掉，退出时重新播一遍 */
+html.home-zen :is(.home-hero, .home-posts > .post-item, .page-navigator) {
+    animation: none;
+    opacity: 0;
+    scale: .96;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .4s var(--ease-exit), scale .45s var(--ease-exit), visibility 0s .4s;
+}
+html.home-zen .gizmo-leaf.is-landed { opacity: 0; pointer-events: none; transition: opacity .4s var(--ease-exit); }
+html.home-zen-done main {
+    box-sizing: border-box;
+    height: calc(100vh - 3.2em);
+    height: calc(100dvh - 3.2em);
+    padding: 0;
+    overflow: clip;
+}
+
+/* 导航卡片里的沉浸开关：一整排，样式同下方的背景那一排 */
+html.nav-collapsed .head-menu-zen {
+    appearance: none;
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-height: 0;
+    margin: 0;
+    padding: 0.75em 0.75em;
+    border: 0;
+    border-radius: calc(var(--glass-radius) - 0.5em);
+    corner-shape: squircle;
+    background: var(--glass-tile);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
+    font: inherit;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.15s var(--ease-exit), transform 0.15s var(--ease-exit), color .25s;
+}
+html.nav-collapsed .head-menu.active .head-menu-zen {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.35s var(--ease-spring) 220ms, transform 0.5s var(--ease-spring) 220ms, color .25s;
+}
+html.nav-collapsed .dark-theme .head-menu-zen { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04); }
+.head-menu-zen .fa { width: 1em; text-align: center; color: var(--blue); }
+.dark-theme .head-menu-zen .fa { color: var(--tc-soft); }
+.head-menu-zen[aria-pressed="true"] { color: var(--blue); }
+.dark-theme .head-menu-zen[aria-pressed="true"] { color: var(--tc-soft); }
+
 /* 导航卡片里的一整排：标题 + 缩略图，随卡片最后浮现 */
 html.nav-collapsed .head-menu-bg {
     grid-column: 1 / -1;
@@ -4254,7 +4325,7 @@ html.nav-collapsed .dark-theme .head-menu-bg { box-shadow: inset 0 0 0 1px rgba(
 .head-menu-bg-title .fa { color: var(--blue); }
 .dark-theme .head-menu-bg-title .fa { color: var(--tc-soft); }
 
-/* 缩略图磁贴：浮层里两列（单数时最后一张占满一排，不留空格）、导航卡片里三列
+/* 缩略图磁贴：浮层里两列（单数时最后一张占满一排，不留空格）、导航卡片里三列（最后一排同样铺满，见下方）
    名称压在图片底部的渐变上，磁贴只是一块圆角矩形；所选的描边画在磁贴里面（::after），圆角与磁贴一致 */
 .bg-tiles {
     --tile-r: calc(var(--glass-radius) - 0.5em - 0.6em); /* 导航卡片里：外框圆角 − 内边距（同心） */
@@ -4264,7 +4335,19 @@ html.nav-collapsed .dark-theme .head-menu-bg { box-shadow: inset 0 0 0 1px rgba(
 }
 .corner-morph .bg-tiles { --tile-r: var(--corner-in-r); grid-auto-rows: 64px; }
 .corner-morph .bg-tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
-.head-menu-bg .bg-tiles { grid-template-columns: repeat(3, 1fr); gap: 0.45em; }
+/* 导航卡片里：按三列排，但网格切成 6 份、每张占 2 份，最后一排不留空格——余 1 张时占满一排，余 2 张时各占半排
+   行高统一按「三列时一张 16:10」算（容器宽度 100cqi 换算），加宽的磁贴不会被撑高，每排一样高 */
+.head-menu-bg { container-type: inline-size; }
+.head-menu-bg .bg-tiles {
+    --tiles-gap: 0.45em;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-auto-rows: calc((100cqi - var(--tiles-gap) * 2) / 3 * 10 / 16);
+    gap: var(--tiles-gap);
+}
+.head-menu-bg .bg-tile { grid-column: span 2; }
+.head-menu-bg .bg-tile:last-child:nth-child(3n + 1) { grid-column: span 6; }
+.head-menu-bg .bg-tile:nth-last-child(2):nth-child(3n + 1),
+.head-menu-bg .bg-tile:last-child:nth-child(3n + 2) { grid-column: span 3; }
 .bg-tile {
     appearance: none;
     position: relative;
@@ -4283,7 +4366,7 @@ html.nav-collapsed .dark-theme .head-menu-bg { box-shadow: inset 0 0 0 1px rgba(
     -webkit-tap-highlight-color: transparent;
     transition: scale .45s var(--ease-spring);
 }
-.head-menu-bg .bg-tile { aspect-ratio: 16 / 10; corner-shape: squircle; } /* 导航卡片本身是 squircle，磁贴跟着它 */
+.head-menu-bg .bg-tile { corner-shape: squircle; } /* 导航卡片本身是 squircle，磁贴跟着它；高度由上方的 grid-auto-rows 定 */
 .bg-tile-img {
     position: absolute;
     inset: 0;
@@ -4723,31 +4806,37 @@ article sup a[data-footnote-ref] {
    TO DO 侧边栏（首页左侧抽屉：Bangumi 在看 + 网易云周榜）
    ========================================= */
 
-/* 抽屉宽度与开合动画参数 */
+/* 抽屉：一张浮起的毛玻璃卡片（--glass-*，与设置面板 / 导航卡片同一套），离屏幕左、下边各 0.6rem，顶边与其他浮层一样在 3.7rem
+   卡片里两个分区是 --glass-tile 色块（同导航卡片的磁贴），条目再在色块里排开；圆角一层层同心收小 */
 :root {
-    --todo-width: min(300px, 85vw);
-    --todo-ease: cubic-bezier(0.22, 1, 0.36, 1);   /* 快出慢停，收尾柔和 */
-    --todo-duration: .55s;
+    --todo-width: min(320px, calc(100vw - 1.2rem - 3em));   /* 手机上展开后右侧仍留出标签的位置 */
+    --todo-open: .6s var(--ease-glide);                     /* 展开：带一点回弹的弹簧 */
+    --todo-close: .42s cubic-bezier(.4, 0, .2, 1);          /* 收起：平稳收回，标签不撞向屏幕边 */
+    --todo-tile-r: calc(var(--glass-radius) - .55em);       /* 分区色块圆角 = 卡片圆角 − 卡片内边距 */
+    --todo-item-r: calc(var(--todo-tile-r) - .35em);        /* 条目圆角 = 色块圆角 − 色块内边距 */
 }
 
-/* 外层容器：抽屉 + 标签，开合时只位移它这一个元素，标签始终粘在抽屉右缘。
-   transform 只由 .active 切换驱动；探出、悬停等小动作走独立的 translate 属性，
-   避免动画/悬停打断开合过渡（造成错位或瞬移） */
+/* 外层容器：卡片 + 标签，开合时只位移它这一个元素，标签始终跟着卡片右缘。
+   transform 只由 .active 切换驱动；探出、悬停等小动作走独立的 translate 属性，避免打断开合过渡 */
 .todo-drawer {
     position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 9001;                  /* 低于页眉 (99999) 与设置面板 */
+    top: 3.7rem;
+    bottom: .6rem;
+    left: .6rem;
+    z-index: 9001;                  /* 低于页眉 (99999) 与设置面板，高于 Gizmo 叶片 */
     width: var(--todo-width);
     pointer-events: none;           /* 收起时不挡住页面左缘 */
-    transform: translateX(-100%);
+    transform: translateX(calc(-100% - .6rem));   /* 收起：卡片右缘正好退到屏幕左缘，标签贴边 */
     will-change: transform;
-    transition: transform var(--todo-duration) var(--todo-ease),
-                translate .3s var(--todo-ease);
-    animation: todo-peek 1.4s var(--todo-ease) 1s 2;
+    transition: transform var(--todo-close), translate .5s var(--ease-spring);
+    animation: todo-peek 1.4s var(--ease-spring) 1s 2;
 }
-.todo-drawer.active { transform: translateX(0); animation: none; translate: 0; }
+.todo-drawer.active {
+    transform: none;
+    animation: none;
+    translate: 0;
+    transition: transform var(--todo-open), translate .5s var(--ease-spring);
+}
 @media (hover: hover) {
     .todo-drawer:not(.active):has(.todo-toggle:hover) { translate: 4px 0; }
 }
@@ -4758,7 +4847,8 @@ article sup a[data-footnote-ref] {
     60%      { translate: -2px 0; }
 }
 
-/* 竖排展开标签：贴在容器右缘，自身不做位移动画；默认在上三分之一处，可上下拖动（top 由脚本写入） */
+/* 竖排标签：与右上角胶囊同款的一小块毛玻璃（配色走 --hd-*）；收起时贴着屏幕左缘（左侧不留圆角），
+   展开后离开卡片一点、变成整颗胶囊。默认在上三分之一处，可上下拖动（top 由脚本写入，已扣掉卡片顶边） */
 .todo-toggle {
     position: absolute;
     top: 33.333%;
@@ -4766,39 +4856,49 @@ article sup a[data-footnote-ref] {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: .6em;
-    padding: 1.1em .6em;
+    gap: .55em;
+    min-height: 0;
+    margin: 0;
+    padding: 1em .55em;
     font: inherit;
-    font-size: .95em;
+    font-size: .82em;
     font-weight: 700;
-    letter-spacing: .2em;
-    color: #fff;
+    letter-spacing: .22em;
+    color: var(--hd-ink);
     cursor: pointer;
     pointer-events: auto;
-    background-color: var(--blue);
+    background: var(--hd-bg);
     border: none;
-    border-radius: 0 10px 10px 0;
-    box-shadow: 2px 4px 16px rgba(0, 0, 0, 0.18);
+    border-radius: 0 999px 999px 0;
+    box-shadow: inset 0 0 0 1px var(--hd-line), 0 4px 14px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
     translate: 0 -50%;
-    transform-origin: left center;  /* 按下缩放时左缘不离开抽屉 */
+    transform-origin: left center;  /* 按下缩放时左缘不离开屏幕边 */
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;    /* 长按不弹菜单 / 不选中文字 */
     -webkit-tap-highlight-color: transparent;
     touch-action: none;             /* 触屏上同样可拖动，不触发页面滚动 */
-    transition: scale .2s var(--todo-ease), background-color .3s;
+    transition: scale .45s var(--ease-spring), color .3s, translate var(--todo-close), border-radius var(--todo-close);
+}
+.todo-drawer.active .todo-toggle {
+    translate: .45rem -50%;
+    border-radius: 999px;
+    transition: scale .45s var(--ease-spring), color .3s, translate var(--todo-open), border-radius .3s ease;
 }
 .todo-toggle.dragging { cursor: grabbing; scale: 1; }
 .todo-toggle span { writing-mode: vertical-rl; }
 .todo-toggle i {
-    font-size: 1.1em;
-    transition: transform var(--todo-duration) var(--todo-ease);
+    font-size: 1.05em;
+    color: var(--hd-accent);
+    transition: rotate .6s var(--ease-glide);
 }
 @media (hover: hover) {
-    .todo-drawer:not(.active) .todo-toggle:hover { background-color: var(--light-blue); }
+    .todo-toggle:hover { color: var(--hd-accent); }
 }
-.todo-toggle:active { scale: .94; }
-.todo-drawer.active .todo-toggle i { transform: rotate(-90deg); }
+.todo-toggle:active { scale: .92; transition-duration: .12s, .3s; }
+.todo-drawer.active .todo-toggle i { rotate: -90deg; }
 
 /* 呼吸光晕：固定 box-shadow 的伪元素，只做 opacity / scale 动画 */
 .todo-toggle::after {
@@ -4806,117 +4906,171 @@ article sup a[data-footnote-ref] {
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--tc-main) 50%, transparent);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--tc-main) 35%, transparent);
     opacity: 0;
     pointer-events: none;
-    animation: todo-glow 2.8s ease-in-out infinite;
+    animation: todo-glow 3.2s ease-in-out infinite;
 }
 .todo-drawer.active .todo-toggle::after { animation: none; }
 @keyframes todo-glow {
     0%   { opacity: 0;  scale: .96; }
     40%  { opacity: 1;  scale: 1; }
-    100% { opacity: 0;  scale: 1.06; }
+    100% { opacity: 0;  scale: 1.08; }
 }
 
-/* 抽屉本体：填满容器，收起时在过渡结束后隐藏 */
+/* 卡片本体：收起时淡去、略微缩小，过渡结束后隐藏 */
 .todo-sidebar {
     position: absolute;
     inset: 0;
-    padding: 4.6em 1.1em 1.5em;     /* 顶部留出导航栏高度 */
+    display: flex;
+    flex-direction: column;
+    gap: .55em;
+    padding: .55em;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: none;          /* 卡片窄，不画滚动条（触屏 / 滚轮照常可滚） */
     box-sizing: border-box;
     pointer-events: auto;
-    background: rgba(255, 255, 255, 0.62);  /* 抽屉背景透明度，越低毛玻璃越通透 */
-    backdrop-filter: blur(16px) saturate(160%);   /* 抽屉毛玻璃模糊强度 */
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-    border-right: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 45px rgba(0, 0, 0, 0.18);
+    color: #333;
+    border-radius: var(--glass-radius);
+    corner-shape: squircle;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    opacity: 0;
+    scale: .96;
+    transform-origin: left center;
     visibility: hidden;
-    transition: visibility 0s var(--todo-duration);
+    transition: opacity .3s ease, scale var(--todo-close), visibility 0s .42s;
 }
+.todo-sidebar::-webkit-scrollbar { display: none; }
 .todo-drawer.active .todo-sidebar {
+    opacity: 1;
+    scale: 1;
     visibility: visible;
-    transition: visibility 0s;
+    transition: opacity .25s ease, scale var(--todo-open), visibility 0s;
 }
 
-/* 内容依次淡入滑出，增加层次感 */
+/* 内容依次浮现：标题 → 两个分区 → 分区里的条目一条接一条（--i 由模板 / 脚本写入）；收起时一起淡去，不等 */
 .todo-sidebar .todo-head,
-.todo-sidebar .todo-block {
+.todo-sidebar .todo-block,
+.todo-sidebar .todo-list > li {
     opacity: 0;
-    transform: translateX(-16px);
-    transition: opacity .25s ease, transform .25s ease;
+    translate: -10px 0;
+    transition: opacity .15s ease, translate .2s ease;
 }
 .todo-drawer.active .todo-head,
-.todo-drawer.active .todo-block {
+.todo-drawer.active .todo-block,
+.todo-drawer.active .todo-list > li {
     opacity: 1;
-    transform: translateX(0);
-    transition: opacity .45s ease, transform .55s var(--todo-ease);
+    translate: none;
+    transition: opacity .4s ease var(--d, 0s), translate .6s var(--ease-glide) var(--d, 0s);
 }
-.todo-drawer.active .todo-head { transition-delay: .08s; }
-.todo-drawer.active .todo-block:nth-of-type(1) { transition-delay: .14s; }
-.todo-drawer.active .todo-block:nth-of-type(2) { transition-delay: .22s; }
+.todo-drawer.active .todo-head { --d: .06s; }
+.todo-block:nth-of-type(1) { --block-d: .12s; }
+.todo-block:nth-of-type(2) { --block-d: .2s; }
+.todo-drawer.active .todo-block { --d: var(--block-d); }
+.todo-drawer.active .todo-list > li { --d: calc(var(--block-d) + .08s + min(var(--i, 0), 10) * 30ms); }
 
 .todo-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: .6em;
+    padding: .25em .2em .1em .55em;
 }
-.todo-head h2 { margin: 0; font-size: 1.2em; letter-spacing: .1em; color: var(--blue); }
+.todo-head h2 { margin: 0; font-size: 1.05em; letter-spacing: .22em; color: var(--blue); }
 .todo-close {
-    padding: .3em .5em;
+    display: grid;
+    place-items: center;
+    width: 2em;
+    height: 2em;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
     font-size: 1em;
     color: inherit;
     cursor: pointer;
-    background: none;
+    background: var(--glass-tile);
     border: none;
-    opacity: .6;
+    border-radius: 50%;
+    opacity: .75;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .25s, color .25s, background-color .25s, scale .45s var(--ease-spring);
 }
+.todo-close .fa { font-size: 1.15em; translate: -.05em 0; }
 .todo-close:hover { opacity: 1; color: var(--blue); }
+.todo-close:active { scale: .86; transition-duration: .25s, .25s, .25s, .12s; }
 
-.todo-block + .todo-block { margin-top: 1.4em; }
-.todo-block h3 {
-    margin: 0 0 .6em;
-    padding-left: .6em;
-    font-size: .95em;
-    border-left: 3px solid var(--blue);
+/* 分区：一块次级色块 */
+.todo-block {
+    padding: .5em .35em .4em;
+    border-radius: var(--todo-tile-r);
+    corner-shape: squircle;
+    background: var(--glass-tile);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
 }
-.todo-block h3 a { color: inherit; text-decoration: none; }
-.todo-block h3 a:hover { color: var(--blue); }
+.todo-block h3 { margin: 0 0 .35em; padding: 0 .3em; font-size: .8rem; font-weight: 600; letter-spacing: .05em; }
+.todo-block h3 a {
+    display: flex;
+    align-items: center;
+    gap: .5em;
+    color: inherit;
+    text-decoration: none;
+    opacity: .8;
+    transition: opacity .25s, color .25s;
+}
+.todo-block h3 .fa { width: 1.1em; text-align: center; color: var(--blue); }
+.todo-block h3 a::after {           /* 右侧一枚小箭头，悬停时往前探一点 */
+    content: "\f105";
+    margin-left: auto;
+    font: 1em/1 "FontAwesome";
+    opacity: .45;
+    transition: translate .45s var(--ease-spring), opacity .25s;
+}
+.todo-block h3 a:hover { opacity: 1; color: var(--blue); }
+.todo-block h3 a:hover::after { translate: 3px 0; opacity: 1; }
 
 .todo-list { margin: 0; padding: 0; list-style: none; }
 .todo-list li { margin: 0; padding: 0; }
-.todo-list li + li { margin-top: .35em; }
+.todo-list li + li { margin-top: .1em; }
 .todo-list a {
     display: flex;
     align-items: center;
-    gap: .65em;
-    padding: .35em .4em;
+    gap: .7em;
+    padding: .38em .4em;
     color: inherit;
     text-decoration: none;
-    border-radius: 6px;
-    transition: background-color .2s;
+    border-radius: var(--todo-item-r);
+    corner-shape: round;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color .25s, scale .45s var(--ease-spring);
 }
-.todo-list a:hover { background-color: color-mix(in srgb, var(--tc-main) 12%, transparent); }
+@media (hover: hover) {
+    .todo-list a:hover { background-color: color-mix(in srgb, currentColor 7%, transparent); }
+}
+.todo-list a:active { scale: .97; transition-duration: .25s, .12s; }
 .todo-list img {
     flex: none;
     width: 40px;
     height: 40px;
     object-fit: cover;
-    border-radius: 4px;
-    background: var(--light-border);
+    border-radius: 8px;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
 }
-.todo-bgm img { height: 54px; }
+.todo-bgm img { width: 38px; height: 52px; border-radius: 6px; }
+
 /* Bangumi 分组小标题：文字 + 细分界线 */
 .todo-sub {
     display: flex;
     align-items: center;
     gap: .6em;
-    margin: 0 0 .3em;
-    padding-left: .4em;
-    font-size: .72em;
-    letter-spacing: .15em;
+    margin: .2em .4em .25em;
+    font-size: .7em;
+    font-weight: 600;
+    letter-spacing: .18em;
     color: var(--blue);
 }
 .todo-sub::after {
@@ -4924,34 +5078,58 @@ article sup a[data-footnote-ref] {
     flex: 1;
     height: 1px;
     background: currentColor;
-    opacity: .3;
+    opacity: .2;
 }
-.todo-list + .todo-sub { margin-top: .9em; }
-.todo-text { display: flex; flex-direction: column; min-width: 0; }
+.todo-list + .todo-sub { margin-top: .7em; }
+.todo-text { display: flex; flex: 1; flex-direction: column; gap: .1em; min-width: 0; }
 .todo-title {
     overflow: hidden;
-    font-size: .88em;
+    font-size: .86em;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 .todo-meta {
     overflow: hidden;
-    font-size: .75em;
+    font-size: .72em;
     font-weight: 400;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
     text-overflow: ellipsis;
-    opacity: .7;
-}
-.todo-rank {
-    flex: none;
-    width: 1.4em;
-    font-size: .85em;
-    text-align: center;
     opacity: .6;
 }
-.todo-music li:nth-child(-n+3) .todo-rank { color: var(--blue); opacity: 1; font-weight: 700; }
-.todo-empty { margin: 0; padding: .4em; font-size: .85em; opacity: .6; }
-.todo-note { margin: .6em 0 0; font-size: .72em; text-align: right; opacity: .5; }
+/* 「在看」进度：一道细轨道，展开时从左长到当前集数（--p 由模板 / 脚本写入，0–1） */
+.todo-progress {
+    position: relative;
+    display: block;
+    height: 3px;
+    margin-top: .3em;
+    overflow: hidden;
+    border-radius: 2px;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.todo-progress::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--blue);
+    transform-origin: left center;
+    scale: 0 1;
+    transition: scale .2s ease;
+}
+.todo-drawer.active .todo-progress::before { scale: var(--p, 0) 1; transition: scale 1s var(--ease-spring) calc(var(--d, 0s) + .15s); }
+.todo-rank {
+    flex: none;
+    width: 1.3em;
+    font-size: .82em;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    opacity: .35;
+}
+.todo-music li:nth-child(-n+3) .todo-rank { color: var(--blue); opacity: 1; }
+.todo-empty { margin: 0; padding: .6em .4em; font-size: .82em; text-align: center; opacity: .55; }
+.todo-note { margin: .4em .45em 0; font-size: .7em; text-align: right; opacity: .45; }
 
 /* 不支持毛玻璃的浏览器退回近乎不透明，保证文字可读 */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -4962,25 +5140,24 @@ article sup a[data-footnote-ref] {
 /* 设置面板「关闭首页 TODO 显示」 */
 body.hide-todo .todo-drawer { display: none; }
 
-/* 夜间模式 */
-.dark-theme .todo-toggle { color: #eee; }
-.dark-theme .todo-sidebar {
-    color: #ddd;
-    background: rgba(24, 24, 24, 0.55);    /* 夜间抽屉背景透明度 */
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 45px rgba(0, 0, 0, 0.65);
-}
+/* 夜间模式：卡片底色 / 描边 / 投影由 --glass-* 变量统一切换 */
+.dark-theme .todo-sidebar { color: #ddd; }
+.dark-theme .todo-block { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04); }
+.dark-theme :is(.todo-head h2, .todo-block h3 .fa, .todo-sub, .todo-music li:nth-child(-n+3) .todo-rank),
+.dark-theme .todo-block h3 a:hover, .dark-theme .todo-close:hover { color: var(--tc-soft); }
+.dark-theme .todo-progress::before { background: var(--tc-soft); }
+.dark-theme .todo-list img { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
 
-/* 手机端：标签更小，抽屉近乎全宽 */
+/* 手机端：标签更小 */
 @media screen and (max-width: 599px) {
-    .todo-toggle { padding: .9em .45em; font-size: .8em; }
-    .todo-sidebar { padding-top: 4.2em; }
+    .todo-toggle { padding: .85em .45em; font-size: .76em; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .todo-drawer, .todo-toggle, .todo-toggle::after, .todo-toggle i,
-    .todo-sidebar, .todo-drawer.active .todo-sidebar,
-    .todo-sidebar .todo-head, .todo-sidebar .todo-block { transition: none !important; animation: none !important; }
+    .todo-drawer, .todo-drawer.active, .todo-toggle, .todo-drawer.active .todo-toggle, .todo-toggle::after, .todo-toggle i,
+    .todo-sidebar, .todo-drawer.active .todo-sidebar, .todo-progress::before, .todo-drawer.active .todo-progress::before,
+    .todo-sidebar :is(.todo-head, .todo-block, .todo-list > li),
+    .todo-drawer.active :is(.todo-head, .todo-block, .todo-list > li) { transition: none !important; animation: none !important; }
 }
 
 /* =========================================
@@ -5401,6 +5578,7 @@ body:not(.dark-theme) .post-item.card-style:not(.cw-card) {
     --card-edge-mid: rgba(255, 255, 255, 0.22);
     --card-edge-bottom: rgba(255, 255, 255, 0.36);
     --card-sheen: rgba(255, 240, 225, 0.2);         /* 高光带一点暖色 */
+    --card-spot: rgba(255, 242, 228, 0.1);
 }
 
 /* 白天模式目录：卡片沿用 --glass-* 毛玻璃，轨道与文字换成暖灰，强调取天空蓝 */

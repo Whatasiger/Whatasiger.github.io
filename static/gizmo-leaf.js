@@ -47,7 +47,8 @@
     var wakeX = 0, wakeY = 0, wakeDist = 0;
 
     function rand(a, b) { return a + Math.random() * (b - a); }
-    function hidden() { return root.classList.contains("nav-collapsed") || document.hidden; }
+    // 导航收起、首页沉浸（html.home-zen，叶片随卡片一起隐去）或标签页在后台时停下，不再搅动水面
+    function hidden() { return root.classList.contains("nav-collapsed") || root.classList.contains("home-zen") || document.hidden; }
 
     /* ── 锚点：右侧空白的中线、页眉以下偏下的位置 ───────── */
     function layout() {
@@ -218,7 +219,7 @@
             landed = true;
             if (wr()) {
                 wr().onStart = start;
-                wr().drop(x, y, 24, 0.9);
+                if (!hidden()) wr().drop(x, y, 24, 0.9);
             }
             start();
         }, 650); // 与 .gizmo-leaf.is-landed 的落下动画同步
@@ -226,10 +227,13 @@
     }
 
     window.addEventListener("resize", layout);
-    // 导航收起 / 展开时（html 上的其他类名变化不管）
+    // 导航收起 / 展开时重新布局；退出首页沉浸时接着漂（html 上的其他类名变化不管）
     var wasCollapsed = root.classList.contains("nav-collapsed");
+    var wasZen = root.classList.contains("home-zen");
     new MutationObserver(function () {
         var c = root.classList.contains("nav-collapsed");
+        var z = root.classList.contains("home-zen");
+        if (z !== wasZen) { wasZen = z; if (!z && landed) start(); }
         if (c === wasCollapsed) return;
         wasCollapsed = c;
         if (placed) layout();

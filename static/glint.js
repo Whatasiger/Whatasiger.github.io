@@ -96,6 +96,20 @@ var Glint = function (config) {
     // 模糊度要变（拖设置滑块）时先退回 CSS 模糊实时预览，松手后再重新烘焙；水波纹读到的是烤好的图 + 无模糊，结果一致
     // 首页指针移上文章卡片时，还会按文章页的模糊度把那张封面预先烤好（prebake），文章页首帧就直接用上（见 head.ejs），
     // 一镜到底的全程都没有实时的全屏模糊
+    // 抖动：每个通道加上 ±1 级的三角分布噪点，把 8 位色深下暗部平滑渐变的台阶（色带）打散成看不出的细颗粒
+    // 浏览器合成只有 8 位，10bit 屏幕也一样会出台阶；噪点幅度只有 1 级，肉眼看不出颗粒。背景烘焙与卡片模糊层共用
+    function dither(ctx, w, h) {
+        try {
+            var data = ctx.getImageData(0, 0, w, h);
+            var d = data.data;
+            for (var i = 0; i < d.length; i += 4) {
+                var n = Math.random() - Math.random();     // -1 ~ 1，三角分布
+                d[i] += n; d[i + 1] += n; d[i + 2] += n;   // Uint8ClampedArray 会自动四舍五入并夹在 0–255
+            }
+            ctx.putImageData(data, 0, 0);
+        } catch (e) {}      // 跨域图片画进来后画布被污染、读不出像素：不抖动（导出也会失败，退回 CSS 模糊）
+    }
+
     var bgBake = (function () {
         var PREBAKE_KEY = "glint-bg-prebake";   // 与 head.ejs 中文章页读取的键一致
         var seq = 0;                // 每次烘焙 / 撤销都加一，过期的异步结果直接丢弃
@@ -104,12 +118,14 @@ var Glint = function (config) {
         var rawInline = null;       // 烘焙前 body 上 --page-bg-image 的内联值（"" 表示来自样式表）
         var lastWidth = window.innerWidth;
 
-        // 按当前视口 cover 铺满时的尺寸，把图模糊成一张画布并导出；cb(blob | null)
-        function blurBlob(img, blur, cb) {
+        // 按当前视口 cover 铺满时的尺寸，把图模糊成一张画布并导出无损 PNG；cb(blob | null)
+        // 有损 WebP 会在暗部压出一格一格的方块，所以不用；fine 为真时（页面上真正用的那张）提高密度并加抖动去色带，
+        // 为假时（预烤，要以 data URL 存进 sessionStorage）保持低密度、不抖动（噪点会让 PNG 压不小），文章页落定后再按 fine 重烤
+        function blurBlob(img, blur, cb, fine) {
             try {
                 var dpr = Math.min(window.devicePixelRatio || 1, 2);
                 var cover = Math.max(window.innerWidth / img.naturalWidth, window.innerHeight / img.naturalHeight); // 原图 1px 显示成多少 CSS px
-                var density = Math.min(dpr, 4 / blur);      // 画布每 CSS px 的像素数：模糊半径至少留 4 个画布像素，再高也看不出差别
+                var density = Math.min(dpr, (fine ? 8 : 4) / blur);  // 画布每 CSS px 的像素数：模糊半径至少留 4 / 8 个画布像素
                 var k = Math.min(1, cover * density);       // 画布相对原图的缩放
                 var w = Math.max(1, Math.round(img.naturalWidth * k));
                 var h = Math.max(1, Math.round(img.naturalHeight * k));
@@ -133,7 +149,8 @@ var Glint = function (config) {
                     ctx.imageSmoothingQuality = "high";
                     ctx.drawImage(s, 0, 0, w, h);
                 }
-                c.toBlob(function (blob) { cb(blob || null); }, "image/webp", 0.9);
+                if (fine) dither(ctx, w, h);
+                c.toBlob(function (blob) { cb(blob || null); }, "image/png");
             } catch (e) {
                 cb(null);           // 跨域图片等无法导出时，保持 CSS 模糊
             }
@@ -219,7 +236,7 @@ var Glint = function (config) {
                             body.classList.add("bg-baked");
                         });
                     }, function () { URL.revokeObjectURL(url); });
-                });
+                }, true);
             });
         }
 
@@ -249,7 +266,7 @@ var Glint = function (config) {
                     };
                     fr.onerror = function () { prebaking = ""; };
                     fr.readAsDataURL(blob);
-                });
+                }, false);
             });
         }
 
@@ -269,10 +286,31 @@ var Glint = function (config) {
             document.documentElement.classList.remove("bg-prebaked");
         }
 
-        // DOM 就绪（文章封面已换上，见 post.ejs）后等切页过渡（模糊 0.8s）走完再烤；不等 load，外部脚本慢时也不耽误
+        // 背景层（body:before）上的过渡都走完再动手：换图时 withoutTransition 会撤掉过渡，
+        // 若这时「从文章回首页」的变清晰 / 变亮（header.ejs，0.8s）还没走完，就会被硬切到终点，背景颤一下；
+        // 页面加载偏慢时这段过渡开始得晚，固定等 1s 并不总够，所以按实际在跑的动画等
+        function whenBgIdle(fn) {
+            if (body.classList.contains("no-bg-transition")) {     // header.ejs 还没放开过渡（两帧之后才放）：先等
+                requestAnimationFrame(function () { whenBgIdle(fn); });
+                return;
+            }
+            var running = document.getAnimations ? document.getAnimations().filter(function (a) {
+                var e = a.effect;
+                return e && e.target === body && e.pseudoElement === "::before" && a.playState === "running";
+            }) : [];
+            if (!running.length) { fn(); return; }
+            Promise.all(running.map(function (a) { return a.finished.catch(function () {}); }))
+                .then(function () { whenBgIdle(fn); });
+        }
+
+        // DOM 就绪（文章封面已换上，见 post.ejs）后等切页过渡走完再烤；不等 load，外部脚本慢时也不耽误
+        var scheduled = 0;
         function schedule(delay) {
             clearTimeout(timer);
-            timer = setTimeout(bake, delay || 0);
+            var my = ++scheduled, at = seq;             // 期间又排了一次或被 unbake 撤销，就作废
+            timer = setTimeout(function () {
+                whenBgIdle(function () { if (my === scheduled && at === seq) bake(); });
+            }, delay || 0);
         }
 
         // 预渲染中（首页悬停文章卡片时）还没有过渡要让路，立即烤；点进来时背景已是烤好的图
@@ -280,6 +318,9 @@ var Glint = function (config) {
             var wait = document.prerendering ? 0 : 1000;
             if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { schedule(wait); });
             else schedule(wait);
+        } else {
+            // 用上的是预烤的低密度图（没有抖动）：等一镜到底落定、再空一会儿，按正式规格重烤一张悄悄换上（两张几乎一样，看不出切换）
+            (window.vtSettled || Promise.resolve()).then(function () { schedule(1200); });
         }
         window.addEventListener("resize", function () {
             if (window.innerWidth === lastWidth) return; // 只理会宽度变化（地址栏伸缩只改高度）
@@ -362,20 +403,92 @@ var Glint = function (config) {
     }
 
     function updateSliderFill(input) {
-        var min = parseFloat(input.min) || 0;
-        var max = parseFloat(input.max) || 100;
-        var val = parseFloat(input.value) || 0;
-        var pct = ((val - min) / (max - min)) * 100;
-        var isDark = body.classList.contains("dark-theme");
-        // 进度色取主题色阶（随主题色切换）：夜间用柔和一级，白天用主色一级
-        var fill = isDark ? "color-mix(in srgb, var(--tc-soft) 50%, transparent)" : "color-mix(in srgb, var(--tc-main) 55%, transparent)";
-        var track = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)";
-        input.style.backgroundImage = "linear-gradient(90deg, " + fill + " " + pct + "%, " + track + " " + pct + "%)";
+        if (input._gs) input._gs.sync();   // 滑动条由 makeSlider 画（见下方）
     }
 
     function updateAllSliderFills() {
         var sliders = document.querySelectorAll(".settings-row-range input[type='range']");
         for (var i = 0; i < sliders.length; i++) updateSliderFill(sliders[i]);
+    }
+
+    // 设置面板的无极滑动条「液态胶囊」（glint.css「设置面板 · 无极滑动条」）
+    // 原生 input 改成 step="any"、透明地叠在最上面，拖动 / 点按 / 键盘 / 读屏都还是它；胶囊的样子由这里按数值逐帧画：
+    // 显示位置用一根很硬的弹簧跟着数值——拖动时几乎贴手，点轨道跳位、松手吸附时滑过去，不瞬移
+    // snap：本来就分档的设置（字重），拖动时照样无极，松手后吸附到最近一档
+    var GS_SLIDERS = {
+        "setting-font-weight": { snap: true, format: function (v) { return String(getWeightFromLevel(Math.round(v))); } },
+        "setting-letter-spacing": { format: function (v) { return (v > 0.05 ? "+" : "") + v.toFixed(1); } },
+        "setting-font-size": { format: function (v) { return Math.round(v) + "%"; } },
+        "setting-bg-opacity": { format: function (v) { return Math.round(v * 2) + "%"; } },
+        "setting-bg-blur": { format: function (v) { return v.toFixed(1) + "px"; } }
+    };
+
+    function makeSlider(input, opt) {
+        var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var wrap = document.createElement("glint-slider");
+        wrap.innerHTML = "<gs-track><gs-fill></gs-fill><gs-grip></gs-grip><gs-val></gs-val></gs-track>";
+        input.parentNode.insertBefore(wrap, input);
+        wrap.appendChild(input);
+        var val = wrap.querySelector("gs-val");
+        var min = parseFloat(input.min) || 0, max = parseFloat(input.max) || 100;
+        var x = 0, v = 0, target = 0;           // 显示位置（0–1）与它的速度
+        var frame = 0, last = 0;
+
+        function readP() {
+            var p = (parseFloat(input.value) - min) / (max - min);
+            return Math.min(1, Math.max(0, p || 0));
+        }
+        function step(now) {
+            frame = 0;
+            var dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
+            last = now;
+            if (reduce) { x = target; v = 0; }
+            else for (var i = 0; i < 4; i++) {  // ω≈55、临界阻尼：约 60ms 到位，不过冲
+                v += (-3000 * (x - target) - 110 * v) * dt / 4;
+                x += v * dt / 4;
+            }
+            var busy = Math.abs(x - target) > 1e-4 || Math.abs(v) > 1e-3;
+            if (!busy) { x = target; v = 0; last = 0; }
+            wrap.style.setProperty("--p", x.toFixed(4));
+            if (busy) frame = requestAnimationFrame(step);
+        }
+        function sync(jump) {
+            target = readP();
+            val.textContent = opt.format(parseFloat(input.value) || 0);
+            if (jump) { x = target; v = 0; }
+            if (!frame) frame = requestAnimationFrame(step);
+        }
+        // 松手 / 键盘改完：分档的设置吸附到最近一档（发一次 input，让设置照常生效；胶囊由弹簧滑过去）
+        function settle() {
+            if (!opt.snap) return;
+            var n = String(Math.round(parseFloat(input.value)));
+            if (input.value === n) return;
+            input.value = n;
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+
+        input.addEventListener("pointerdown", function () {
+            wrap.classList.add("is-active");
+            function up() {
+                wrap.classList.remove("is-active");
+                window.removeEventListener("pointerup", up);
+                window.removeEventListener("pointercancel", up);
+                settle();
+            }
+            window.addEventListener("pointerup", up);
+            window.addEventListener("pointercancel", up);
+        });
+        input.addEventListener("change", settle);
+        sync(true);
+        return { sync: sync };
+    }
+
+    function setupFancySliders() {
+        Object.keys(GS_SLIDERS).forEach(function (id) {
+            var input = document.getElementById(id);
+            if (!input || input._gs) return;
+            input._gs = makeSlider(input, GS_SLIDERS[id]);
+        });
     }
 
     // 浮层（设置面板 / 手机端导航卡片）同时打开时，后打开的置于最上层
@@ -485,7 +598,9 @@ var Glint = function (config) {
             ? (typeof currentSettings.bgBlur === "number" ? currentSettings.bgBlur : defaultSettings.bgBlur)
             : 0;
         if (bgBlurInput) bgBlurInput.value = initBlur;
-        body.style.setProperty("--bg-blur", initBlur + "px");
+        // header.ejs 开头已按同样的规则设好（从文章回首页时还在从文章页的模糊度往 0 过渡）：已设过就不再覆盖，
+        // 否则这里若赶在它放开过渡之前执行，模糊会瞬间清零，不走动画
+        if (!body.style.getPropertyValue("--bg-blur")) body.style.setProperty("--bg-blur", initBlur + "px");
 
         updateAllSliderFills();
 
@@ -573,7 +688,7 @@ var Glint = function (config) {
 
         if (weightInput) {
             weightInput.addEventListener("input", function () {
-                var lvl = parseInt(this.value, 10) || 3;
+                var lvl = Math.round(parseFloat(this.value)) || 3;    // 拖动时无极，字重按最近一档生效；松手后滑动条吸附过去
                 currentSettings.fontWeight = getWeightFromLevel(lvl);
                 persistSettings();
                 applyReadingSettings();
@@ -583,7 +698,7 @@ var Glint = function (config) {
 
         if (letterInput) {
             letterInput.addEventListener("input", function () {
-                currentSettings.letterSpacing = parseInt(this.value, 10) || 0;
+                currentSettings.letterSpacing = Math.round((parseFloat(this.value) || 0) * 100) / 100;   // 无极：不再取整
                 persistSettings();
                 applyReadingSettings();
                 updateSliderFill(this);
@@ -592,7 +707,7 @@ var Glint = function (config) {
 
         if (sizeInput) {
             sizeInput.addEventListener("input", function () {
-                currentSettings.fontSize = parseInt(this.value, 10) || defaultSettings.fontSize;
+                currentSettings.fontSize = Math.round((parseFloat(this.value) || defaultSettings.fontSize) * 10) / 10;
                 persistSettings();
                 applyReadingSettings();
                 updateSliderFill(this);
@@ -605,7 +720,7 @@ var Glint = function (config) {
                 if (isNaN(v)) v = defaultSettings.bgOpacity / 2;
                 if (v < 0) v = 0;
                 if (v > 50) v = 50;
-                currentSettings.bgOpacity = Math.round(v * 2);
+                currentSettings.bgOpacity = Math.round(v * 20) / 10;
                 persistSettings();
                 applyReadingSettings();
                 updateSliderFill(this);
@@ -614,7 +729,7 @@ var Glint = function (config) {
 
         if (bgBlurInput) {
             bgBlurInput.addEventListener("input", function () {
-                var v = parseInt(this.value, 10);
+                var v = Math.round(parseFloat(this.value) * 10) / 10;
                 if (isNaN(v) || v < 0) v = 0;
                 if (v > 20) v = 20;
                 bgBake.unbake(); // 拖动中用 CSS 模糊实时预览
@@ -694,7 +809,7 @@ var Glint = function (config) {
         // 点浮层外面收起；点另一张卡或另一个按钮不算（两张卡可以同时开着）
         document.addEventListener("click", function (e) {
             if (!panel.classList.contains("open")) return;
-            if (e.target.closest && e.target.closest(".corner-morph, .music-dock, .bg-switch")) return;
+            if (e.target.closest && e.target.closest(".corner-morph, .music-dock, .bg-dock")) return;
             set(false);
         });
         return set;
@@ -803,7 +918,7 @@ var Glint = function (config) {
         if (btn && picker) {
             btn.addEventListener("pointerdown", loadThumbs);    // 按下就开始取缩略图，展开时多半已到
             btn.addEventListener("click", loadThumbs);
-            cornerMorph(picker, btn, btn);
+            cornerMorph(picker, btn, btn.closest(".bg-dock") || btn);  // 从整条胶囊（背景 + 沉浸）长出来，同音乐
         }
 
         // 导航卡片里的那排：卡片展开时才加载缩略图
@@ -812,6 +927,44 @@ var Glint = function (config) {
                 if (nav.classList.contains("active")) loadThumbs();
             }).observe(nav, { attributes: true, attributeFilter: ["class"] });
         }
+    }
+
+    // 首页沉浸：中央卡片（博主卡、文章卡片、分页）与 Gizmo 叶片淡出，只留背景、TODO 与右上角两枚胶囊；
+    // 淡出后再挂 home-zen-done 把 main 收成一屏高，底栏落在屏幕底边外，一下滑就露出来（glint.css「首页沉浸」）
+    // 入口：右上角 .bg-dock 下半的按钮，导航收起时是导航卡片里的 .head-menu-zen；本次浏览中记住（sessionStorage，首帧见 index.ejs）
+    function setupHomeZen() {
+        var KEY = "glint-home-zen";
+        var btns = [].slice.call(document.querySelectorAll(".zen-switch"));
+        if (!btns.length) return;
+        var root = document.documentElement;
+        var timer = 0;
+        function mark(on) {
+            btns.forEach(function (b) {
+                b.setAttribute("aria-pressed", String(on));
+                if (!b.classList.contains("head-menu-zen")) b.setAttribute("aria-label", on ? "退出沉浸" : "沉浸：只留背景");
+                var label = b.querySelector("span");
+                if (label) label.textContent = on ? "退出沉浸" : "沉浸：只留背景";
+                var icon = b.querySelector(".fa");
+                if (icon) icon.className = "fa " + (on ? "fa-compress" : "fa-expand");
+            });
+        }
+        function set(on) {
+            clearTimeout(timer);
+            try { on ? sessionStorage.setItem(KEY, "1") : sessionStorage.removeItem(KEY); } catch (e) {}
+            mark(on);
+            if (on) {
+                var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+                root.classList.add("home-zen");
+                timer = setTimeout(function () { root.classList.add("home-zen-done"); }, reduce ? 0 : 420); // 与卡片淡出时长一致
+            } else {
+                root.classList.remove("home-zen", "home-zen-done");  // 卡片重新播一遍入场动画
+            }
+        }
+        btns.forEach(function (b) {
+            b.addEventListener("click", function () { set(!root.classList.contains("home-zen")); });
+        });
+        mark(root.classList.contains("home-zen"));
     }
 
     // 首页轻音乐（_data/music.yml）：首页右上角的胶囊 .music-dock + 选曲浮层 .music-picker，顶栏导航收起时在导航卡片的 .head-menu-music
@@ -1045,7 +1198,9 @@ var Glint = function (config) {
 
         // 初始化右上角设置面板
         setupSettingsPanel();
+        setupFancySliders();
         setupBgSwitch();
+        setupHomeZen();
         setupHomeMusic();
     };
 
@@ -1107,9 +1262,11 @@ var Glint = function (config) {
     function setupCardFloat() {
         if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        var TILT = 2.5;             // deg：最大倾斜角
-        var SPOT = 100;             // px：光斑元素的半径，须与 glint.css .post-card-spot 一致
-        var REACH = 0.55;           // 光斑半径 = 指针到最远角距离的 55%（原 radial-gradient 的 transparent 55%）
+        // 最大倾斜角（deg）：卡片很宽，绕竖轴转同样角度时左右两端前后差得多，所以横向（rotateY）比纵向（rotateX）小一些
+        var TILT_X = 7, TILT_Y = 4.5;
+        var PERSPECTIVE = 900;      // px：与 glint.css .post-item.card-style:not(.cw-card) 的 perspective() 一致；越小透视越强
+        var SHADOW_SHIFT = 2.4;     // px / deg：投影朝倾斜的反方向挪，像卡片真的翘起来、影子落在后面
+        // 光斑按原生尺寸画、只平移不缩放（放大的合成层会直接拉伸纹理，发糊、出色带）；尺寸与层次在 glint.css .post-card-spot
         var OMEGA = 12, ZETA = 0.85; // 弹簧的固有频率（rad/s）与阻尼比：约 0.3s 到位，几乎不过冲
         ks(".post-item.card-style:not(.cw-card)").each(function (card) {
             var sheen = card.querySelector(".post-card-sheen");
@@ -1117,6 +1274,7 @@ var Glint = function (config) {
             var spot = document.createElement("span");
             spot.className = "post-card-spot";
             sheen.appendChild(spot);
+            var shadow = card.querySelector(".post-card-shadow");
 
             var rx = { x: 0, v: 0, to: 0 }, ry = { x: 0, v: 0, to: 0 };
             var frame = 0, last = 0, px = 0, py = 0, moved = false;
@@ -1127,12 +1285,9 @@ var Glint = function (config) {
                 var r = card.getBoundingClientRect();
                 var x = Math.min(Math.max((px - r.left) / r.width, 0), 1);
                 var y = Math.min(Math.max((py - r.top) / r.height, 0), 1);
-                rx.to = (0.5 - y) * TILT;
-                ry.to = (x - 0.5) * TILT;
-                var w = card.offsetWidth, h = card.offsetHeight;
-                var sx = x * w, sy = y * h;
-                var far = Math.sqrt(Math.pow(Math.max(sx, w - sx), 2) + Math.pow(Math.max(sy, h - sy), 2));
-                spot.style.transform = "translate(" + sx.toFixed(1) + "px," + sy.toFixed(1) + "px) scale(" + (far * REACH / SPOT).toFixed(3) + ")";
+                rx.to = (0.5 - y) * TILT_X;
+                ry.to = (x - 0.5) * TILT_Y;
+                spot.style.transform = "translate3d(" + (x * card.offsetWidth).toFixed(1) + "px," + (y * card.offsetHeight).toFixed(1) + "px,0)";
             }
             function spring(s, dt) {
                 var a = -OMEGA * OMEGA * (s.x - s.to) - 2 * ZETA * OMEGA * s.v;
@@ -1154,8 +1309,12 @@ var Glint = function (config) {
                     var bx = spring(rx, dt / 4), by = spring(ry, dt / 4);
                     busy = bx || by;
                 }
-                card.style.transform = rx.x || ry.x
-                    ? "perspective(1000px) rotateX(" + rx.x.toFixed(3) + "deg) rotateY(" + ry.x.toFixed(3) + "deg)"
+                var tilted = rx.x || ry.x;
+                card.style.transform = tilted
+                    ? "perspective(" + PERSPECTIVE + "px) rotateX(" + rx.x.toFixed(3) + "deg) rotateY(" + ry.x.toFixed(3) + "deg)"
+                    : "";
+                if (shadow) shadow.style.translate = tilted
+                    ? (-ry.x * SHADOW_SHIFT).toFixed(2) + "px " + (rx.x * SHADOW_SHIFT).toFixed(2) + "px"
                     : "";
                 if (busy) frame = requestAnimationFrame(step);
                 else last = 0;
@@ -1186,11 +1345,13 @@ var Glint = function (config) {
     // 触屏上点按时卡片同样会短暂进入悬停态，也一并烤（卡片小、半分辨率，成本很低）；卡片接近视口时在空闲时间逐张处理
     function setupCardBlur() {
         if (!("IntersectionObserver" in window)) return;
-        // 各层的模糊半径、亮度与 glint.css 中的 filter 一致；q 为画布每 CSS px 的像素数：模糊过的图不需要满分辨率
+        // 各层的模糊半径、亮度与 glint.css 中的 filter 一致；q 为画布每 CSS px 的像素数（再乘设备像素比，最多按 2 倍算）
+        // 原先 10px 层只烤半分辨率（0.5），高分屏上要放大四倍以上，暗部能看出一格一格的像素
         var LAYERS = {
-            "post-card-blur": { blur: 10, bright: 0.8, q: 0.5 },
+            "post-card-blur": { blur: 10, bright: 0.8, q: 0.75 },
             "post-card-soft": { blur: 3, bright: 0.94, q: 1 }
         };
+        var DPR = Math.min(window.devicePixelRatio || 1, 2);
         var els = [].slice.call(document.querySelectorAll(".post-item.card-style:not(.cw-card) .post-card-blur, .post-item.card-style:not(.cw-card) .post-card-soft"));
         if (!els.length) return;
         var queue = [], busy = false;
@@ -1209,7 +1370,7 @@ var Glint = function (config) {
             var m = src.match(/url\(\s*["']?([^"')]+)["']?\s*\)/);
             var w = el.offsetWidth, h = el.offsetHeight;   // 不用中间层的浏览器里它是 display: none，宽高为 0，跳过
             var L = LAYERS[el.classList.contains("post-card-soft") ? "post-card-soft" : "post-card-blur"];
-            var BLUR = L.blur, BRIGHT = L.bright, Q = L.q;
+            var BLUR = L.blur, BRIGHT = L.bright, Q = L.q * DPR;
             if (!m || !w || !h) { done(); return; }
             var img = new Image();
             img.onerror = done;
@@ -1242,6 +1403,8 @@ var Glint = function (config) {
                         ctx.fillStyle = "rgba(0, 0, 0, " + (1 - BRIGHT) + ")";
                         ctx.fillRect(0, 0, cw, ch);
                     }
+                    dither(ctx, cw, ch);
+                    // 导出用无损 PNG：有损 WebP 按小方块压缩、色度减半，在这种很暗又几乎平滑的区域会压出一格一格的方块
                     canvas.toBlob(function (blob) {
                         if (!blob) { done(); return; }
                         var url = URL.createObjectURL(blob);
@@ -1256,7 +1419,7 @@ var Glint = function (config) {
                             if (old) URL.revokeObjectURL(old);
                             done();
                         }, function () { URL.revokeObjectURL(url); done(); });
-                    }, "image/webp", 0.85);
+                    }, "image/png");
                 } catch (e) {
                     done();     // 无法导出时保持 CSS 滤镜
                 }

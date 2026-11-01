@@ -65,6 +65,7 @@
         return baseHeight;
     }
 
+    // 标签贴在抽屉卡片右缘，卡片本身不从视口顶端开始：脚本按视口坐标算好，写入时扣掉卡片的顶边
     function placeToggle() {
         var vh = window.innerHeight;
         var half = toggle.offsetHeight / 2;
@@ -72,7 +73,8 @@
         var min = (header ? header.getBoundingClientRect().bottom : 0) + half + 8;
         var max = vh - half - 8;                    // 仍按实际视口夹紧，标签不会被工具栏遮住
         var y = Math.min(Math.max(togglePos * baseH(), min), Math.max(min, max));
-        toggle.style.top = y + "px";
+        toggle.style.top = (y - drawer.offsetTop) + "px";
+        return y;
     }
 
     toggle.addEventListener("pointerdown", function (e) {
@@ -90,9 +92,8 @@
             toggle.classList.add("dragging");
         }
         togglePos = drag.startPos + dy / baseH();
-        placeToggle();
         // 夹紧后回写实际位置，避免拖出边界后再拖回时“空走”
-        togglePos = parseFloat(toggle.style.top) / baseH();
+        togglePos = placeToggle() / baseH();
     });
 
     function endDrag(e) {
@@ -134,10 +135,11 @@
         return node;
     }
 
-    function renderItem(c) {
+    function renderItem(c, i) {
         var subject = c.subject || {};
         var images = subject.images || {};
         var li = el("li");
+        li.style.setProperty("--i", i);         // 展开时逐条浮现的次序（glint.css「TO DO」）
         var a = el("a");
         a.href = "https://bgm.tv/subject/" + c.subject_id;
         a.target = "_blank";
@@ -153,6 +155,11 @@
         text.appendChild(el("span", "todo-title", subject.name_cn || subject.name || ""));
         if (c.subject_type === 2) {
             text.appendChild(el("span", "todo-meta", (c.ep_status || 0) + " / " + (subject.eps || "?")));
+            if (subject.eps) {
+                var bar = el("span", "todo-progress");
+                bar.style.setProperty("--p", Math.min(1, (c.ep_status || 0) / subject.eps).toFixed(3));
+                text.appendChild(bar);
+            }
         }
 
         a.appendChild(img);
@@ -169,7 +176,7 @@
             if (!group.length) return;
             frag.appendChild(el("p", "todo-sub", BGM_LABEL[type]));
             var ul = el("ul", "todo-list");
-            group.forEach(function (c) { ul.appendChild(renderItem(c)); });
+            group.forEach(function (c, i) { ul.appendChild(renderItem(c, i)); });
             frag.appendChild(ul);
         });
         if (!frag.childNodes.length) frag.appendChild(el("p", "todo-empty", "暂无数据"));

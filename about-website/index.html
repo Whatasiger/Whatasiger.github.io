@@ -64,7 +64,7 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=71060e33">
+    <link rel="stylesheet" href="/static/glint.css?v=d83f4a99">
     
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -345,17 +345,17 @@
                 <label class="settings-row settings-row-range">
                     <i class="fa fa-bold"></i>
                     <span>字重</span>
-                    <input type="range" id="setting-font-weight" min="1" max="5" step="1">
+                    <input type="range" id="setting-font-weight" min="1" max="5" step="any">
                 </label>
                 <label class="settings-row settings-row-range">
                     <i class="fa fa-text-width"></i>
                     <span>字间距</span>
-                    <input type="range" id="setting-letter-spacing" min="-2" max="8" step="1">
+                    <input type="range" id="setting-letter-spacing" min="-2" max="8" step="any">
                 </label>
                 <label class="settings-row settings-row-range">
                     <i class="fa fa-text-height"></i>
                     <span>字号</span>
-                    <input type="range" id="setting-font-size" min="90" max="130" step="10">
+                    <input type="range" id="setting-font-size" min="90" max="130" step="any">
                 </label>
             </div>
             <div class="settings-group-title">背景</div>
@@ -363,12 +363,12 @@
                 <label class="settings-row settings-row-range">
                     <i class="fa fa-eye"></i>
                     <span>可见度</span>
-                    <input type="range" id="setting-bg-opacity" min="0" max="50" step="2.5">
+                    <input type="range" id="setting-bg-opacity" min="0" max="50" step="any">
                 </label>
                 <label class="settings-row settings-row-range">
                     <i class="fa fa-tint"></i>
                     <span>模糊度</span>
-                    <input type="range" id="setting-bg-blur" min="0" max="20" step="1">
+                    <input type="range" id="setting-bg-blur" min="0" max="20" step="any">
                 </label>
             </div>
             
@@ -410,6 +410,7 @@
     
     
     <a href="/gizmo/" class="head-menu-gizmo"><i class="fa fa-leaf"></i><span>Gizmo</span><small>随手做的小玩意</small></a>
+    
     
     
 </nav>
@@ -618,7 +619,13 @@
 <p>GA 1.3 ~ with <a target="_blank" rel="noopener" href="https://chatgpt.com/zh-Hans-CN/codex/"><strong>Codex</strong></a></p>
 <p>GA 2.0 ~ with <a target="_blank" rel="noopener" href="https://claude.com/product/claude-code"><strong>Claude Code</strong></a></p>
 <hr>
-<h3 id="背景图"><a href="#背景图" class="headerlink" title="背景图"></a><strong>背景图</strong></h3><p><a target="_blank" rel="noopener" href="https://www.pixiv.net/artworks/68893230"><strong>#オリジナル 窓の研究Ⅱ - banishment的插画 - pixiv</strong></a></p>
+<h3 id="背景图"><a href="#背景图" class="headerlink" title="背景图"></a><strong>背景图</strong></h3><p><strong><a target="_blank" rel="noopener" href="https://www.pixiv.net/artworks/68893230">#オリジナル 窓の研究Ⅱ - banishment的插画 - pixiv</a></strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://www.pixiv.net/artworks/124089112">#風景 新作《雨后》 - 画师JW的插画 - pixiv</a></strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://www.pixiv.net/artworks/118435175">#オリジナル 欠片 - コーラ的插画 - pixiv</a></strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://www.pixiv.net/artworks/144486189">#風景 新作《生之向往》 - 画师JW的插画 - pixiv</a></strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://www.pixiv.net/artworks/21315033">#雲 夕 - 磯部トースト＠お仕事募集中的插画 - pixiv</a></strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://www.pixiv.net/artworks/6095368">#クリック推奨 ■□廊下□■ - 磯部トースト＠お仕事募集中的插画 - pixiv</a></strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://www.pixiv.net/artworks/78792385">#風景 错过日出可以等待，错过美景可以再来。 - 画师JW的插画 - pixiv</a></strong></p>
 <hr>
 <h3 id="文本编辑"><a href="#文本编辑" class="headerlink" title="文本编辑"></a><strong>文本编辑</strong></h3><p><a target="_blank" rel="noopener" href="https://typoraio.cn/"><strong>Typora</strong></a></p>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_61621323/article/details/141036982"><strong>Typora 免费安装教程（支持版本：1.9.5）</strong></a></p>
@@ -803,38 +810,60 @@
 <li>从这一版起，版本以名字称呼。</li>
 <li>全新的界面风格「Glint」：通透的毛玻璃、分明的层次，以及更有弹性的动画。<ul>
 <li>可在设置中随时切换回改版前的界面「Origin」。</li>
+</ul>
+</li>
+<li>新功能<ul>
+<li>首页右上角新增两枚小胶囊（手机端在导航里）：<ul>
+<li>「背景」：从几张壁纸中挑一张作首页背景，会记住你的选择；新增五张壁纸。</li>
+<li>「轻音乐」：点一下播放，可选曲目；本次浏览中回到首页会接着放。</li>
+<li>「沉浸」：中央的卡片与叶子悄悄隐去，只留背景与水面；往下一滑就是底栏。</li>
+</ul>
+</li>
+<li>「续读」：读到一半离开，再打开这篇时底部会提示上次读到哪里，点「继续阅读」即回到那一段。</li>
+<li>「Gizmo」：陈列随手（或认真）做出来的小玩意；入口是首页右侧水面上漂着的那片叶子，手机端在导航里。</li>
+<li>设置新增「主题色」：天青、藤紫、樱粉、蜜柑、若草、薄荷，一键改变全站的强调色。</li>
+<li>设置新增「沉浸模式」：向下滚动时收起顶栏，快速上滑才会重新出现。</li>
+</ul>
+</li>
+<li>「Glint」的细节<ul>
 <li>首页<ul>
 <li>博主信息改为一整张毛玻璃卡片，与下方文章卡片对齐；头像周围多了一粒缓缓绕行的光点。</li>
 <li>点击座右铭可以收听这首歌。</li>
 <li>社交账号悬停时，强调框会在图标间滑动，并浮出名称。</li>
-<li>文章卡片镶上一圈细边，投影更有层次；悬停时浮起，随鼠标微微倾斜、泛起光泽。</li>
+<li>文章卡片镶上一圈细边，投影更有层次；悬停时浮起、随鼠标立体地倾斜，泛起一片柔和的光。</li>
 <li>点击文章卡片，封面会放大铺满全屏、沉为文章页的背景，标题一路飞到正文顶端。</li>
-<li>文章卡片支持中键 &#x2F; Ctrl + 点击在新标签页中打开。</li>
+<li>在首页拖动鼠标划水面时，不会再选中一片文字。</li>
 </ul>
 </li>
 <li>顶栏<ul>
 <li>重新设计：页顶时更通透，向下滚动后渐渐变实。</li>
 <li>导航的强调框会随鼠标在各项之间弹性滑动。</li>
-<li>日夜切换改为太阳 &#x2F; 月亮图标；设置齿轮在打开时转动。</li>
 </ul>
 </li>
 <li>文章页<ul>
 <li>正文与评论分别托在两块毛玻璃上，与背景分开一层。</li>
 <li>目录重新设计：悬浮的毛玻璃卡片，竖线标出当前章节；收起后缩成右上角的「迷你目录」，点一下即展开，手机端同样适用。</li>
 <li>去掉顶部的阅读进度条与文末的版权信息块。</li>
-<li>修复页面底部底栏与目录重叠的问题。</li>
 </ul>
 </li>
 <li>底栏重新设计：三张毛玻璃卡片，「时光机」改为时间线，标签改为胶囊样式。</li>
-<li>设置新增<ul>
-<li>「主题色」：天青、藤紫、樱粉、蜜柑、若草、薄荷，一键改变全站的强调色。</li>
-<li>「沉浸模式」：向下滚动时收起顶栏，快速上滑才会重新出现。</li>
+<li>「TO DO」列表重新设计：浮起的毛玻璃卡片，在看的番剧显示观看进度，展开时内容依次浮现。</li>
+<li>设置面板的滑动条重新设计为「液态胶囊」，拖动无级、跟手；字重松手后吸附到最近一档。</li>
+<li>背景与卡片封面的模糊更细腻，暗处不再有色块和一圈圈的色带。</li>
+</ul>
+</li>
+<li>修复与改进<ul>
+<li>修复刷新或返回首页时，顶栏与背景轻微跳动的问题。</li>
+<li>从文章回到首页时，不再把背景可见度重置为默认值。</li>
+<li>修复文章页底栏与目录重叠的问题。</li>
+<li>文章标题的锚点与带锚点的分享链接恢复可用。</li>
+<li>手机端<ul>
+<li>首页背景与「TO DO」标签不再随地址栏伸缩上下跳动。</li>
+<li>导航里的背景缩略图铺满排列，不再留空格。</li>
 </ul>
 </li>
 </ul>
 </li>
-<li>新增「Gizmo」：陈列随手（或认真）做出来的小玩意；入口是首页右侧水面上漂着的那片叶子，手机端在导航里。</li>
-<li>「CARRiER WAVE.」：悬停同名篇目时，驶过的信号不再让平直的载波起伏。</li>
 </ul>
 
             </article>
@@ -1476,7 +1505,7 @@
 <div class="buttons"></div>
 
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=6c5ca3a9"></script>
+<script src="/static/glint.js?v=04313f24"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 
