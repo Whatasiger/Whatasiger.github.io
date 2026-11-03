@@ -2,27 +2,27 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://whatasiger.xyz/about-website/index.html</loc>
+    <loc>https://whatasiger.xyz/about-website/</loc>
     
-    <lastmod>2026-11-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://whatasiger.xyz/gizmo/index.html</loc>
-    
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-11-03</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>https://whatasiger.xyz/friend/index.html</loc>
+    <loc>https://whatasiger.xyz/about-me/</loc>
     
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-11-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://whatasiger.xyz/posts/3/</loc>
+    
+    <lastmod>2026-11-03</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -31,16 +31,34 @@
   <url>
     <loc>https://whatasiger.xyz/posts/5/</loc>
     
-    <lastmod>2026-10-19</lastmod>
+    <lastmod>2026-11-03</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>https://whatasiger.xyz/about-me/index.html</loc>
+    <loc>https://whatasiger.xyz/posts/2/</loc>
     
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-11-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://whatasiger.xyz/gizmo/</loc>
+    
+    <lastmod>2026-10-28</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://whatasiger.xyz/friend/</loc>
+    
+    <lastmod>2026-10-27</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -83,15 +101,6 @@
   </url>
   
   <url>
-    <loc>https://whatasiger.xyz/posts/2/</loc>
-    
-    <lastmod>2026-05-24</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://whatasiger.xyz/posts/6/</loc>
     
     <lastmod>2026-05-24</lastmod>
@@ -102,15 +111,6 @@
   
   <url>
     <loc>https://whatasiger.xyz/posts/1/</loc>
-    
-    <lastmod>2026-05-24</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://whatasiger.xyz/posts/3/</loc>
     
     <lastmod>2026-05-24</lastmod>
     
@@ -137,7 +137,7 @@
   </url>
   
   <url>
-    <loc>https://whatasiger.xyz/comments/index.html</loc>
+    <loc>https://whatasiger.xyz/comments/</loc>
     
     <lastmod>2026-04-16</lastmod>
     
@@ -148,7 +148,7 @@
 
   <url>
     <loc>https://whatasiger.xyz/</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -156,28 +156,28 @@
   
   <url>
     <loc>https://whatasiger.xyz/tags/%E9%9A%8F%E7%AC%94/</loc>
-    <lastmod>2026-11-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://whatasiger.xyz/tags/%E8%AF%84%E6%9E%90/</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://whatasiger.xyz/tags/%E5%B0%8F%E8%AF%B4/</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://whatasiger.xyz/tags/%E8%AF%84%E6%9E%90/</loc>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://whatasiger.xyz/tags/%E7%89%B9%E6%AE%8A/</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>

@@ -29,7 +29,7 @@
     <link rel="shortcut icon" href="/origin/static/img/icon.png">
     <link rel="icon" href="/origin/static/img/icon.png" sizes="192x192"/>
     
-    <link rel="canonical" href="https://whatasiger.xyz/about-website/index.html">
+    <link rel="canonical" href="https://whatasiger.xyz/about-website/">
     <meta name="robots" content="noindex, follow">
 
     <!-- 基本 SEO -->
@@ -43,7 +43,7 @@
     <meta property="og:site_name" content="Whatasiger">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="zh_CN">
-    <meta property="og:url" content="https://whatasiger.xyz/origin/about-website/index.html">
+    <meta property="og:url" content="https://whatasiger.xyz/origin/about-website/">
     <meta property="og:title" content="关于网站 - Whatasiger">
     <meta property="og:description" content="建站使用的教程和工具">
     <meta property="og:image" content="https://whatasiger.xyz/origin/images/webp/043eba537105a620.webp">
@@ -600,9 +600,11 @@
 </ul>
 </li>
 <li>新功能<ul>
-<li>首页右上角新增两枚小胶囊（手机端在导航里）：<ul>
-<li>「背景」：从几张壁纸中挑一张作首页背景，会记住你的选择；新增五张壁纸。</li>
-<li>「轻音乐」：点一下播放，可选曲目；本次浏览中回到首页会接着放。</li>
+<li>首页右上角新增一枚小胶囊（手机端在导航里）：<ul>
+<li>「背景」：从几张壁纸中挑一张作首页背景，会记住你的选择；新增五张壁纸，并注明画师与出处。<ul>
+<li>也可以选「每日轮换」，每天换一张。</li>
+</ul>
+</li>
 <li>「沉浸」：中央的卡片与叶子悄悄隐去，只留背景与水面；往下一滑就是底栏。</li>
 </ul>
 </li>
@@ -610,6 +612,17 @@
 <li>「Gizmo」：陈列随手（或认真）做出来的小玩意；入口是首页右侧水面上漂着的那片叶子，手机端在导航里。</li>
 <li>设置新增「主题色」：天青、藤紫、樱粉、蜜柑、若草、薄荷，一键改变全站的强调色。</li>
 <li>设置新增「沉浸模式」：向下滚动时收起顶栏，快速上滑才会重新出现。</li>
+<li>全新的站内搜索：<ul>
+<li>每个页面都能搜，按 <kbd>/</kbd> 或 <kbd>Ctrl</kbd> + <kbd>K</kbd> 随时唤起。</li>
+<li>除了文章，也能搜到 CARRiER WAVE. 的各篇、独立页面与 Gizmo。</li>
+<li>空格隔开多个词一起搜；结果按相关程度排列，摘出命中的段落并高亮。</li>
+<li>键盘 ↑ ↓ 选择、回车打开；点开文章时，标题会一路飞到正文顶端。</li>
+</ul>
+</li>
+<li>「归档」重新设计为时间线，按年份排列，每篇附上小封面、简介与字数；标签页同样如此，导航里多了它的入口。</li>
+<li>脚注可以就地预览：把鼠标停在脚注标号上（手机上点一下），旁边就会浮出注释，不必跳到文末再跳回来。</li>
+<li>图片可以点开放大查看：支持双指 &#x2F; 滚轮缩放、拖动、左右滑动切换，下拉即可关闭。</li>
+<li>设置新增阅读排版：正文可选宋体，可调行距、段距、行宽，可开启段首缩进；中文与英文、数字之间会自动留出一点空隙。</li>
 </ul>
 </li>
 <li>「Glint」的细节<ul>
@@ -635,11 +648,25 @@
 </li>
 <li>底栏重新设计：三张毛玻璃卡片，「时光机」改为时间线，标签改为胶囊样式。</li>
 <li>「TO DO」列表重新设计：浮起的毛玻璃卡片，在看的番剧显示观看进度，展开时内容依次浮现。</li>
-<li>设置面板的滑动条重新设计为「液态胶囊」，拖动无级、跟手；字重松手后吸附到最近一档。</li>
+<li>设置面板重新整理为「外观」「阅读」两页，比原先短了一半多。<ul>
+<li>滑动条重新设计为「液态胶囊」，拖动无级、跟手；字重松手后吸附到最近一档。</li>
+<li>二选一的按钮和分页都可以按住直接拖过去选。</li>
+</ul>
+</li>
+<li>顶栏导航同样可以按住拖动，松手即前往那一页。</li>
+<li>切换日夜模式时，新的配色会从按钮处一圈圈扩散开。</li>
+<li>「TO DO」里的网易云周榜会注明是几天前更新的。</li>
 <li>背景与卡片封面的模糊更细腻，暗处不再有色块和一圈圈的色带。</li>
 </ul>
 </li>
 <li>修复与改进<ul>
+<li>加载更快、更省流量：<ul>
+<li>首页卡片改用尺寸合适的封面图，往下滚到附近才加载；文章页也只提前准备屏幕上看得到的那几篇。</li>
+<li>图标、脚本与样式更精简，换页时多半直接从缓存读取。</li>
+<li>评论区快滚到时才开始加载；文中图片看到时才加载，加载前就占好位置，不再撑开跳动。</li>
+</ul>
+</li>
+<li>拖动设置里的滑动条时不再卡顿。</li>
 <li>修复刷新或返回首页时，顶栏与背景轻微跳动的问题。</li>
 <li>从文章回到首页时，不再把背景可见度重置为默认值。</li>
 <li>修复文章页底栏与目录重叠的问题。</li>
@@ -647,8 +674,10 @@
 <li>手机端<ul>
 <li>首页背景与「TO DO」标签不再随地址栏伸缩上下跳动。</li>
 <li>导航里的背景缩略图铺满排列，不再留空格。</li>
+<li>导航卡片里「归档」与「Gizmo」两块并排，更紧凑。</li>
 </ul>
 </li>
+<li>打印文章时只保留标题与正文，不再带上浮层与背景。</li>
 </ul>
 </li>
 </ul>

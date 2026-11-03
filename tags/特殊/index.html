@@ -28,7 +28,7 @@
 
     <link rel="shortcut icon" href="/static/img/icon.png">
     <link rel="icon" href="/static/img/icon.png" sizes="192x192"/>
-    <link rel="canonical" href="https://whatasiger.xyz/tags/%E7%89%B9%E6%AE%8A/index.html">
+    <link rel="canonical" href="https://whatasiger.xyz/tags/%E7%89%B9%E6%AE%8A/">
 
     <!-- 基本 SEO -->
     <meta name="description" content="Whatasiger 的个人博客 —— 小说、随笔、日记、二次元杂谈。">
@@ -41,7 +41,7 @@
     <meta property="og:site_name" content="Whatasiger">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="zh_CN">
-    <meta property="og:url" content="https://whatasiger.xyz/tags/%E7%89%B9%E6%AE%8A/index.html">
+    <meta property="og:url" content="https://whatasiger.xyz/tags/%E7%89%B9%E6%AE%8A/">
     <meta property="og:title" content="特殊 - Whatasiger">
     <meta property="og:description" content="Whatasiger 的个人博客 —— 小说、随笔、日记、二次元杂谈。">
     <meta property="og:image" content="https://whatasiger.xyz/images/webp/44ccd674949c189c.webp">
@@ -64,10 +64,9 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=d83f4a99">
+    <link rel="stylesheet" href="/static/glint.css?v=1a3a6109">
     
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
+    <link rel="stylesheet" href="/static/fa/fa.css?v=4d659793">
 
     
     
@@ -80,6 +79,10 @@
             try {
                 var choices = {"sunset":"/images/webp/44ccd674949c189c.webp","blue-night":"/images/webp/124089112_p0.webp","ice-bloom":"/images/webp/118435175_p0.webp","summer-cloud":"/images/webp/144486189_p0.webp","dusk-field":"/images/webp/21315033_p0.webp","checker-hall":"/images/webp/6095368_p0.webp","twilight-rail":"/images/webp/81829877_p0.webp"};
                 var id = localStorage.getItem('whatasiger_home_bg'); // 与 glint.js setupBgSwitch 的 BG_KEY 一致
+                if (id === '@daily') {    // 每日轮换：按本地日期在各张之间轮换，算法与 glint.js todayId() 一致
+                    var ids = Object.keys(choices), d = new Date();
+                    id = ids[Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 864e5) % ids.length];
+                }
                 var src = id && Object.prototype.hasOwnProperty.call(choices, id) ? choices[id] : '';
                 if (!src || src === "/images/webp/44ccd674949c189c.webp") return;
                 var st = document.createElement('style');
@@ -94,7 +97,7 @@
 
     <!-- 顶栏固定文字的思源黑体子集，内联，首帧即可用 -->
     
-<style>@font-face{font-family:"Glint UI";font-style:normal;font-weight:600;font-display:block;src:url(data:font/woff2;base64,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) format("woff2")}</style>
+<style>@font-face{font-family:"Glint UI";font-style:normal;font-weight:600;font-display:block;src:url(data:font/woff2;base64,d09GMgABAAAAABXgABEAAAAAJAgAABWCAAIBBgAAAAAAAAAAAAAAAAAAAAAAAAAAGYFeG4QSHEIGYD9TVEFUKgCCTBEICrZcq0kBNgIkA3oLVgAEIAWBCgcgFyQYVhvwHDOjwcYBQNnsXkD/9QE3hkIN6R+iEXQlJ3FMZyXHpR5MBrv44sA+LBR9skMl1ZVHLBw9k3t1TDufZr7GEhMG3I9juDNCklke+t/vf3vmni/iTUszWd0E9yoeGiWT6ot0QoHK8cP9NHA//x2ll7YDIEdg1IyaUBPGbXg417+0pakFjy2PwbcWuDRUQ5MC+CMP+ned0Fnyv6kKdn8fxGlYMy2Zs9UvZJPSuhtaYU2rw17qpC61f5SCgGtRUCLY8ithEjvgEJBs9Tq1/b8QHjsBBQYNfn/+kioxJSHBh5e3/9uvX33zRaRjHhLeCZlS5t9ZuzNPZ7+83UXew7+oJqxxujUibXcxX5I2DlU9RAg5QmiE0DAbYzcF0LR8emBsKxNzWpfQTVKjdIJ49No7I2TmF8ANptrmdioXkG7WlOaDkLulKgMIuScr1AHSQ1mhDJAeycoLQQiIhEQOEfmYU0KaeGbJUReTunrTr2EDonZZ2m8yvX9TLefc8v8z4XSUFhUU8ts8WXHNdpZ0hAXyd/6k26dkPsmkzZOKSEx942Gvh7dLC4E5tQgpnwpkSFteOJ7FBDgTg/Xz0niRn/u67hzf6sP6odys7xtbnuw38ah6jb6sT/JTb931fn1f74IHtjvlH3D6Q9H3+orRNj72Ul5k1+cpi1DmrRN3d+IWdu0zvYkDBG8f8Sil/pXYW07ez3mKwbsV+UaW9j0Gc1lbPkCQWaS65aukTUXxKjcOfflcw9qK0g6zcD56PWLHb8xkajI1mZpMTaeOibFKcz9zZlL+GEuAg6vGBXrEAdljDEJ5dILErG2y0gET9qepXFy7gPItsG2IylzIO1QnEEAOpWJ0OXiW8du72nIjI8lZaxkDHFleJE0kj8JnoWmEvG77mMyIYxQxEmSTUdEpUKQcVu2pgQxBZpkIIcmSIeQoeYqqU9OkhWoVBkXZyorcyvbaG3WNTZk9YGJwqmJqavaE/BPRKtQI+du99H8i7sSiOf1kbVq5uTiY175+x7rFSyGLDi80XwCdf3bO6NS8KbvJnWO7+ip7jnXP70hqn26+VOmhm9TMaIbUXKNC3CDLFSPrFv6I8r8aPqP/0qHlGymifrKcv7y+Eq22n5gZNcIoej0oFHQ7thun8hAox2enh7qPxxgbZON8xOphR2hN6AMnX/hE/fWEV2txGkTtWAQmjvo+QrKybevVXPutwFzYZYXr9lKsqH2mAUrzRmQfftSSouOBmWigzD5y6aXYC2bXFIgLeEaD2rBARZ82tF2hnTgnr1ho3IR2SUVhhi3lDnw33yIUiAVPEEa1GikCgTGBqsLIc/Ei6qew/7U7qSKQuvTP4AwdvzEetvPEy7tLnuHkWTHAwaIuYCIXobbZNAisjPSQ+x2qEIYwyYj+mikyNiuY4tZZFTiCvFrPZiZ263cJvtdA2Fw8lOP6lUqxo3+IpIpKD5oSHguGAq76BIyBMJ5isAimIEW1wLmkX408wN2c7NWXGZq6GL2QsQ1C4yFS7ajCOonJBbYPLYRysQzCbpUOVqkyE7ZisQDjnGAWh4cmvk3fvdebQ7Fh4RBk6rVgdl9vojZLJxLsGZYKon9yS9u3gibFHhHy66nkYGQqQGB5OhxUQ6cI44JYTG+njGvLZ6ccKRePOLOC7q1keWtuiB5j8CqUIa2FSKDkl2DsDMXSGcpVhBZL3py/WIXFDxaNMnDt6g8ZUzdgNIsbRtKhRFtTPKJjVEkSm8zA6kyDo7tijo3RLLPAkKlRQjgyibocNlRdQZok9xqnnrkJosEFzBrJZCoW22V1vRXkOu7laaaPfYP2MRrZZssY8rGSoQPn8SfFDrX7waRRRlDas1aVLvGoTdozXFnLafc6TBAoMGT84A5gcZKxO7odVbVIvAwj6BWv0x1r3Er2DG6CEGj/1NqwaCfk+14yMj32b9Lu91I4sh21Z7gXVWTG14RwLbVODdeZ3eauSRixz+8Ilwts3jGZzL7wfXTSkXX8JKJhcsOcIpXous6zkiTiMkPNqb7Dm2AhZgRHBYUtFdY0h3bfk3dzFzwQw3cxa5O5zcDPczhkJhGSvyA/1pgbk6ZTZuGfKrv8+S2V/1W/7/eXEFvcB+1jOLLpujflqB2zIx7hWf15DxTTeEAg2O7MtOGIVMfrGZRKhg8s0hKbKkk5hiLb8vtCWawp8w3IYIMuRmIppa9aD42twZft7FCUHY1cJXQLe/4dzLZ7xfcg5cyw0s8X9oWbpbnAEXoI6JQZ1zYcMZDSMPWQEfe91+9h5BaTtreGfAvKyivcVMyPZKm+AwtWogAtq1e/rFaHHsPXW65FOEgTNEJXupS9PdE4NRbMMAs2ynSUEyqTzjdRVkQXDVTIGqxSy3Xo/Y8fQc8gyDKaJLWU2Noi5LFQvTnU3M7pLTwJ1mQaQjbMMTQ8CZlzQ4Z4pPbQGoczbEpBaBzziCiTXUhdSPy6LkpSGRkVOE3NsgdRxJ5yKfVFtvtZWNfkYd9wxBoHB26WhxN77qsyKdPaNi5wg7uWe/BBdJm2GoxQiooo4rZ2yZfITcwJqqzOtOy4KtgWXGR4gQftmTk9jbfnXmaRG7T7qN3+tNEUsUyztA9bV00NdX6S0vjAXxwSgZ58wLCp3VWzzMOSPdMeB8iA6pUT9XY6SXFunJ8jKrJRv46iNHS/56/X0Fk1k4grr23AzC1210gkYZ0Z3vJNSCXQASoeD5PsG1QYMgWOd/WOJGkV3LtCZD28EWfYZfCZF/CxJ9ixJqOWxv7EkgxSkJRia4swyvDGHGp2i4XWoNFgJD7EdQnrusuQrbgpH/6pwSk1OBwhgVXcAAStQpkHoXcxjKzYka+yiHuRRezzkYvDaHLTsDIistVpKB0pRXvklfWzQmXG9Rd0qlFNrT7AEmVmIWxyL8KI2w+GxiOaN9BzeDkYBrwkuW9bBfqCcLtX/HrlYAzbcXy+m3uH/Giur4k54ZlUsG9BVVWwyQ6kEXvaTrk3UTsf8YJX2Ovd7/efC34v/0R7/5HFV9GEMnq/UBjQL1LUMuLjDSHEOM6pGIJfuJjJqORwadUCZiSN7f0gLutwWRAYhSnn5QhX1goD+/MUjYzk9IJQQjxnZywxIFrGDPL/C0OvVjKTMcXwhb0FxgmxdXSwfPhhZ1T5bJuKXtNdDhU7csvLcsuP21eeMqtDVdQwyxv7Hi4VtPUgOXpTPYpTm9MGrsNoid7eiVTBXOlKGxh2jYcPGxNPzn4Yj82w9YsXBvvr2UmGeaZpPF+IBjdwqz7ZPBuT6upxDsyCseviEluEsT76xFSBJy1FxWJUpqGxPhKmb0ws0Z9w+aFfpk6GO57zbVZoYiim0QDQn1lazD4qoU9lxj6Nx8YPmh7xT6ExI3MV/qFOk1+OyZTnEG6RwVypTzhSTdrxDG2vZygUGmZicEJOB4P71WXnEIEwtMLVecVCImFolediMssxwRFnT0m1Z32SBKI9UrwBJ7rtrJkOy6WH5maW6URtKXGd/kQ5sh1wMtt8mb3EKTxuiojfjsNvB+dh5EqHeMpA25ijjaVpcTFCthkCOJkGyxTjgMyAwMhEBrmGFxKYnVWmE7WmxHX6ObcYtROs8HMa/hAtEBZXHZvUKhQntYxR4gLySEnJPoZ44QrV+sQavOe5ZwWHMDTP22uWGRLMSH+ScuMrnDA/+yNb7IoftdtgExkDWeANLLTItyWck5qE8/Hf4uZA1pyMjPO8Q6ZSkwU+UWEiT8vw9MM7sT6lzvavAm6erLky7Umlpkn8gR2MmUrHCyKg6XK+GWyyYKpf229OlXrBn222k/D7gWe8af1zbV//r2e4FjCOtRhahrpLNzCW+lnrIamU644DmYmgGKJOIlMvfzd8BzsmMeoX6prwDFmGzWrxVnHIlh8lP0Rzd8zNxEoQcLHf5qgFq5OjS+bgaR24OfZ6qAA/J0BkBl/JgjYc0cYm1q2eVISWz4R+1DVD09xWBy8Rd8X5dfUX5ScGSCbD12M2m2ctc5a7uvDZ64RzfSN9UvuGUuqjBkP3SSWorwrQ9OO7/nv0WJG+6HUiPrOs9X+hxn734cmmQsyyourF3qq3ZhUeGlomJTFfSMjzZZMyb1gL/D6HiR9KA6p+FV1Z1niEgdYHalXKRYJKj/yRR6/ysaMpuZn+XATHE7hciq5AMJb8tlZBEwD5uuMAjgWwVshTiPfQkHzi2IvC5pwp918TODd52l1Vg0YmU5eyxpcf52U9GY3s85kASUz3VXekQD/Athrz7GXXR9N73vy6tiZOj6+0amIdN+ox9DDentSfNCozv5de+KQEYMe1Regkorkn1dfS1rfd7gcnJmF3EBlK8PUlQMOZti1++dU3V++XY6Kj/22O0Cx5HjXw/pUi7648cnRKcC6pMFKlzAmQROdh5/7l/iWz5Vz53hEZenMsXeVAsC/2LbSFHToktltWJSplbGRsKKVvpNvHtJJbvzRr0dcWxBXYBxaBfb8zgrat9HrGjzj2a+6Kze2qduS2HQtcZjB8JFSagZrGz8YwrXcy8jf6Z57anQ2NpGz51riRDfafn7K2HnVLFDwax8xxTITiCa1xFsNObdhxZLFRvc07/HnK/JBsdxQqzURojEsw52PylL6MzMSoVv8NbufgD+AUsRdN2Lt4ulVI2dRE43suqmgfATRGBjsnCT3jdsD2oLXAmPitONdkD2wLeoGzytJWbRvTOqIbGX5RvIC+39XFAE0FlCf2DdIkoyEr1CsE2F1a6B6x5ZC53catwSLV+OqN/tD5M29liwLHtr+zXL7Oe9em9satVNj2veZRK8b5w7rh4l8lWJY3b7Ca2EjMAbThTEVmA0Y5rTRaBF2LafGsJ+sr0r6S+vv9czzVWL3WpNvGYGyISlfOd48+PnIAon3Psljoujxw/rkuqN3medR+h3HIQMS3DmmHSILGs2wclxd+XbYin5Gf0bRS4jk1obqO7jpEdizJPdIzLCPtWNTSqKYOTYvvunVw5Yk8oyqXVlSb5QUb05GZBqsqpNYBuDFg25Xb/XpclC7HaQUHvcHaeckQhoP7ctBsOVRhOYnKcZP5FGP1OVJCrqvBsyw2VWr3wruMqp7ofPxpizJycmFdmbJswM8wbbCeirZdgan1rqSqx9I8ePPMw6r8/muy6C44xq4J47Y5iAj7gG+DRClpD1BPqy2GnszFNnnVU/TTFdcPFfvlkNRuujKrbs5qvD4iq+N1lPnixjrNlOapQO1s4cEnpsG5TnAcxy17O5TvboLLcGUPCAkFLhlYjvU7By/dgXUw2SHpIYLmseYxMCNYp+pSd76Q6WR37QZ0A85LUKW3S31+FP8tBsZtpjwlz2pPlCLK9eeLapdOLAthJRI77aWnoFte3lff99oSqYmswmiNJXYLghv0eTlYUVT+jnRnQaqfFtGxg6cvcTRYm9jYmli0JluuQEVcMkm2524kQmwd0FCf51YMm2ktX4MEi3Nn1pZmXxbmB9qEpoe6bNCL9S4LQ/mhb/TqeLUDg6wBCDTERG/ZiUw8t9+dhYtCmj1afOHDfstH/Oq15jXG8g1xMWnnC9yLHZMo1oPOGmcx5nu80jSHMMGvyPIsifwdh4kTO9eEMPi4TJ90ArtRRGrApHll7b4NzR55GRg7w+TZ611mTreHs1M6b20kndFZAcqcvf6gdw19Hl1y/t75KLH8uTz0BkQM4cPKUe8J8oc8tPadFVPb4i33NpYpAdoBYrrS8hV8Es39FDZ6+X/uRjPfLyaZRmgEafYeVIbVqOUjk/k/N6odbJIChmY1Yaa+2W+xDCslt2FKOOSW0Cx66htB8F1KehAX0OcOKAbMj1s0OfVh4hCWcpnDEUq6je3vLMRWVDWsnJyNdLcqR9VdZSuQxWidrcZOvJSNHEdJ4TprTf8soXM0MbNfimnE817V49X45a/ylfmQS5WFkMJ5vleOFyiB9gHAzZuTM6d6WzA/uI9Xya9sW6dw8mDowsSPuszQW96m9SxPVDoUJpVrpj6bbpUxFZl6gQOblFIncTEQU+fiJej5DPYZtd1qclprPEIcWkyvJq2Bxyw5V0UrZcqTEmxyeD6hMfOLZrIFbiMUDN9xfcqEvMZXK9Eu1Uid44JKQ7RTyz8ZH9kUJKXpGA5cd1dcrCtTl0vUObGw8RYQnkdyk1+nwLfzLykaNDdILJz26ChCReUTs+mbWcsYZ/AlEkun/QaGRFH15cmWn7zlgedOmp9NSBEkCCI50dFJtPDshLxk0TcvZpg+TRInDxHax7Psg/JiVamy9TF49VazfP9PBsMLcunr22JIPHC/+rXh/Qdy/yQMfCf9zfkbvruCV/Gef956P/SKepvre6MKH296poddGtA7r2dk7Ct2m0/NAl+fnhCeGLpwM/nmrJupN4Plzun71wte/ZFMu8+EOnGJqNdFWBxkkfWi1XlI1/aCmxkJ2jlzJ5MipPvCE05JC1zyrJbUIS/FkHa5KFykxxY45lMoKKZkaupB6X3jkSUbsNDiQ4xOuYOno6J62DbTJguekJhAS/A4FJJzLtV3Q6Bw4EaLyCs1tyzLsdQ0V4yOwGYZcyHolHGlNTJ6ptkxRurUO7wZYf3Y4Q9TNMJlAlOOm0ahyafVIih+QqzIZjLFGgUr3upjlxXMVsbPDy92FEqGdujQA1RB0Etrd8HaiMQhia+UwiFfYnGXZlDz6BLKKsj+c2X594oKwV5ZyJKQ/+uClwQbJ6oT1G5H048evHCRd9E4QdgnCPA7fjjt8IjMYOdNyHzNtdvvwvvtmpeQrPBoskpDp8mB8ryR/brYgGQP0SiqhJGpdMlacaRzoTDzMj9ndVq2mWmVx34qSz1zcOy4+9qEuFxjtc2CgAotJ9ul6MQptn1unK8c1k35u/0gk3YOH8myXcwMAG+rLDmWKXyB6dZi692vOhWd6rhNFUUONxwMhMedJn+vsxEa6/++Hn93o8b5ZGTaXLHL50+tk3CJ945A1gs5/URgIjhjyPNNI0hn8txFEkTEF3MTk+cA8HsDcTkA/EEsew/8X+VrJgIAtAPjXu1K19/7AHhTq2LiXzLjiOX7VwoPAYgOADPuBcHGR0CwSRewM04AgcalRSJnKv+swgkvCUHHaXbgZD5yLMeJZ1xjikN8sdQ8FwDmjJNk/vD8uHJkwxaZgxhsPlxloEnkyxGdkWRVDxjWiWO4eP51dGax2H0LpBcV3e1qRkbAvHZGgBAr7Y8ClIOxOGQKlaVEzKO9SgEdlrUxn1LWL/6xohIZZm+o01EbPWHLoIm409qGrnMMMvr73/QcsPc6flHJg7G1B80zbM2tqD+CHRzphBSEmNZGHAU8AgoH2/OG5Qh3XF5Jyw024kywo7HhJC4=) format("woff2")}</style>
 
     <!-- 思源黑体（Noto Sans SC）：国内镜像优先 + 本机字体名回退 -->
     <link rel="preconnect" href="https://fonts.loli.net">
@@ -107,6 +110,50 @@
           media="print" onload="this.media='all'; this.onload=null;" id="font-css">
     
     
+    
+<script>
+    (function () {
+        var root = document.documentElement;
+        function norm(u) {
+            try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+        }
+        window.takeTitleHop = function (e) {
+            var el = window.glintTitleHopEl;
+            window.glintTitleHopEl = null;
+            var to = e.activation && e.activation.entry && e.activation.entry.url;
+            if (!el || !to || !e.viewTransition) return false;
+            var hop = null;
+            try { hop = JSON.parse(sessionStorage.getItem('title-hop')); } catch (err) {}
+            if (!hop || hop.to !== norm(to) || Date.now() - hop.t > 10000) return false;
+            var r = el.getBoundingClientRect();
+            if (!r.width || r.bottom <= 0 || r.top >= innerHeight) return false;
+            el.classList.add('vt-hop-src');
+            el.style.viewTransitionName = 'post-title';
+            root.classList.add('title-leaving');
+            return true;
+        };
+        // 从往返缓存回来：撤掉离场时挂的名字
+        window.addEventListener('pageshow', function () {
+            root.classList.remove('title-leaving');
+            [].forEach.call(document.querySelectorAll('.vt-hop-src'), function (el) {
+                el.classList.remove('vt-hop-src');
+                el.style.viewTransitionName = '';
+            });
+        });
+    })();
+</script>
+
+<style>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
+<script>
+    window.addEventListener('pageswap', function (e) {
+        if (e.viewTransition && !takeTitleHop(e)) e.viewTransition.skipTransition();
+    });
+    window.addEventListener('pagereveal', function (e) {
+        if (e.viewTransition) e.viewTransition.skipTransition();
+    });
+</script>
+
+
     
     
     
@@ -160,6 +207,15 @@
             document.body.style.fontFamily = fontChoice === "noto-sans-sc" ? sourceHanFontStack : systemFontStack;
             if (fontChoice !== "noto-sans-sc") document.documentElement.classList.add("font-system"); // 顶栏不用内联的 Glint UI
             if (savedSettings && savedSettings.hideTodo) document.body.classList.add("hide-todo");
+            // 阅读排版（行距 / 段距 / 行宽 / 缩进 / 宋体）：阅读页首帧前就按设置排好，glint.js 载入后照同样的值接管
+            if (isArticle && savedSettings) {
+                var bs = document.body.style;
+                if (typeof savedSettings.lineHeight === "number") bs.setProperty("--reader-line-height", String(savedSettings.lineHeight));
+                if (typeof savedSettings.paraSpacing === "number") bs.setProperty("--reader-para", savedSettings.paraSpacing + "em");
+                if (typeof savedSettings.readWidth === "number") bs.setProperty("--reader-width", savedSettings.readWidth + "em");
+                if (savedSettings.indent) bs.setProperty("--reader-indent", "2em");
+                if (savedSettings.bodyFont === "serif") document.body.classList.add("reader-serif");
+            }
             // 主题色：首帧前挂到 html 上，避免先闪一下默认的蓝
             if (savedSettings && savedSettings.accent && savedSettings.accent !== "blue") {
                 document.documentElement.setAttribute("data-accent", savedSettings.accent);
@@ -256,110 +312,146 @@
         <button type="button" class="toggle-btn" aria-label="导航" aria-controls="header-menu" aria-expanded="false"></button>
         <button type="button" class="light-btn" aria-label="切换日夜模式"></button>
         <button type="button" class="settings-btn" aria-label="阅读设置" aria-controls="reader-settings-panel" aria-expanded="false"></button>
-        
-            <button type="button" class="search-btn" aria-label="搜索文章" aria-controls="header-search" aria-expanded="false"></button>
-        
+        <button type="button" class="search-btn" aria-label="搜索文章" aria-controls="header-search" aria-expanded="false"></button>
     </div>
 
     
-        <div class="head-search" id="header-search">
-            <label class="sr-only" for="local-search-input">搜索文章（标题 / 标签 / 正文）</label>
-            <input type="text" id="local-search-input" name="s" placeholder="标题 / 标签 / 正文" aria-controls="local-search-result" aria-expanded="false">
-            <div id="local-search-result" aria-live="polite"></div>
-        </div>
-    
+    <div class="head-search" id="header-search">
+        <label class="sr-only" for="local-search-input">搜索文章、CARRiER WAVE. 与页面（空格分隔多个词）</label>
+        <input type="search" id="local-search-input" name="s" placeholder="标题 / 标签 / 正文" autocomplete="off" enterkeyhint="search"
+               role="combobox" aria-autocomplete="list" aria-controls="local-search-result" aria-expanded="false">
+    </div>
 </header>
+
+<div class="search-panel" id="search-panel" inert aria-hidden="true">
+    <div class="search-panel-inner">
+        <div class="search-empty">
+            <div class="search-empty-title"><i class="fa fa-tags" aria-hidden="true"></i>按标签浏览</div>
+            <div class="search-chips">
+                <a class="search-chip" href="/tags/%E5%B0%8F%E8%AF%B4/">#小说<small>4</small></a><a class="search-chip" href="/tags/%E7%89%B9%E6%AE%8A/">#特殊<small>1</small></a><a class="search-chip" href="/tags/%E8%AF%84%E6%9E%90/">#评析<small>2</small></a><a class="search-chip" href="/tags/%E9%9A%8F%E7%AC%94/">#随笔<small>5</small></a>
+                <a class="search-chip is-archive" href="/archives/"><i class="fa fa-archive" aria-hidden="true"></i>全部归档</a>
+            </div>
+            <p class="search-empty-tip">可搜文章、CARRiER WAVE.、页面与 Gizmo；空格分隔多个词，须全部命中</p>
+        </div>
+        <div class="search-status" role="status" aria-live="polite"></div>
+        <div class="search-results" id="local-search-result" role="listbox" aria-label="搜索结果"><span class="search-pill" aria-hidden="true"></span></div>
+        <div class="search-foot" aria-hidden="true">
+            <span><kbd>↑</kbd><kbd>↓</kbd>选择</span><span><kbd>↵</kbd>打开</span><span><kbd>Esc</kbd>关闭</span><span class="search-foot-key"><kbd>/</kbd>随时唤起</span>
+        </div>
+    </div>
+</div>
 
 <div class="settings-panel" id="reader-settings-panel" inert aria-hidden="true">
     <div class="settings-panel-inner">
+        
         <div class="settings-panel-header">
             <i class="fa fa-sliders"></i>
             <span class="settings-panel-title">阅读设置</span>
+            <button type="button" id="setting-reset-btn" class="settings-reset-btn" title="恢复默认" aria-label="恢复默认"><i class="fa fa-undo"></i></button>
         </div>
-        <div class="settings-panel-body">
-            <div class="settings-group">
+        
+        <div class="settings-tabs" role="tablist" aria-label="设置分类" data-tab="look">
+            <button type="button" role="tab" id="st-tab-look" data-tab="look" aria-controls="st-pane-look" aria-selected="true">外观</button>
+            <button type="button" role="tab" id="st-tab-read" data-tab="read" aria-controls="st-pane-read" aria-selected="false">阅读</button>
+        </div>
+        <div class="settings-panes">
+            <div class="settings-pane" id="st-pane-look" role="tabpanel" aria-labelledby="st-tab-look" data-pane="look">
+                <div class="settings-group">
+                    
+                    <div class="settings-row">
+                        <i class="fa fa-desktop"></i>
+                        <span>界面</span>
+                        <div class="settings-segment" id="setting-ui" data-value="glint" role="radiogroup" aria-label="界面">
+                            <button type="button" role="radio" data-value="glint" aria-checked="true">Glint</button>
+                            <button type="button" role="radio" data-value="origin" aria-checked="false">Origin</button>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <i class="fa fa-font"></i>
+                        <span>字体</span>
+                        <div class="settings-segment" id="setting-font-family" role="radiogroup" aria-label="字体">
+                            <button type="button" role="radio" data-value="noto-sans-sc">思源黑体</button>
+                            <button type="button" role="radio" data-value="system-default">系统默认</button>
+                        </div>
+                    </div>
+                </div>
                 
-                <div class="settings-row">
-                    <i class="fa fa-desktop"></i>
-                    <span>界面</span>
-                    <div class="settings-segment" id="setting-ui" data-value="glint" role="radiogroup" aria-label="界面">
-                        <button type="button" role="radio" data-value="glint" aria-checked="true">Glint</button>
-                        <button type="button" role="radio" data-value="origin" aria-checked="false">Origin</button>
+                <div class="settings-chips">
+                    <label class="settings-chip"><input type="checkbox" id="setting-immersive"><i class="fa fa-expand"></i>沉浸模式</label>
+                    <label class="settings-chip"><input type="checkbox" id="setting-hide-todo"><i class="fa fa-list-ul"></i>隐藏首页 TODO</label>
+                </div>
+                <div class="settings-tiles">
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-eye"></i>背景可见度</span>
+                        <input type="range" id="setting-bg-opacity" min="0" max="50" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-tint"></i>背景模糊</span>
+                        <input type="range" id="setting-bg-blur" min="0" max="20" step="any">
+                    </label>
+                </div>
+                
+                
+                <div class="settings-group settings-accent-group">
+                    <div class="settings-accent-head"><span>主题色</span><small id="setting-accent-name">天青</small></div>
+                    <div class="settings-accent" id="setting-accent" role="radiogroup" aria-label="主题色">
+                        
+                            <button type="button" role="radio" data-value="blue" data-name="天青" aria-label="天青" title="天青" style="--sw: #8bb4e0"></button>
+                        
+                            <button type="button" role="radio" data-value="lavender" data-name="藤紫" aria-label="藤紫" title="藤紫" style="--sw: oklch(0.756 0.078 300)"></button>
+                        
+                            <button type="button" role="radio" data-value="sakura" data-name="樱粉" aria-label="樱粉" title="樱粉" style="--sw: oklch(0.756 0.078 355)"></button>
+                        
+                            <button type="button" role="radio" data-value="mikan" data-name="蜜柑" aria-label="蜜柑" title="蜜柑" style="--sw: oklch(0.756 0.078 62)"></button>
+                        
+                            <button type="button" role="radio" data-value="wakakusa" data-name="若草" aria-label="若草" title="若草" style="--sw: oklch(0.756 0.078 135)"></button>
+                        
+                            <button type="button" role="radio" data-value="mint" data-name="薄荷" aria-label="薄荷" title="薄荷" style="--sw: oklch(0.756 0.078 185)"></button>
+                        
                     </div>
                 </div>
-                <label class="settings-row">
-                    <i class="fa fa-expand"></i>
-                    <span>沉浸模式</span>
-                    <input type="checkbox" id="setting-immersive">
-                </label>
-                <label class="settings-row">
-                    <i class="fa fa-list-ul"></i>
-                    <span>关闭首页 TODO 显示</span>
-                    <input type="checkbox" id="setting-hide-todo">
-                </label>
-                <div class="settings-row">
-                    <i class="fa fa-font"></i>
-                    <span>字体</span>
-                    <div class="settings-segment" id="setting-font-family" role="radiogroup" aria-label="字体">
-                        <button type="button" role="radio" data-value="noto-sans-sc">思源黑体</button>
-                        <button type="button" role="radio" data-value="system-default">系统默认</button>
+            </div>
+            <div class="settings-pane" id="st-pane-read" role="tabpanel" aria-labelledby="st-tab-read" data-pane="read">
+                <div class="settings-group">
+                    
+                    <div class="settings-row">
+                        <i class="fa fa-paragraph"></i>
+                        <span>正文</span>
+                        <div class="settings-segment" id="setting-body-font" role="radiogroup" aria-label="正文字体">
+                            <button type="button" role="radio" data-value="sans">黑体</button>
+                            <button type="button" role="radio" data-value="serif">宋体</button>
+                        </div>
+                        <label class="settings-chip is-small"><input type="checkbox" id="setting-indent"><i class="fa fa-indent"></i>缩进</label>
                     </div>
                 </div>
-            </div>
-            <div class="settings-group-title">文字<small>仅在文章页对正文生效</small></div>
-            <div class="settings-group">
-                <label class="settings-row settings-row-range">
-                    <i class="fa fa-bold"></i>
-                    <span>字重</span>
-                    <input type="range" id="setting-font-weight" min="1" max="5" step="any">
-                </label>
-                <label class="settings-row settings-row-range">
-                    <i class="fa fa-text-width"></i>
-                    <span>字间距</span>
-                    <input type="range" id="setting-letter-spacing" min="-2" max="8" step="any">
-                </label>
-                <label class="settings-row settings-row-range">
-                    <i class="fa fa-text-height"></i>
-                    <span>字号</span>
-                    <input type="range" id="setting-font-size" min="90" max="130" step="any">
-                </label>
-            </div>
-            <div class="settings-group-title">背景</div>
-            <div class="settings-group">
-                <label class="settings-row settings-row-range">
-                    <i class="fa fa-eye"></i>
-                    <span>可见度</span>
-                    <input type="range" id="setting-bg-opacity" min="0" max="50" step="any">
-                </label>
-                <label class="settings-row settings-row-range">
-                    <i class="fa fa-tint"></i>
-                    <span>模糊度</span>
-                    <input type="range" id="setting-bg-blur" min="0" max="20" step="any">
-                </label>
-            </div>
-            
-            
-            <div class="settings-group-title">主题色<small id="setting-accent-name">天青</small></div>
-            <div class="settings-group">
-                <div class="settings-accent" id="setting-accent" role="radiogroup" aria-label="主题色">
-                    
-                        <button type="button" role="radio" data-value="blue" data-name="天青" aria-label="天青" title="天青" style="--sw: #8bb4e0"></button>
-                    
-                        <button type="button" role="radio" data-value="lavender" data-name="藤紫" aria-label="藤紫" title="藤紫" style="--sw: oklch(0.756 0.078 300)"></button>
-                    
-                        <button type="button" role="radio" data-value="sakura" data-name="樱粉" aria-label="樱粉" title="樱粉" style="--sw: oklch(0.756 0.078 355)"></button>
-                    
-                        <button type="button" role="radio" data-value="mikan" data-name="蜜柑" aria-label="蜜柑" title="蜜柑" style="--sw: oklch(0.756 0.078 62)"></button>
-                    
-                        <button type="button" role="radio" data-value="wakakusa" data-name="若草" aria-label="若草" title="若草" style="--sw: oklch(0.756 0.078 135)"></button>
-                    
-                        <button type="button" role="radio" data-value="mint" data-name="薄荷" aria-label="薄荷" title="薄荷" style="--sw: oklch(0.756 0.078 185)"></button>
-                    
+                <div class="settings-tiles">
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-bold"></i>字重</span>
+                        <input type="range" id="setting-font-weight" min="1" max="5" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-text-height"></i>字号</span>
+                        <input type="range" id="setting-font-size" min="90" max="130" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-text-width"></i>字间距</span>
+                        <input type="range" id="setting-letter-spacing" min="-2" max="8" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-align-justify"></i>行距</span>
+                        <input type="range" id="setting-line-height" min="1.5" max="2.4" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-arrows-v"></i>段距</span>
+                        <input type="range" id="setting-para-spacing" min="0" max="2" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-arrows-h"></i>行宽</span>
+                        <input type="range" id="setting-read-width" min="36" max="60" step="any">
+                    </label>
                 </div>
+                <p class="settings-note">只在文章与独立页面对正文生效</p>
             </div>
-        </div>
-        <div class="settings-panel-footer">
-            <button id="setting-reset-btn" class="settings-reset-btn"><i class="fa fa-undo"></i>恢复默认</button>
         </div>
     </div>
 </div>
@@ -368,19 +460,69 @@
     <span class="head-menu-pill" aria-hidden="true"></span>
     <a href="/"><i class="fa fa-home"></i><span>首页</span></a>
     
-        <a href="/about-me"><i class="fa fa-user"></i><span>关于我</span></a>
+        <a href="/about-me/"><i class="fa fa-user"></i><span>关于我</span></a>
     
-        <a href="/about-website"><i class="fa fa-info-circle"></i><span>关于网站</span></a>
+        <a href="/about-website/"><i class="fa fa-info-circle"></i><span>关于网站</span></a>
     
-        <a href="/comments"><i class="fa fa-comments"></i><span>留言板</span></a>
+        <a href="/comments/"><i class="fa fa-comments"></i><span>留言板</span></a>
+    
+        <a href="/archives/" class="head-menu-wide current"><i class="fa fa-archive"></i><span>归档</span><small>所有文章 · 标签</small></a>
     
     
     <a href="/gizmo/" class="head-menu-gizmo"><i class="fa fa-leaf"></i><span>Gizmo</span><small>随手做的小玩意</small></a>
     
     
-    
 </nav>
 <script>
+    // 拖动选择（顶栏导航、设置面板的二选一与分页共用，glint.js 也用它）：在一排选项上按住拖动，强调框跟着指针走，
+    // 松手时选中指针下最近的那一项；只是点一下照旧走各自的 click。拖动过后紧跟着的那次 click 会被吞掉，免得重复触发
+    //   o.items()        → 可选的元素（按从左到右）
+    //   o.move(x, item)  → 拖动中：x 是指针的 clientX，item 是离它最近的一项
+    //   o.end(item)      → 松手（pointercancel 时 item 为 null，表示放弃）
+    //   o.enabled()      → 可选；返回 false 时不接管
+    window.glintDragPick = function (box, o) {
+        var id = null, sx = 0, moved = false, swallowUntil = 0;
+        function nearest(x) {          // 指针落在哪一项上就是哪一项，落在空隙里取中心最近的
+            var best = null, bd = Infinity;
+            o.items().forEach(function (el) {
+                var r = el.getBoundingClientRect();
+                if (!r.width) return;
+                var d = x >= r.left && x <= r.right ? -1 : Math.abs(x - (r.left + r.right) / 2);
+                if (d < bd) { bd = d; best = el; }
+            });
+            return best;
+        }
+        box.addEventListener("pointerdown", function (e) {
+            if ((e.pointerType === "mouse" && e.button !== 0) || (o.enabled && !o.enabled())) return;
+            id = e.pointerId; sx = e.clientX; moved = false;
+        });
+        box.addEventListener("pointermove", function (e) {
+            if (e.pointerId !== id) return;
+            if (!moved) {
+                if (Math.abs(e.clientX - sx) < 6) return;
+                moved = true;
+                try { box.setPointerCapture(id); } catch (err) {}
+                box.classList.add("is-dragging");
+            }
+            o.move(e.clientX, nearest(e.clientX));
+        });
+        function finish(e, cancel) {
+            if (e.pointerId !== id) return;
+            id = null;
+            if (!moved) return;
+            moved = false;
+            box.classList.remove("is-dragging");
+            swallowUntil = performance.now() + 350;
+            o.end(cancel ? null : nearest(e.clientX));
+        }
+        box.addEventListener("pointerup", function (e) { finish(e, false); });
+        box.addEventListener("pointercancel", function (e) { finish(e, true); });
+        box.addEventListener("click", function (e) {
+            if (performance.now() < swallowUntil && e.isTrusted) { e.preventDefault(); e.stopPropagation(); swallowUntil = 0; }
+        }, true);
+        box.addEventListener("dragstart", function (e) { e.preventDefault(); });   // 链接默认可拖出，会打断指针事件
+    };
+
     // 顶栏导航是否收起：按钮居中排开时若会碰到左侧 Logo 或右侧搜索框 / 按钮，就收进汉堡菜单（html.nav-collapsed）
     // 紧跟在 nav 后同步执行，首帧即为正确布局；按钮宽度用 canvas 量文字算出，不必来回切换布局
     (function () {
@@ -468,6 +610,27 @@
             a.addEventListener("blur", function () { place(current); });
         });
 
+        // 拖动选择：按住在各项上拖，强调框跟着指针走（宽度随最近的一项），松手即前往那一项（收起成卡片时不接管）
+        var items = [].slice.call(nav.querySelectorAll(":scope > a:not(.head-menu-gizmo)"));
+        window.glintDragPick(nav, {
+            items: function () { return items; },
+            enabled: function () { return !root.classList.contains("nav-collapsed"); },
+            move: function (x, a) {
+                clearTimeout(leaveTimer);
+                var navLeft = nav.getBoundingClientRect().left;
+                var w = a ? a.offsetWidth : pill.offsetWidth;
+                pill.classList.add("is-on");
+                pill.classList.toggle("is-current", a === current);
+                pill.style.setProperty("--pill-w", w + "px");
+                pill.style.setProperty("--pill-x", Math.max(0, Math.min(nav.clientWidth - w, x - navLeft - w / 2)) + "px");
+            },
+            end: function (a) {
+                if (!a) { place(current); return; }
+                place(a);
+                if (a !== current) a.click();
+            }
+        });
+
         update();
         window.addEventListener("resize", update);
         // 字体加载完成或在设置里切换字体后，文字宽度会变
@@ -475,68 +638,79 @@
             document.fonts.ready.then(update);
             document.fonts.addEventListener("loadingdone", update);
         }
-        new MutationObserver(update).observe(document.body, { attributes: true, attributeFilter: ["style"] });
+        // 设置里切换字体时写的是 body 的内联 font-family；body 的 style 还会被滑动条（--bg-blur、--reader-* 等）逐帧改写，
+        // 只比对字体这一项的字符串（不触发样式计算），真的变了才重新量，拖滑动条时不再每帧强制重排
+        var lastFont = document.body.style.fontFamily;
+        new MutationObserver(function () {
+            var f = document.body.style.fontFamily;
+            if (f === lastFont) return;
+            lastFont = f;
+            update();
+        }).observe(document.body, { attributes: true, attributeFilter: ["style"] });
     })();
 </script>
 
-    <main>
+    
+<main class="archive-main">
     <div class="wrap min">
-        <section class="home-title">
-            
-            <h1>“特殊”</h1>
+        <section class="archive-hero">
+            <p class="archive-kicker">TAG</p>
+            <h1 class="archive-heading"><span class="archive-hash">#</span>特殊</h1>
+            <p class="archive-stats">
+                <span><b>1</b> 篇</span><i aria-hidden="true"></i>
+                <span>约 <b>7370</b> 字</span>
+                <i aria-hidden="true"></i><span>2023</span>
+            </p>
+            <nav class="archive-tags" aria-label="按标签筛选">
+                <a class="archive-chip" href="/archives/">全部<small>11</small></a>
+                
+                <a class="archive-chip" href="/tags/%E5%B0%8F%E8%AF%B4/">#小说<small>4</small></a>
+                
+                <a class="archive-chip is-current" href="/tags/%E7%89%B9%E6%AE%8A/">#特殊<small>1</small></a>
+                
+                <a class="archive-chip" href="/tags/%E8%AF%84%E6%9E%90/">#评析<small>2</small></a>
+                
+                <a class="archive-chip" href="/tags/%E9%9A%8F%E7%AC%94/">#随笔<small>5</small></a>
+                
+            </nav>
         </section>
-        <section class="home-posts">
-    
-    
-        
-        
-        <a class="post-item card-style" href="/posts/1/">
-            
-            <span class="post-card-shadow" aria-hidden="true"></span>
-            
-            
-            <div class="post-card-bg">
-                <div class="post-card-zoom">
-                    <div class="post-card-img" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
-                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
-                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/7d359b54eaa343ca.webp');"></div>
-                </div>
-            </div>
 
-            <div class="post-card-overlay">
-                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
-                <h2 class="post-card-title">
-                    <span>『原点』</span>
-                </h2>
-
-                <div class="post-card-info">
-                    <p class="post-card-description">
-                        初心之作。
-                    </p>
-                    <div class="post-card-meta">
-                        <span class="meta-date">2023-10-12</span>
-                        
-                            <span class="meta-tags">
-                                
-                                    #小说
-                                
-                                    #特殊
-                                
-                            </span>
-                        
-                    </div>
-                </div>
-            </div>
-        </a>
         
-    
-</section>
-
-        <section class="page-navigator">
-            <span class="page-number current">1</span>
+        <section class="archive-year" style="--gi: 0">
+            <h2 class="archive-year-title"><span>2023</span><small>1 篇</small></h2>
+            <ol class="archive-list">
+                
+                <li style="--i: 0">
+                    <a class="archive-row" href="/posts/1/">
+                        <time class="archive-date" datetime="2023-10-11T16:00:00.000Z">10-12</time>
+                        <span class="archive-dot" aria-hidden="true"></span>
+                        <span class="archive-thumb" style="background-image: url('/images/webp/card/7d359b54eaa343ca@thumb.webp')" aria-hidden="true"></span>
+                        <span class="archive-body">
+                            <span class="archive-title">『原点』</span>
+                            <span class="archive-desc">初心之作。</span>
+                        </span>
+                        <span class="archive-meta">
+                            <span class="archive-tag">#小说</span><span class="archive-tag">#特殊</span>
+                            <span class="archive-words">7370 字</span>
+                        </span>
+                    </a>
+                </li>
+                
+            </ol>
         </section>
+        
+        
     </div>
 </main>
+<script>
+    // 点进文章：标题文字一镜到底飞到正文标题处（_partial/title-hop.ejs）
+    document.querySelector(".archive-main").addEventListener("click", function (e) {
+        var row = e.target.closest(".archive-row");
+        if (!row || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        try { sessionStorage.setItem("title-hop", JSON.stringify({ to: new URL(row.href).pathname.replace(/index\.html$/, ""), t: Date.now() })); } catch (err) {}
+        window.glintTitleHopEl = row.querySelector(".archive-title");
+    });
+</script>
 
     <footer>
     <div class="wrap min">
@@ -570,7 +744,7 @@
 <div class="buttons"></div>
 
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=04313f24"></script>
+<script src="/static/glint.js?v=4b1cc250"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 
@@ -587,25 +761,5 @@
         else load();
     })();
 </script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const searchBox = document.querySelector('.head-search');
-        const searchBtn = document.querySelector('.search-btn');
-
-        if (searchBox && searchBtn) {
-          // 监听整个网页的点击事件
-          document.addEventListener('click', function(event) {
-            // 如果搜索框当前是展开状态 (active)
-            if (searchBox.classList.contains('active')) {
-              // 且手指点击的位置既不在搜索框内部，也不在放大镜图标上
-              if (!searchBox.contains(event.target) && !searchBtn.contains(event.target)) {
-                // 移除 active 状态，触发 CSS 动画收回搜索框
-                searchBox.classList.remove('active');
-              }
-            }
-          });
-        }
-      });
-    </script>
   </body>
 </html>
