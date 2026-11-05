@@ -26,8 +26,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Whatasiger</title>
 
-    <link rel="shortcut icon" href="/static/img/icon.png">
-    <link rel="icon" href="/static/img/icon.png" sizes="192x192"/>
+    
+    <link rel="icon" href="/static/img/icon.png" sizes="512x512" type="image/png">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
     <link rel="canonical" href="https://whatasiger.xyz/">
 
     <!-- 基本 SEO -->
@@ -56,6 +58,8 @@
     <!-- RSS / Atom（hexo-generator-feed 启用后可用） -->
     <link rel="alternate" type="application/atom+xml" title="Whatasiger" href="/atom.xml"><link rel="alternate" type="application/rss+xml" title="Whatasiger" href="/rss2.xml">
 
+    <link rel="alternate" type="application/atom+xml" title="CARRiER WAVE." href="/carrier_wave/atom.xml">
+
     <!-- Sitemap（hexo-generator-sitemap 启用后可用） -->
     
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
@@ -64,9 +68,9 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=1a3a6109">
+    <link rel="stylesheet" href="/static/glint.css?v=06f798f2">
     
-    <link rel="stylesheet" href="/static/fa/fa.css?v=4d659793">
+    <link rel="stylesheet" href="/static/fa/fa.css?v=79527eff">
 
     
     
@@ -137,6 +141,13 @@
             root.classList.add('title-leaving');
             return true;
         };
+        // 通用接入：带 data-title-hop 的链接（文末「继续阅读」等），标题元素写 data-hop-title
+        document.addEventListener('click', function (e) {
+            var a = e.target.closest && e.target.closest('a[data-title-hop]');
+            if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            try { sessionStorage.setItem('title-hop', JSON.stringify({ to: norm(a.href), t: Date.now() })); } catch (err) {}
+            window.glintTitleHopEl = a.querySelector('[data-hop-title]') || a;
+        });
         // 从往返缓存回来：撤掉离场时挂的名字
         window.addEventListener('pageshow', function () {
             root.classList.remove('title-leaving');
@@ -507,13 +518,21 @@
         document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
         document.body.style.setProperty("--bg-blur", initialBgBlur + "px");
 
-        // 2. 瞬间敲定日夜模式
-        if (theme === "light") {
-            document.body.classList.remove("dark-theme");
-        } else {
-            document.body.classList.add("dark-theme");
-            sessionStorage.setItem("theme", "dark");
-        }
+        // 2. 瞬间敲定日夜模式：本次浏览中点过日月按钮（sessionStorage theme-pick）就照它；否则按设置里的「日夜」
+        //    （whatasiger_reader_settings.themeMode：dark 夜间，默认 / light 白天 / auto 跟随系统）。
+        //    结果仍写回 sessionStorage theme，一叶等独立页面照旧读它；手机地址栏颜色（theme-color）跟着换
+        try {
+            var themeMode = (savedSettings && savedSettings.themeMode) || "dark";
+            var themePick = sessionStorage.getItem("theme-pick");
+            var isDark = themePick ? themePick !== "light"
+                : themeMode === "auto" ? !window.matchMedia("(prefers-color-scheme: light)").matches
+                : themeMode !== "light";
+            theme = isDark ? "dark" : "light";
+        } catch (e) {}
+        document.body.classList.toggle("dark-theme", theme !== "light");
+        try { sessionStorage.setItem("theme", theme === "light" ? "light" : "dark"); } catch (e) {}
+        var themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) themeMeta.setAttribute("content", theme === "light" ? "#e9eff7" : "#0e0e10");
 
         // 3. 敲定刚进网页瞬间的背景状态
         if (isArticle) {
@@ -615,6 +634,16 @@
                             <button type="button" role="radio" data-value="origin" aria-checked="false">Origin</button>
                         </div>
                     </div>
+                    
+                    <div class="settings-row">
+                        <i class="fa fa-adjust"></i>
+                        <span>日夜</span>
+                        <div class="settings-segment is-three" id="setting-theme-mode" data-value="dark" role="radiogroup" aria-label="日夜">
+                            <button type="button" role="radio" data-value="dark" aria-checked="true">夜间</button>
+                            <button type="button" role="radio" data-value="light" aria-checked="false">白天</button>
+                            <button type="button" role="radio" data-value="auto" aria-checked="false" title="跟随系统">自动</button>
+                        </div>
+                    </div>
                     <div class="settings-row">
                         <i class="fa fa-font"></i>
                         <span>字体</span>
@@ -635,7 +664,7 @@
                         <input type="range" id="setting-bg-opacity" min="0" max="50" step="any">
                     </label>
                     <label class="settings-tile">
-                        <span class="settings-tile-label"><i class="fa fa-tint"></i>背景模糊</span>
+                        <span class="settings-tile-label"><i class="fa fa-tint"></i>背景模糊<small>阅读页</small></span>
                         <input type="range" id="setting-bg-blur" min="0" max="20" step="any">
                     </label>
                 </div>
@@ -1105,7 +1134,9 @@
         </section>
         <section class="home-posts">
     
-        <a class="post-item card-style cw-card" href="/carrier_wave/">
+        
+        <a class="post-item card-style cw-card" href="/carrier_wave/" data-cw-tracks="sin,pathos,mamihlapinatapei-1,anecdoche,eden,airs-1,mamihlapinatapei-2,eric,airs-2,remy,mamihlapinatapei-3,mora,sonder,mamihlapinatapei-4,enouement,airs-3,limbo,carrier-wave">
+            <span class="cw-card-new" aria-hidden="true">新信号</span>
             <div class="cw-card-wave-box" aria-hidden="true">
                 <svg class="cw-card-wave" viewBox="0 0 1600 100" preserveAspectRatio="none">
                     <path class="cw-card-strand is-ghost" d="M0 50 Q10 38 20 50 T40 50 Q50 38 60 50 T80 50 Q90 38 100 50 T120 50 Q130 38 140 50 T160 50 Q170 38 180 50 T200 50 Q210 38 220 50 T240 50 Q250 38 260 50 T280 50 Q290 38 300 50 T320 50 Q330 38 340 50 T360 50 Q370 38 380 50 T400 50 Q410 38 420 50 T440 50 Q450 38 460 50 T480 50 Q490 38 500 50 T520 50 Q530 38 540 50 T560 50 Q570 38 580 50 T600 50 Q610 38 620 50 T640 50 Q650 38 660 50 T680 50 Q690 38 700 50 T720 50 Q730 38 740 50 T760 50 Q770 38 780 50 T800 50 Q810 38 820 50 T840 50 Q850 38 860 50 T880 50 Q890 38 900 50 T920 50 Q930 38 940 50 T960 50 Q970 38 980 50 T1000 50 Q1010 38 1020 50 T1040 50 Q1050 38 1060 50 T1080 50 Q1090 38 1100 50 T1120 50 Q1130 38 1140 50 T1160 50 Q1170 38 1180 50 T1200 50 Q1210 38 1220 50 T1240 50 Q1250 38 1260 50 T1280 50 Q1290 38 1300 50 T1320 50 Q1330 38 1340 50 T1360 50 Q1370 38 1380 50 T1400 50 Q1410 38 1420 50 T1440 50 Q1450 38 1460 50 T1480 50 Q1490 38 1500 50 T1520 50 Q1530 38 1540 50 T1560 50 Q1570 38 1580 50 T1600 50"/>
@@ -1413,6 +1444,19 @@
         });
     })();
 </script>
+<script>
+    (function () {
+        var card = document.querySelector(".cw-card[data-cw-tracks]");
+        if (!card) return;
+        var seen = null;
+        try { seen = JSON.parse(localStorage.getItem("whatasiger_cw_seen")); } catch (e) {}
+        if (!Array.isArray(seen)) return;
+        var fresh = card.getAttribute("data-cw-tracks").split(",").filter(function (s) { return s && seen.indexOf(s) === -1; });
+        if (!fresh.length) return;
+        card.classList.add("has-new");
+        card.setAttribute("aria-label", "CARRiER WAVE.（有 " + fresh.length + " 篇新接收的信号）");
+    })();
+</script>
 
         <section class="page-navigator">
             <span class="page-number current">1</span>
@@ -1447,8 +1491,8 @@
                             <span class="todo-text">
                                 <span class="todo-title">再见菈菈</span>
                                 
-                                <span class="todo-meta">3 / 12</span>
-                                <span class="todo-progress" style="--p: 0.250"></span>
+                                <span class="todo-meta">4 / 12</span>
+                                <span class="todo-progress" style="--p: 0.333"></span>
                                 
                             </span>
                         </a>
@@ -1599,8 +1643,19 @@
                 </li>
                 
                 <li style="--i: 1">
-                    <a href="https://music.163.com/#/song?id=26405133" target="_blank" rel="noopener">
+                    <a href="https://music.163.com/#/song?id=2722426126" target="_blank" rel="noopener">
                         <span class="todo-rank">2</span>
+                        <img src="https://p2.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">おとぎ</span>
+                            <span class="todo-meta">RAY</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 2">
+                    <a href="https://music.163.com/#/song?id=26405133" target="_blank" rel="noopener">
+                        <span class="todo-rank">3</span>
                         <img src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">Girl meets NUMBER GIRL</span>
@@ -1609,24 +1664,13 @@
                     </a>
                 </li>
                 
-                <li style="--i: 2">
+                <li style="--i: 3">
                     <a href="https://music.163.com/#/song?id=3363527827" target="_blank" rel="noopener">
-                        <span class="todo-rank">3</span>
+                        <span class="todo-rank">4</span>
                         <img src="https://p2.music.126.net/mkcHO_3dQ9jgyoK6fpFCmw==/109951172946101598.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">芽吹くとき</span>
                             <span class="todo-meta">yonige</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li style="--i: 3">
-                    <a href="https://music.163.com/#/song?id=2722426126" target="_blank" rel="noopener">
-                        <span class="todo-rank">4</span>
-                        <img src="https://p2.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">おとぎ</span>
-                            <span class="todo-meta">RAY</span>
                         </span>
                     </a>
                 </li>
@@ -1643,22 +1687,22 @@
                 </li>
                 
                 <li style="--i: 5">
-                    <a href="https://music.163.com/#/song?id=28095028" target="_blank" rel="noopener">
+                    <a href="https://music.163.com/#/song?id=2712589107" target="_blank" rel="noopener">
                         <span class="todo-rank">6</span>
-                        <img src="https://p2.music.126.net/o7w7szxFLTeSnDJJa9hoKw==/109951163560123952.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p2.music.126.net/jd5vRmlAEaJ40ao4HK2Wag==/109951171268447043.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">FLOWER GIRL</span>
-                            <span class="todo-meta">きのこ帝国</span>
+                            <span class="todo-title">春の嵐</span>
+                            <span class="todo-meta">羊文学</span>
                         </span>
                     </a>
                 </li>
                 
                 <li style="--i: 6">
-                    <a href="https://music.163.com/#/song?id=1387098940" target="_blank" rel="noopener">
+                    <a href="https://music.163.com/#/song?id=487527984" target="_blank" rel="noopener">
                         <span class="todo-rank">7</span>
-                        <img src="https://p2.music.126.net/oH-hPC-coG6spFpbaA4xjw==/109951164327687331.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p2.music.126.net/rD6Ul3DVakQkD8_VeL-aRw==/19162288649094546.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">ノーチラス</span>
+                            <span class="todo-title">雲と幽霊</span>
                             <span class="todo-meta">ヨルシカ</span>
                         </span>
                     </a>
@@ -1687,12 +1731,12 @@
                 </li>
                 
                 <li style="--i: 9">
-                    <a href="https://music.163.com/#/song?id=2744488734" target="_blank" rel="noopener">
+                    <a href="https://music.163.com/#/song?id=28095028" target="_blank" rel="noopener">
                         <span class="todo-rank">10</span>
-                        <img src="https://p2.music.126.net/LcsEn0Yz6g_7Go401fzPIA==/109951171991978996.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img src="https://p2.music.126.net/o7w7szxFLTeSnDJJa9hoKw==/109951163560123952.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">天体</span>
-                            <span class="todo-meta">RAY</span>
+                            <span class="todo-title">FLOWER GIRL</span>
+                            <span class="todo-meta">きのこ帝国</span>
                         </span>
                     </a>
                 </li>
@@ -1701,7 +1745,7 @@
         </ol>
         
             
-            <p class="todo-note" data-time="2026-11-03T15:46:04.229Z" title="2026-11-03">更新于 2026-11-03</p>
+            <p class="todo-note" data-time="2026-11-05T15:58:13.704Z" title="2026-11-05">更新于 2026-11-05</p>
         
     </section>
 </aside>
@@ -1822,7 +1866,7 @@
                 <div class="footer-card">
                     <h3 class="footer-card-title title-tags">标签云<span class="footer-card-sub">Tags</span></h3>
                     <div class="footer-tags"><a href="/tags/%E5%B0%8F%E8%AF%B4/" style="font-size: 15.67px;">小说</a> <a href="/tags/%E7%89%B9%E6%AE%8A/" style="font-size: 13px;">特殊</a> <a href="/tags/%E8%AF%84%E6%9E%90/" style="font-size: 14.33px;">评析</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 17px;">随笔</a></div>
-                    <p class="footer-card-note">共 11 篇文章 · 4 个标签</p>
+                    <p class="footer-card-note"><a href="/stats/" title="写作统计">共 11 篇文章 · 4 个标签<i class="fa fa-angle-right" aria-hidden="true"></i></a></p>
                 </div>
             </div>
         </section>
@@ -1836,8 +1880,10 @@
 
 <div class="buttons"></div>
 
+
+<script>window.GLINT_RELEASE = {"name":"Ciel","date":"2026-10-27","url":"/about-website/"};</script>
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=4b1cc250"></script>
+<script src="/static/glint.js?v=9594a005"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 

@@ -10,7 +10,10 @@
     <meta name="theme-color" content="#16181D">
     <link rel="canonical" href="https://whatasiger.xyz/carrier_wave/sonder/">
     
-    <link rel="icon" href="/static/img/icon.png" sizes="192x192">
+    <link rel="icon" href="/static/img/icon.png" sizes="512x512" type="image/png">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    
+    <link rel="alternate" type="application/atom+xml" title="CARRiER WAVE." href="/carrier_wave/atom.xml">
 
     <meta property="og:site_name" content="Whatasiger">
     <meta property="og:type" content="article">
@@ -374,11 +377,9 @@
 
     
     
-    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=b5f057f8">
+    <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=e1aedba0">
     <script src="/static/carrier-wave/cw.js?v=280bbeb2" defer></script>
-<meta name="generator" content="Hexo 8.1.1"><link rel="alternate" href="/atom.xml" title="Whatasiger" type="application/atom+xml">
-<link rel="alternate" href="/rss2.xml" title="Whatasiger" type="application/rss+xml">
-</head>
+<meta name="generator" content="Hexo 8.1.1"></head>
 
 
 <body class="cw cw-reader" style="--tint:#CFC6B8">
@@ -436,6 +437,27 @@
             
         </nav>
     </main>
+    
+    <script>
+        (function () {
+            var slug = "sonder", end = document.querySelector(".cw-end");
+            if (!end || false) return;
+            function done() {
+                try {
+                    var read = JSON.parse(localStorage.getItem("whatasiger_cw_read")) || [];
+                    if (read.indexOf(slug) === -1) { read.push(slug); localStorage.setItem("whatasiger_cw_read", JSON.stringify(read)); }
+                } catch (e) {}
+            }
+            if (!window.IntersectionObserver) return;
+            // 读到文末（结尾的小波浪进入视口）才算读过；预渲染中不算
+            var io = new IntersectionObserver(function (en) {
+                if (!en.some(function (x) { return x.isIntersecting; }) || document.prerendering) return;
+                io.disconnect();
+                done();
+            });
+            setTimeout(function () { io.observe(end); }, 1200);
+        })();
+    </script>
 </body>
 </html>
 

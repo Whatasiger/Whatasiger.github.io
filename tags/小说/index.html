@@ -26,8 +26,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>小说 - Whatasiger</title>
 
-    <link rel="shortcut icon" href="/static/img/icon.png">
-    <link rel="icon" href="/static/img/icon.png" sizes="192x192"/>
+    
+    <link rel="icon" href="/static/img/icon.png" sizes="512x512" type="image/png">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
     <link rel="canonical" href="https://whatasiger.xyz/tags/%E5%B0%8F%E8%AF%B4/">
 
     <!-- 基本 SEO -->
@@ -56,6 +58,8 @@
     <!-- RSS / Atom（hexo-generator-feed 启用后可用） -->
     <link rel="alternate" type="application/atom+xml" title="Whatasiger" href="/atom.xml"><link rel="alternate" type="application/rss+xml" title="Whatasiger" href="/rss2.xml">
 
+    <link rel="alternate" type="application/atom+xml" title="CARRiER WAVE." href="/carrier_wave/atom.xml">
+
     <!-- Sitemap（hexo-generator-sitemap 启用后可用） -->
     
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
@@ -64,9 +68,9 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=1a3a6109">
+    <link rel="stylesheet" href="/static/glint.css?v=06f798f2">
     
-    <link rel="stylesheet" href="/static/fa/fa.css?v=4d659793">
+    <link rel="stylesheet" href="/static/fa/fa.css?v=79527eff">
 
     
     
@@ -132,6 +136,13 @@
             root.classList.add('title-leaving');
             return true;
         };
+        // 通用接入：带 data-title-hop 的链接（文末「继续阅读」等），标题元素写 data-hop-title
+        document.addEventListener('click', function (e) {
+            var a = e.target.closest && e.target.closest('a[data-title-hop]');
+            if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            try { sessionStorage.setItem('title-hop', JSON.stringify({ to: norm(a.href), t: Date.now() })); } catch (err) {}
+            window.glintTitleHopEl = a.querySelector('[data-hop-title]') || a;
+        });
         // 从往返缓存回来：撤掉离场时挂的名字
         window.addEventListener('pageshow', function () {
             root.classList.remove('title-leaving');
@@ -258,13 +269,21 @@
         document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
         document.body.style.setProperty("--bg-blur", initialBgBlur + "px");
 
-        // 2. 瞬间敲定日夜模式
-        if (theme === "light") {
-            document.body.classList.remove("dark-theme");
-        } else {
-            document.body.classList.add("dark-theme");
-            sessionStorage.setItem("theme", "dark");
-        }
+        // 2. 瞬间敲定日夜模式：本次浏览中点过日月按钮（sessionStorage theme-pick）就照它；否则按设置里的「日夜」
+        //    （whatasiger_reader_settings.themeMode：dark 夜间，默认 / light 白天 / auto 跟随系统）。
+        //    结果仍写回 sessionStorage theme，一叶等独立页面照旧读它；手机地址栏颜色（theme-color）跟着换
+        try {
+            var themeMode = (savedSettings && savedSettings.themeMode) || "dark";
+            var themePick = sessionStorage.getItem("theme-pick");
+            var isDark = themePick ? themePick !== "light"
+                : themeMode === "auto" ? !window.matchMedia("(prefers-color-scheme: light)").matches
+                : themeMode !== "light";
+            theme = isDark ? "dark" : "light";
+        } catch (e) {}
+        document.body.classList.toggle("dark-theme", theme !== "light");
+        try { sessionStorage.setItem("theme", theme === "light" ? "light" : "dark"); } catch (e) {}
+        var themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) themeMeta.setAttribute("content", theme === "light" ? "#e9eff7" : "#0e0e10");
 
         // 3. 敲定刚进网页瞬间的背景状态
         if (isArticle) {
@@ -366,6 +385,16 @@
                             <button type="button" role="radio" data-value="origin" aria-checked="false">Origin</button>
                         </div>
                     </div>
+                    
+                    <div class="settings-row">
+                        <i class="fa fa-adjust"></i>
+                        <span>日夜</span>
+                        <div class="settings-segment is-three" id="setting-theme-mode" data-value="dark" role="radiogroup" aria-label="日夜">
+                            <button type="button" role="radio" data-value="dark" aria-checked="true">夜间</button>
+                            <button type="button" role="radio" data-value="light" aria-checked="false">白天</button>
+                            <button type="button" role="radio" data-value="auto" aria-checked="false" title="跟随系统">自动</button>
+                        </div>
+                    </div>
                     <div class="settings-row">
                         <i class="fa fa-font"></i>
                         <span>字体</span>
@@ -386,7 +415,7 @@
                         <input type="range" id="setting-bg-opacity" min="0" max="50" step="any">
                     </label>
                     <label class="settings-tile">
-                        <span class="settings-tile-label"><i class="fa fa-tint"></i>背景模糊</span>
+                        <span class="settings-tile-label"><i class="fa fa-tint"></i>背景模糊<small>阅读页</small></span>
                         <input type="range" id="setting-bg-blur" min="0" max="20" step="any">
                     </label>
                 </div>
@@ -672,6 +701,7 @@
                 
                 <a class="archive-chip" href="/tags/%E9%9A%8F%E7%AC%94/">#随笔<small>5</small></a>
                 
+                <a class="archive-chip is-stats" href="/stats/"><i class="fa fa-bar-chart" aria-hidden="true"></i>写作统计</a>
             </nav>
         </section>
 
@@ -791,7 +821,7 @@
                 <div class="footer-card">
                     <h3 class="footer-card-title title-tags">标签云<span class="footer-card-sub">Tags</span></h3>
                     <div class="footer-tags"><a href="/tags/%E5%B0%8F%E8%AF%B4/" style="font-size: 15.67px;">小说</a> <a href="/tags/%E7%89%B9%E6%AE%8A/" style="font-size: 13px;">特殊</a> <a href="/tags/%E8%AF%84%E6%9E%90/" style="font-size: 14.33px;">评析</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 17px;">随笔</a></div>
-                    <p class="footer-card-note">共 11 篇文章 · 4 个标签</p>
+                    <p class="footer-card-note"><a href="/stats/" title="写作统计">共 11 篇文章 · 4 个标签<i class="fa fa-angle-right" aria-hidden="true"></i></a></p>
                 </div>
             </div>
         </section>
@@ -805,8 +835,10 @@
 
 <div class="buttons"></div>
 
+
+<script>window.GLINT_RELEASE = {"name":"Ciel","date":"2026-10-27","url":"/about-website/"};</script>
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=4b1cc250"></script>
+<script src="/static/glint.js?v=9594a005"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 
