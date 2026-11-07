@@ -1,1 +1,248 @@
-(function(){"use strict";var g=document.querySelector(".gizmo-leaf");if(!g)return;var se=g.querySelector(".gizmo-leaf-body"),f=document.documentElement,O=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches,e={len:64,height:40,margin:28,minGutter:132,roam:120,anchorY:.62,spring:.3,drag:1.1,angDrag:1.8,gustEvery:[7e3,16e3],gustSpeed:[24,50],slope:8e3,surf:4e7,soften:400,turn:.0016,bob:.06,wakeStep:16,wakeSpeed:16},u=function(){return window.waterRipple},a=0,r=0,l=0,h=0,q=-.35,b=0,k=1,M=0,x=0,y=e.roam,E=e.roam,G=0,A=0,D=0,F=0,I=0,W=0,P=!1,S=!1,R=0,X=0,z=0;function w(n,t){return n+Math.random()*(t-n)}function C(){return f.classList.contains("nav-collapsed")||f.classList.contains("home-zen")||document.hidden}function B(){var n=f.clientWidth,t=window.innerHeight,s=document.querySelector("main > .wrap"),v=s?s.getBoundingClientRect().right:n*.75,o=document.querySelector("header"),i=o?o.getBoundingClientRect().bottom:0,d=n-v,c=e.len/2;d>=e.minGutter?(M=v+d/2,y=Math.max(8,Math.min(e.roam,d/2-e.margin-c))):(M=n-e.margin-c,y=10),x=i+(t-i)*e.anchorY,E=Math.max(20,Math.min(e.roam*1.3,(t-i)/2-60)),G=i+e.height,A=n-c-6,D=t-e.height,P||(P=!0,a=M+w(-.4,.4)*y,r=x+w(-.3,.3)*E),Z(),p()}function Z(){g.style.transform="translate3d("+(a-e.len/2).toFixed(2)+"px,"+(r-e.height/2).toFixed(2)+"px,0)",se.style.transform="rotate("+q.toFixed(4)+"rad) scale("+k.toFixed(4)+")"}function p(){F||O||C()||(I=performance.now(),F=requestAnimationFrame(j))}function j(n){if(F=0,C()){u()&&u().setProbe(null);return}var t=Math.min((n-I)/1e3,1/20);I=n;var s=u(),v=s&&s.isActive(),o=0,i=0,d=0,c=0,m=0;if(s&&s.setProbe({x:a,y:r,r:e.len*.6}),v){for(var ue=Math.cos(q),de=Math.sin(q),Y=-1;Y<=1;Y++){var U=ue*Y*e.len*.32,V=de*Y*e.len*.32,L=s.sample(a+U,r+V);if(L){var _=e.slope+e.surf*L.v,$=-L.gx*_,ee=-L.gy*_;o+=$,i+=ee,d+=U*ee-V*$,c+=L.h,m++}}if(m){o/=m,i/=m;var H=1/(1+Math.sqrt(o*o+i*i)/e.soften);o*=H,i*=H,d*=H,c/=m}}var te=(a-M)/y,ae=(r-x)/E,re=Math.sqrt(te*te+ae*ae),ne=e.spring*(re>1?1+(re-1)*8:1);o-=ne*(a-M),i-=ne*(r-x),l=(l+o*t)*Math.exp(-e.drag*t),h=(h+i*t)*Math.exp(-e.drag*t),b=(b+d*e.turn*t)*Math.exp(-e.angDrag*t),a+=l*t,r+=h*t,q+=b*t;var ie=e.len/2;a<ie+6&&(a=ie+6,l=Math.abs(l)*.4),a>A&&(a=A,l=-Math.abs(l)*.4),r<G&&(r=G,h=Math.abs(h)*.4),r>D&&(r=D,h=-Math.abs(h)*.4);var ce=1+Math.max(-.08,Math.min(.08,c*e.bob));k+=(ce-k)*Math.min(1,t*10);var T=Math.sqrt(l*l+h*h);s&&S&&T>e.wakeSpeed?(z+=T*t,z>=e.wakeStep&&(s.stroke(R,X,a,r,10,.05*Math.min(T/40,1.5)),z=0,R=a,X=r)):(z=0,R=a,X=r),Z(),(v||T>.5||Math.abs(b)>.01||Math.abs(k-1)>.002)&&(F=requestAnimationFrame(j))}function J(){clearTimeout(W),W=setTimeout(oe,w(e.gustEvery[0],e.gustEvery[1]))}function oe(){if(J(),!(C()||g.matches(":hover"))){var n=w(0,Math.PI*2),t=w(e.gustSpeed[0],e.gustSpeed[1]),s=M-a,v=x-r,o=Math.sqrt(s*s+v*v)||1,i=Math.min(1,o/Math.max(y,E)),d=Math.cos(n)*(1-i)+s/o*i,c=Math.sin(n)*(1-i)+v/o*i,m=Math.sqrt(d*d+c*c)||1;l+=d/m*t,h+=c/m*t,b+=w(-.5,.5),u()&&u().drop(a,r,14,.25),p()}}g.addEventListener("pointerenter",function(){u()&&S&&u().drop(a,r,18,.45),p()}),g.addEventListener("pointerdown",function(n){n.button===0&&u()&&u().drop(a,r,26,1.1)});function K(){if(B(),g.classList.add("is-landed"),O){S=!0;return}setTimeout(function(){S=!0,u()&&(u().onStart=p,C()||u().drop(a,r,24,.9)),p()},650),J()}window.addEventListener("resize",B);var N=f.classList.contains("nav-collapsed"),Q=f.classList.contains("home-zen");new MutationObserver(function(){var n=f.classList.contains("nav-collapsed"),t=f.classList.contains("home-zen");t!==Q&&(Q=t,!t&&S&&p()),n!==N&&(N=n,P&&B())}).observe(f,{attributes:!0,attributeFilter:["class"]}),document.addEventListener("visibilitychange",p),setTimeout(function(){"requestIdleCallback"in window?requestIdleCallback(K,{timeout:1500}):K()},1400)})();
+/**
+ * gizmo-leaf.js
+ * 首页右侧的 Gizmo 入口：一片浮在水面上的叶子（点击进入 /gizmo/）
+ *
+ *   - 平时静静漂着，隔一阵被风吹动一下，划过水面留下细小的尾流；落下时、悬停 / 按下时轻点水面泛起涟漪
+ *   - 水波（water-ripple.js）经过时随波起伏、被推开：每帧取叶片首、中、尾三处的水面坡度与起伏速度，
+ *     坡度把叶片推向低处，坡度 × 起伏速度（只沿波的传播方向）让它顺着波被推走，首尾受力不同则转动
+ *   - 运动只写 transform（锚点 translate，叶身 rotate / scale），静止后停掉帧循环
+ *   - 只在顶栏导航未收起时显示（收起时入口在导航卡片里，CSS 隐藏叶片）；偏好减少动画时静止不动
+ */
+(function () {
+    "use strict";
+
+    var leaf = document.querySelector(".gizmo-leaf");
+    if (!leaf) return;
+    var body = leaf.querySelector(".gizmo-leaf-body");
+    var root = document.documentElement;
+    var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* ── 配置参数 ─────────────────────────────────────────── */
+    var CFG = {
+        len:        64,      // 叶片长 / 高（CSS px），与 glint.css 中 .gizmo-leaf 的尺寸一致
+        height:     40,
+        margin:     28,      // 与内容区 / 视口边缘至少留出的距离（px）
+        minGutter:  132,     // 右侧空白窄于此时退到视口右缘
+        roam:       120,     // 以锚点为中心的漂动半径（px），超出后被更用力地拉回
+        anchorY:    0.62,    // 锚点在页眉以下区域的高度比例
+        spring:     0.3,     // 拉回锚点的弹性（/s²）
+        drag:       1.1,     // 线速度阻尼（/s），水的黏滞
+        angDrag:    1.8,     // 角速度阻尼（/s）
+        gustEvery:  [7000, 16000], // 两阵风之间的间隔（ms）
+        gustSpeed:  [24, 50],      // 一阵风吹出的初速度（px/s）
+        slope:      8000,    // 水面坡度推力（px/s² / 每 px 坡度）：随波来回晃
+        surf:       4e7,     // 坡度 × 起伏速度的推力：只沿传播方向，把叶片顺着波推走
+        soften:     400,     // 推力软饱和（px/s²）：a → a / (1 + a / soften)，近处的大浪不至于把叶片弹飞，远处的小浪仍推得动
+                             // 实测（桌面，默认点击水滴）：200px 外约推开 55px，450px 约 40px，800px 约 12px
+        turn:       0.0016,  // 首尾受力差 → 角加速度
+        bob:        0.06,    // 波峰抬起时放大的比例（每单位水面高度）
+        wakeStep:   16,      // 每漂过这么远（px）留一段尾流
+        wakeSpeed:  16       // 速度高于此（px/s）才留尾流
+    };
+
+    var wr = function () { return window.waterRipple; };
+    var x = 0, y = 0, vx = 0, vy = 0, th = -0.35, w = 0, sc = 1;
+    var ax = 0, ay = 0, roamX = CFG.roam, roamY = CFG.roam, minY = 0, maxX = 0, maxY = 0;
+    var raf = 0, last = 0, gustTimer = 0, placed = false, landed = false;
+    var wakeX = 0, wakeY = 0, wakeDist = 0;
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+    // 导航收起、首页沉浸（html.home-zen，叶片随卡片一起隐去）或标签页在后台时停下，不再搅动水面
+    function hidden() { return root.classList.contains("nav-collapsed") || root.classList.contains("home-zen") || document.hidden; }
+
+    /* ── 锚点：右侧空白的中线、页眉以下偏下的位置 ───────── */
+    function layout() {
+        var vw = root.clientWidth, vh = window.innerHeight;
+        var wrap = document.querySelector("main > .wrap");
+        var right = wrap ? wrap.getBoundingClientRect().right : vw * 0.75;
+        var header = document.querySelector("header");
+        var top = header ? header.getBoundingClientRect().bottom : 0;
+        var gutter = vw - right;
+        var half = CFG.len / 2;
+
+        if (gutter >= CFG.minGutter) {
+            ax = right + gutter / 2;
+            roamX = Math.max(8, Math.min(CFG.roam, gutter / 2 - CFG.margin - half));
+        } else {
+            ax = vw - CFG.margin - half;
+            roamX = 10;
+        }
+        ay = top + (vh - top) * CFG.anchorY;
+        roamY = Math.max(20, Math.min(CFG.roam * 1.3, (vh - top) / 2 - 60));
+        minY = top + CFG.height;
+        maxX = vw - half - 6;
+        maxY = vh - CFG.height;
+
+        if (!placed) {
+            placed = true;
+            x = ax + rand(-0.4, 0.4) * roamX;
+            y = ay + rand(-0.3, 0.3) * roamY;
+        }
+        render();
+        start();
+    }
+
+    function render() {
+        leaf.style.transform = "translate3d(" + (x - CFG.len / 2).toFixed(2) + "px," + (y - CFG.height / 2).toFixed(2) + "px,0)";
+        body.style.transform = "rotate(" + th.toFixed(4) + "rad) scale(" + sc.toFixed(4) + ")";
+    }
+
+    /* ── 帧循环 ──────────────────────────────────────────── */
+    function start() {
+        if (raf || reduce || hidden()) return;
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+    }
+
+    function tick(now) {
+        raf = 0;
+        if (hidden()) { if (wr()) wr().setProbe(null); return; }
+        var dt = Math.min((now - last) / 1000, 1 / 20);
+        last = now;
+
+        // 水波：首、中、尾三处取样
+        var water = wr(), wet = water && water.isActive();
+        var fx = 0, fy = 0, torque = 0, h = 0, n = 0;
+        if (water) water.setProbe({ x: x, y: y, r: CFG.len * 0.6 });
+        if (wet) {
+            var c = Math.cos(th), s = Math.sin(th);
+            for (var k = -1; k <= 1; k++) {
+                var ox = c * k * CFG.len * 0.32, oy = s * k * CFG.len * 0.32;
+                var q = water.sample(x + ox, y + oy);
+                if (!q) continue;
+                var push = CFG.slope + CFG.surf * q.v;
+                var px = -q.gx * push, py = -q.gy * push;
+                fx += px;
+                fy += py;
+                torque += ox * py - oy * px;
+                h += q.h;
+                n++;
+            }
+            if (n) {
+                fx /= n;
+                fy /= n;
+                var soft = 1 / (1 + Math.sqrt(fx * fx + fy * fy) / CFG.soften);
+                fx *= soft;
+                fy *= soft;
+                torque *= soft;
+                h /= n;
+            }
+        }
+
+        // 拉回锚点：漂出漂动范围后越来越用力
+        var dx = (x - ax) / roamX, dy = (y - ay) / roamY;
+        var e = Math.sqrt(dx * dx + dy * dy);
+        var k2 = CFG.spring * (e > 1 ? 1 + (e - 1) * 8 : 1);
+        fx -= k2 * (x - ax);
+        fy -= k2 * (y - ay);
+
+        vx = (vx + fx * dt) * Math.exp(-CFG.drag * dt);
+        vy = (vy + fy * dt) * Math.exp(-CFG.drag * dt);
+        w = (w + torque * CFG.turn * dt) * Math.exp(-CFG.angDrag * dt);
+        x += vx * dt;
+        y += vy * dt;
+        th += w * dt;
+
+        // 视口边缘：轻轻弹回
+        var half = CFG.len / 2;
+        if (x < half + 6) { x = half + 6; vx = Math.abs(vx) * 0.4; }
+        if (x > maxX) { x = maxX; vx = -Math.abs(vx) * 0.4; }
+        if (y < minY) { y = minY; vy = Math.abs(vy) * 0.4; }
+        if (y > maxY) { y = maxY; vy = -Math.abs(vy) * 0.4; }
+
+        // 波峰抬起、波谷沉下（随水面高度略微缩放），平滑过渡
+        var target = 1 + Math.max(-0.08, Math.min(0.08, h * CFG.bob));
+        sc += (target - sc) * Math.min(1, dt * 10);
+
+        // 尾流：漂得够快时沿路径在水面划出细线
+        var speed = Math.sqrt(vx * vx + vy * vy);
+        if (water && landed && speed > CFG.wakeSpeed) {
+            wakeDist += speed * dt;
+            if (wakeDist >= CFG.wakeStep) {
+                water.stroke(wakeX, wakeY, x, y, 10, 0.05 * Math.min(speed / 40, 1.5));
+                wakeDist = 0;
+                wakeX = x;
+                wakeY = y;
+            }
+        } else {
+            wakeDist = 0;
+            wakeX = x;
+            wakeY = y;
+        }
+
+        render();
+        if (wet || speed > 0.5 || Math.abs(w) > 0.01 || Math.abs(sc - 1) > 0.002) {
+            raf = requestAnimationFrame(tick);
+        }
+    }
+
+    /* ── 风：隔一阵吹动一下 ───────────────────────────────── */
+    function scheduleGust() {
+        clearTimeout(gustTimer);
+        gustTimer = setTimeout(gust, rand(CFG.gustEvery[0], CFG.gustEvery[1]));
+    }
+
+    function gust() {
+        scheduleGust();
+        if (hidden() || leaf.matches(":hover")) return;
+        // 方向随机，但离锚点越远越偏向往回吹
+        var ang = rand(0, Math.PI * 2);
+        var spd = rand(CFG.gustSpeed[0], CFG.gustSpeed[1]);
+        var bx = ax - x, by = ay - y, bl = Math.sqrt(bx * bx + by * by) || 1;
+        var pull = Math.min(1, bl / Math.max(roamX, roamY));
+        var gx = Math.cos(ang) * (1 - pull) + bx / bl * pull;
+        var gy = Math.sin(ang) * (1 - pull) + by / bl * pull;
+        var gl = Math.sqrt(gx * gx + gy * gy) || 1;
+        vx += gx / gl * spd;
+        vy += gy / gl * spd;
+        w += rand(-0.5, 0.5);
+        if (wr()) wr().drop(x, y, 14, 0.25); // 风起时叶尖点一下水
+        start();
+    }
+
+    /* ── 交互：悬停轻点水面，按下点得更深 ───────────────── */
+    leaf.addEventListener("pointerenter", function () {
+        if (wr() && landed) wr().drop(x, y, 18, 0.45);
+        start();
+    });
+    leaf.addEventListener("pointerdown", function (e) {
+        if (e.button !== 0) return;
+        if (wr()) wr().drop(x, y, 26, 1.1);
+    });
+
+    /* ── 启动：落到水面上，激起一圈涟漪 ─────────────────── */
+    function land() {
+        layout();
+        leaf.classList.add("is-landed");
+        if (reduce) { landed = true; return; }
+        setTimeout(function () {
+            landed = true;
+            if (wr()) {
+                wr().onStart = start;
+                if (!hidden()) wr().drop(x, y, 24, 0.9);
+            }
+            start();
+        }, 650); // 与 .gizmo-leaf.is-landed 的落下动画同步
+        scheduleGust();
+    }
+
+    window.addEventListener("resize", layout);
+    // 导航收起 / 展开时重新布局；退出首页沉浸时接着漂（html 上的其他类名变化不管）
+    var wasCollapsed = root.classList.contains("nav-collapsed");
+    var wasZen = root.classList.contains("home-zen");
+    new MutationObserver(function () {
+        var c = root.classList.contains("nav-collapsed");
+        var z = root.classList.contains("home-zen");
+        if (z !== wasZen) { wasZen = z; if (!z && landed) start(); }
+        if (c === wasCollapsed) return;
+        wasCollapsed = c;
+        if (placed) layout();
+    }).observe(root, { attributes: true, attributeFilter: ["class"] });
+    document.addEventListener("visibilitychange", start);
+
+    // 等首页卡片入场、背景烘焙告一段落再落下
+    setTimeout(function () {
+        if ("requestIdleCallback" in window) requestIdleCallback(land, { timeout: 1500 });
+        else land();
+    }, 1400);
+})();

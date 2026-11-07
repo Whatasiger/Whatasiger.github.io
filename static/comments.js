@@ -1,4 +1,598 @@
 /* Twikoo 评论（Glint）：容器与配置在 layout/_partial/comments.ejs 的 #tcomment data-* 上
    兼容层：历史评论分散在旧路径 /<abbrlink>/、新路径及其各种写法下，这里拦截 Twikoo 的取评论请求、按各写法分别取回再合并 */
-(function(){var p=document.getElementById("tcomment");if(!p)return;var tt=p.dataset.bloggerNick||"Whatasiger",et=p.dataset.bloggerLabel||"博主",T=p.dataset.bloggerAvatar||"",x=p.dataset.envId||"",rt=p.dataset.lang||"zh-CN",N=p.dataset.twikooPath||"",nt=p.dataset.twikooJs||"https://cdn.jsdelivr.net/npm/twikoo@1.7.7/dist/twikoo.min.js",ot=p.dataset.siteUrl||"",C=p.dataset.currentPath||"",I=null,L=!1,U=!1,D=!1;function M(t){return!t||!x?!1:String(t).indexOf(x)===0}function j(t){return t?/^https?:\/\//i.test(t)?t:window.location.origin+t:window.location.href}function J(t){return(t||"").replace(/\/+$/,"")}function b(t){var e=(t||"").trim();if(!e)return"/";if(/^https?:\/\//i.test(e))try{e=new URL(e).pathname}catch{}return e=e.replace(/index\.html$/i,""),e.charAt(0)!=="/"&&(e="/"+e),e.charAt(e.length-1)!=="/"&&(e=e+"/"),e}function H(t){return!t||t==="/"?t:t.replace(/\/+$/,"")}function B(t){var e=b(t);return e==="/"?"/index.html":e+"index.html"}function k(t,e){e&&t.indexOf(e)===-1&&t.push(e)}function P(t,e){var r=b(e);k(t,r),k(t,H(r)),k(t,B(r))}function R(t,e){for(var r=[J(window.location.origin),J(ot)],i=0;i<r.length;i++)if(r[i]){var u=b(e);k(t,r[i]+u),k(t,r[i]+H(u)),k(t,r[i]+B(u))}}function it(t,e){var r=[];return P(r,t),P(r,e),P(r,C),R(r,t),R(r,e),R(r,C),r}function at(t){return t?t.id||t._id||t.objectId||[t.nick,t.mailMd5||t.mail||"",t.created||"",t.comment||""].join("|"):""}function q(t,e){var r={},i=[],u=0,_=!1,g=!1,y={},A="",S,E;for(S=0;S<t.length;S++){var O=t[S]||{},l=O.data||[];for(y.data||(y=Object.assign({},O)),typeof O.count=="number"&&(u+=O.count,_=!0),g=g||!!O.more,A=A||O.accessToken||"",E=0;E<l.length;E++){var o=at(l[E]);o&&!r[o]&&(r[o]=!0,i.push(l[E]))}}return i.sort(function(h,s){var v=h&&h.created?h.created:0,n=s&&s.created?s.created:0;return e==="oldest"?v-n:n-v}),y.data=i,y.more=g,y.count=_?Math.max(u,i.length):i.length,y.accessToken=A,y}function G(){if(!N)return;var t=b(N),e=b(window.location.pathname||C),r=it(t,e);function i(l,o){return Object.assign({},l,{url:o})}function u(l,o,h,s,v){var n=Object.assign({},s,{url:v}),a=Object.assign({},h,{body:JSON.stringify(n)});return l(o,a).then(function(c){return c.clone().json().catch(function(){return null})}).catch(function(){return null})}if(window.fetch&&!L){var _=window.fetch.bind(window);window.fetch=function(l,o){try{var h=typeof l=="string"?l:l&&l.url;if(M(h)&&o&&typeof o.body=="string"&&o.body){var s=JSON.parse(o.body);if(s&&s.event==="COMMENT_GET"&&r.length>1)return Promise.all(r.map(function(v){return u(_,h,o,s,v)})).then(function(v){var n=v.filter(Boolean);if(!n.length)return _(l,o);var a=q(n,s.sort);return new Response(JSON.stringify(a),{status:200,headers:{"Content-Type":"application/json"}})});s&&s.event==="COMMENT_SUBMIT"&&(s.url=t,s.href=j(t),o.body=JSON.stringify(s))}}catch{}return _(l,o)},L=!0}if(window.XMLHttpRequest&&!U){let l=function(n,a,c,f){return new Promise(function(w){var d=new g;d.onreadystatechange=function(){if(d.readyState===4)if(d.status===200)try{w(JSON.parse(d.responseText))}catch{w(null)}else w(null)},d.onerror=function(){w(null)},d.open("POST",n,!0);for(var m in a)Object.prototype.hasOwnProperty.call(a,m)&&d.setRequestHeader(m,a[m]);d.send(JSON.stringify(i(c,f)))})},o=function(){this._xhr=new g,this._headers={},this._listeners={},this._intercepted=!1,this._method="",this._url="",this._openArgs=null,this._readyState=0,this._status=0,this._statusText="",this._responseText="",this._response="",this.onreadystatechange=null,this.onload=null,this.onloadend=null,this.onerror=null,this.onabort=null,this.ontimeout=null},h=function(n,a){Object.defineProperty(o.prototype,n,{configurable:!0,enumerable:!0,get:function(){if(this._intercepted){var c="_"+n;return this[c]===void 0?a:this[c]}return this._xhr[n]}})},s=function(n,a){var c={type:a,target:n,currentTarget:n},f=n["on"+a];if(typeof f=="function")try{f.call(n,c)}catch{}for(var w=n._listeners[a]||[],d=0;d<w.length;d++)try{w[d].call(n,c)}catch{}},v=function(n,a,c){n._intercepted=!0,n._readyState=4,n._status=a,n._statusText=a===200?"OK":"",n._responseText=c,n._response=c,s(n,"readystatechange"),a===200?s(n,"load"):s(n,"error"),s(n,"loadend")};var y=l,A=o,S=h,E=s,O=v,g=window.XMLHttpRequest;h("readyState",0),h("status",0),h("statusText",""),h("responseText",""),h("response",""),h("responseURL",""),o.UNSENT=g.UNSENT||0,o.OPENED=g.OPENED||1,o.HEADERS_RECEIVED=g.HEADERS_RECEIVED||2,o.LOADING=g.LOADING||3,o.DONE=g.DONE||4,o.prototype.UNSENT=o.UNSENT,o.prototype.OPENED=o.OPENED,o.prototype.HEADERS_RECEIVED=o.HEADERS_RECEIVED,o.prototype.LOADING=o.LOADING,o.prototype.DONE=o.DONE,o.prototype.open=function(){this._method=arguments[0],this._url=arguments[1],this._openArgs=arguments,this._readyState=1,s(this,"readystatechange")},o.prototype.setRequestHeader=function(n,a){this._headers[n]=a},o.prototype.addEventListener=function(n,a){this._listeners[n]||(this._listeners[n]=[]),this._listeners[n].push(a)},o.prototype.removeEventListener=function(n,a){var c=this._listeners[n]||[],f=c.indexOf(a);f!==-1&&c.splice(f,1)},o.prototype.dispatchEvent=function(n){return s(this,n&&n.type),!0},o.prototype.getResponseHeader=function(n){return this._intercepted?n&&n.toLowerCase()==="content-type"?"application/json":null:this._xhr.getResponseHeader(n)},o.prototype.getAllResponseHeaders=function(){return this._intercepted?`content-type: application/json\r
-`:this._xhr.getAllResponseHeaders()},o.prototype.abort=function(){if(this._intercepted){s(this,"abort"),s(this,"loadend");return}return this._xhr.abort()},o.prototype.overrideMimeType=function(n){this._xhr.overrideMimeType&&this._xhr.overrideMimeType(n)},o.prototype.send=function(n){var a=this,c=this._url,f=null;try{M(c)&&typeof n=="string"&&n&&(f=JSON.parse(n))}catch{}if(f&&f.event==="COMMENT_GET"&&r.length>1){Promise.all(r.map(function(d){return l(c,a._headers,f,d)})).then(function(d){var m=d.filter(Boolean),X=m.length?q(m,f.sort):{data:[],more:!1,count:0};v(a,200,JSON.stringify(X))});return}f&&f.event==="COMMENT_SUBMIT"&&(f.url=t,f.href=j(t),n=JSON.stringify(f)),this._xhr.onreadystatechange=function(){s(a,"readystatechange")},this._xhr.onload=function(){s(a,"load")},this._xhr.onloadend=function(){s(a,"loadend")},this._xhr.onerror=function(){s(a,"error")},this._xhr.onabort=function(){s(a,"abort")},this._xhr.ontimeout=function(){s(a,"timeout")},this._xhr.open.apply(this._xhr,this._openArgs);for(var w in this._headers)Object.prototype.hasOwnProperty.call(this._headers,w)&&this._xhr.setRequestHeader(w,this._headers[w]);this._xhr.send(n)},window.XMLHttpRequest=o,U=!0}}function z(t,e){if(!e||!t)return!1;for(var r=e.parentNode;r&&r!==t;){if(r.nodeType===1&&r.classList&&r.classList.contains("tk-comment"))return!1;r=r.parentNode}return r===t}function $(t,e){for(var r=t.querySelectorAll(e),i=0;i<r.length;i++)if(z(t,r[i]))return r[i];return null}function st(t,e){for(var r=t.querySelectorAll(e),i=[],u=0;u<r.length;u++)z(t,r[u])&&i.push(r[u]);return i}function K(t,e){var r=$(t,e);return r?(r.textContent||"").trim():""}function ut(t){if(!t)return!1;if(t.classList.contains("tk-admin"))return!0;var e=K(t,".tk-nick")||K(t,".tk-nick-link");if(e&&e===tt)return!0;for(var r=st(t,".tk-tag, .tk-extra, .tk-meta span, .tk-nick + span"),i=0;i<r.length;i++){var u=(r[i].textContent||"").trim();if(u===et)return!0}return!1}function Q(t){if(!(!T||!ut(t))){var e=$(t,".tk-avatar img, .tk-avatar-img");e&&(e.getAttribute("src")!==T&&e.setAttribute("src",T),e.removeAttribute("srcset"),e.setAttribute("data-force-blogger-avatar","true"))}}function W(t){if(T)for(var e=t||document,r=e.querySelectorAll(".tk-comment"),i=0;i<r.length;i++)Q(r[i])}function ct(){var t=document.querySelector("#twikoo, #tcomment, .twikoo");!t||I||(I=new MutationObserver(function(e){for(var r=0;r<e.length;r++)for(var i=e[r],u=0;u<i.addedNodes.length;u++){var _=i.addedNodes[u];!_||_.nodeType!==1||(_.matches&&_.matches(".tk-comment")?Q(_):_.querySelectorAll&&W(_))}}),I.observe(t,{childList:!0,subtree:!0}))}function F(){if(window.twikoo){G();var t={envId:x,el:"#tcomment",lang:rt,onCommentLoaded:function(){W(),ct()}};N&&(t.path=N),twikoo.init(t)}}function V(){if(G(),window.twikoo){F();return}if(!D){D=!0;var t=document.createElement("script");t.src=nt,t.async=!0,t.onload=F,t.onerror=function(){D=!1},document.head.appendChild(t)}}function Y(t){var e="";try{e=decodeURIComponent(location.hash.slice(1))}catch{}if(!window.IntersectionObserver||e&&!document.getElementById(e)){t();return}var r=new IntersectionObserver(function(i){i.some(function(u){return u.isIntersecting})&&(r.disconnect(),t())},{rootMargin:"100% 0px"});r.observe(p)}function Z(){window.vtSettled?window.vtSettled.then(function(){Y(V)}):Y(V)}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",Z):Z()})();
+(function () {
+    var container = document.getElementById('tcomment');
+    if (!container) return;
+
+    var bloggerNick = container.dataset.bloggerNick || 'Whatasiger';
+    var bloggerLabel = container.dataset.bloggerLabel || '博主';
+    var bloggerAvatar = container.dataset.bloggerAvatar || '';
+    var envId = container.dataset.envId || '';
+    var lang = container.dataset.lang || 'zh-CN';
+    var twikooPath = container.dataset.twikooPath || '';
+    var twikooJsUrl = container.dataset.twikooJs || 'https://cdn.jsdelivr.net/npm/twikoo@1.7.7/dist/twikoo.min.js';
+    var configuredSiteUrl = container.dataset.siteUrl || '';
+    var generatedCurrentPath = container.dataset.currentPath || '';
+    var observer = null;
+    var twikooPatchedFetch = false;
+    var twikooPatchedXhr = false;
+    var twikooScriptLoading = false;
+
+    function __isTwikooEndpoint(url) {
+        if (!url || !envId) return false;
+        return String(url).indexOf(envId) === 0;
+    }
+
+    function __normalizeHref(pathValue) {
+        if (!pathValue) return window.location.href;
+        if (/^https?:\/\//i.test(pathValue)) return pathValue;
+        return window.location.origin + pathValue;
+    }
+
+    function __normalizeOrigin(originValue) {
+        return (originValue || '').replace(/\/+$/, '');
+    }
+
+    function __normalizePath(pathValue) {
+        var p = (pathValue || '').trim();
+        if (!p) return '/';
+        if (/^https?:\/\//i.test(p)) {
+            try {
+                p = new URL(p).pathname;
+            } catch (e) {}
+        }
+        p = p.replace(/index\.html$/i, '');
+        if (p.charAt(0) !== '/') p = '/' + p;
+        if (p.charAt(p.length - 1) !== '/') p = p + '/';
+        return p;
+    }
+
+    function __trimTrailingSlash(pathValue) {
+        if (!pathValue || pathValue === '/') return pathValue;
+        return pathValue.replace(/\/+$/, '');
+    }
+
+    function __withIndexHtml(pathValue) {
+        var p = __normalizePath(pathValue);
+        return p === '/' ? '/index.html' : p + 'index.html';
+    }
+
+    function __pushUnique(list, value) {
+        if (!value) return;
+        if (list.indexOf(value) === -1) list.push(value);
+    }
+
+    function __pushPathVariants(list, pathValue) {
+        var normalized = __normalizePath(pathValue);
+        __pushUnique(list, normalized);
+        __pushUnique(list, __trimTrailingSlash(normalized));
+        __pushUnique(list, __withIndexHtml(normalized));
+    }
+
+    function __pushFullUrlVariants(list, pathValue) {
+        var origins = [
+            __normalizeOrigin(window.location.origin),
+            __normalizeOrigin(configuredSiteUrl)
+        ];
+        for (var i = 0; i < origins.length; i++) {
+            if (!origins[i]) continue;
+            var normalized = __normalizePath(pathValue);
+            __pushUnique(list, origins[i] + normalized);
+            __pushUnique(list, origins[i] + __trimTrailingSlash(normalized));
+            __pushUnique(list, origins[i] + __withIndexHtml(normalized));
+        }
+    }
+
+    function __getTwikooUrlCandidates(legacyPath, currentPath) {
+        var candidates = [];
+        __pushPathVariants(candidates, legacyPath);
+        __pushPathVariants(candidates, currentPath);
+        __pushPathVariants(candidates, generatedCurrentPath);
+        __pushFullUrlVariants(candidates, legacyPath);
+        __pushFullUrlVariants(candidates, currentPath);
+        __pushFullUrlVariants(candidates, generatedCurrentPath);
+        return candidates;
+    }
+
+    function __commentKey(comment) {
+        if (!comment) return '';
+        return comment.id || comment._id || comment.objectId || [
+            comment.nick,
+            comment.mailMd5 || comment.mail || '',
+            comment.created || '',
+            comment.comment || ''
+        ].join('|');
+    }
+
+    function __mergeCommentsResponse(responses, sort) {
+        var map = {};
+        var merged = [];
+        var totalCount = 0;
+        var hasCount = false;
+        var more = false;
+        var base = {};
+        var accessToken = '';
+        var i;
+        var j;
+
+        for (i = 0; i < responses.length; i++) {
+            var response = responses[i] || {};
+            var data = response.data || [];
+            if (!base.data) base = Object.assign({}, response);
+            if (typeof response.count === 'number') {
+                totalCount += response.count;
+                hasCount = true;
+            }
+            more = more || Boolean(response.more);
+            accessToken = accessToken || response.accessToken || '';
+
+            for (j = 0; j < data.length; j++) {
+                var key = __commentKey(data[j]);
+                if (key && !map[key]) {
+                    map[key] = true;
+                    merged.push(data[j]);
+                }
+            }
+        }
+
+        merged.sort(function (a, b) {
+            var ca = a && a.created ? a.created : 0;
+            var cb = b && b.created ? b.created : 0;
+            if (sort === 'oldest') return ca - cb;
+            return cb - ca;
+        });
+
+        base.data = merged;
+        base.more = more;
+        base.count = hasCount ? Math.max(totalCount, merged.length) : merged.length;
+        base.accessToken = accessToken;
+        return base;
+    }
+
+    // 某些版本/场景下 Twikoo 提交评论可能未复用 init.path，
+    // 这里做两件事：
+    // 1) COMMENT_SUBMIT 强制写入旧路径，避免后续再分流；
+    // 2) COMMENT_GET 同时读取旧链接、新链接和 index.html/完整 URL 变体，并在前端合并。
+    function __patchTwikooRequestPath() {
+        if (!twikooPath) return;
+        var legacyPath = __normalizePath(twikooPath);
+        var currentPath = __normalizePath(window.location.pathname || generatedCurrentPath);
+        var twikooUrlCandidates = __getTwikooUrlCandidates(legacyPath, currentPath);
+
+        function __payloadWithUrl(payload, urlValue) {
+            return Object.assign({}, payload, { url: urlValue });
+        }
+
+        function __fetchCommentList(originalFetch, reqUrl, init, payload, urlValue) {
+            var nextPayload = Object.assign({}, payload, { url: urlValue });
+            var nextInit = Object.assign({}, init, { body: JSON.stringify(nextPayload) });
+            return originalFetch(reqUrl, nextInit).then(function (response) {
+                return response.clone().json().catch(function () {
+                    return null;
+                });
+            }).catch(function () {
+                return null;
+            });
+        }
+
+        if (window.fetch && !twikooPatchedFetch) {
+            var originalFetch = window.fetch.bind(window);
+            window.fetch = function (input, init) {
+                try {
+                    var reqUrl = typeof input === 'string' ? input : (input && input.url);
+                    if (__isTwikooEndpoint(reqUrl) && init && typeof init.body === 'string' && init.body) {
+                        var payload = JSON.parse(init.body);
+                        if (payload && payload.event === 'COMMENT_GET' && twikooUrlCandidates.length > 1) {
+                            return Promise.all(twikooUrlCandidates.map(function (urlValue) {
+                                return __fetchCommentList(originalFetch, reqUrl, init, payload, urlValue);
+                            })).then(function (jsonList) {
+                                var validResponses = jsonList.filter(Boolean);
+                                if (!validResponses.length) return originalFetch(input, init);
+                                var merged = __mergeCommentsResponse(validResponses, payload.sort);
+                                return new Response(JSON.stringify(merged), {
+                                    status: 200,
+                                    headers: { 'Content-Type': 'application/json' }
+                                });
+                            });
+                        }
+                        if (payload && payload.event === 'COMMENT_SUBMIT') {
+                            payload.url = legacyPath;
+                            payload.href = __normalizeHref(legacyPath);
+                            init.body = JSON.stringify(payload);
+                        }
+                    }
+                } catch (e) {}
+                return originalFetch(input, init);
+            };
+            twikooPatchedFetch = true;
+        }
+
+        if (window.XMLHttpRequest && !twikooPatchedXhr) {
+            var NativeXMLHttpRequest = window.XMLHttpRequest;
+
+            function __xhrCommentList(reqUrl, headers, payload, urlValue) {
+                return new Promise(function (resolve) {
+                    var xhr = new NativeXMLHttpRequest();
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState !== 4) return;
+                        if (xhr.status === 200) {
+                            try {
+                                resolve(JSON.parse(xhr.responseText));
+                            } catch (e) {
+                                resolve(null);
+                            }
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    xhr.onerror = function () {
+                        resolve(null);
+                    };
+                    xhr.open('POST', reqUrl, true);
+                    for (var name in headers) {
+                        if (Object.prototype.hasOwnProperty.call(headers, name)) {
+                            xhr.setRequestHeader(name, headers[name]);
+                        }
+                    }
+                    xhr.send(JSON.stringify(__payloadWithUrl(payload, urlValue)));
+                });
+            }
+
+            function PatchedXMLHttpRequest() {
+                this._xhr = new NativeXMLHttpRequest();
+                this._headers = {};
+                this._listeners = {};
+                this._intercepted = false;
+                this._method = '';
+                this._url = '';
+                this._openArgs = null;
+                this._readyState = 0;
+                this._status = 0;
+                this._statusText = '';
+                this._responseText = '';
+                this._response = '';
+                this.onreadystatechange = null;
+                this.onload = null;
+                this.onloadend = null;
+                this.onerror = null;
+                this.onabort = null;
+                this.ontimeout = null;
+            }
+
+            function __defineXhrGetter(name, fallbackValue) {
+                Object.defineProperty(PatchedXMLHttpRequest.prototype, name, {
+                    configurable: true,
+                    enumerable: true,
+                    get: function () {
+                        if (this._intercepted) {
+                            var ownName = '_' + name;
+                            return this[ownName] === undefined ? fallbackValue : this[ownName];
+                        }
+                        return this._xhr[name];
+                    }
+                });
+            }
+
+            function __fireXhrEvent(xhr, type) {
+                var event = { type: type, target: xhr, currentTarget: xhr };
+                var handler = xhr['on' + type];
+                if (typeof handler === 'function') {
+                    try {
+                        handler.call(xhr, event);
+                    } catch (e) {}
+                }
+                var listeners = xhr._listeners[type] || [];
+                for (var i = 0; i < listeners.length; i++) {
+                    try {
+                        listeners[i].call(xhr, event);
+                    } catch (e) {}
+                }
+            }
+
+            function __completeInterceptedXhr(xhr, status, responseText) {
+                xhr._intercepted = true;
+                xhr._readyState = 4;
+                xhr._status = status;
+                xhr._statusText = status === 200 ? 'OK' : '';
+                xhr._responseText = responseText;
+                xhr._response = responseText;
+                __fireXhrEvent(xhr, 'readystatechange');
+                if (status === 200) {
+                    __fireXhrEvent(xhr, 'load');
+                } else {
+                    __fireXhrEvent(xhr, 'error');
+                }
+                __fireXhrEvent(xhr, 'loadend');
+            }
+
+            __defineXhrGetter('readyState', 0);
+            __defineXhrGetter('status', 0);
+            __defineXhrGetter('statusText', '');
+            __defineXhrGetter('responseText', '');
+            __defineXhrGetter('response', '');
+            __defineXhrGetter('responseURL', '');
+
+            PatchedXMLHttpRequest.UNSENT = NativeXMLHttpRequest.UNSENT || 0;
+            PatchedXMLHttpRequest.OPENED = NativeXMLHttpRequest.OPENED || 1;
+            PatchedXMLHttpRequest.HEADERS_RECEIVED = NativeXMLHttpRequest.HEADERS_RECEIVED || 2;
+            PatchedXMLHttpRequest.LOADING = NativeXMLHttpRequest.LOADING || 3;
+            PatchedXMLHttpRequest.DONE = NativeXMLHttpRequest.DONE || 4;
+            PatchedXMLHttpRequest.prototype.UNSENT = PatchedXMLHttpRequest.UNSENT;
+            PatchedXMLHttpRequest.prototype.OPENED = PatchedXMLHttpRequest.OPENED;
+            PatchedXMLHttpRequest.prototype.HEADERS_RECEIVED = PatchedXMLHttpRequest.HEADERS_RECEIVED;
+            PatchedXMLHttpRequest.prototype.LOADING = PatchedXMLHttpRequest.LOADING;
+            PatchedXMLHttpRequest.prototype.DONE = PatchedXMLHttpRequest.DONE;
+
+            PatchedXMLHttpRequest.prototype.open = function () {
+                this._method = arguments[0];
+                this._url = arguments[1];
+                this._openArgs = arguments;
+                this._readyState = 1;
+                __fireXhrEvent(this, 'readystatechange');
+            };
+
+            PatchedXMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+                this._headers[name] = value;
+            };
+
+            PatchedXMLHttpRequest.prototype.addEventListener = function (type, listener) {
+                if (!this._listeners[type]) this._listeners[type] = [];
+                this._listeners[type].push(listener);
+            };
+
+            PatchedXMLHttpRequest.prototype.removeEventListener = function (type, listener) {
+                var listeners = this._listeners[type] || [];
+                var index = listeners.indexOf(listener);
+                if (index !== -1) listeners.splice(index, 1);
+            };
+
+            PatchedXMLHttpRequest.prototype.dispatchEvent = function (event) {
+                __fireXhrEvent(this, event && event.type);
+                return true;
+            };
+
+            PatchedXMLHttpRequest.prototype.getResponseHeader = function (name) {
+                if (this._intercepted) {
+                    return name && name.toLowerCase() === 'content-type' ? 'application/json' : null;
+                }
+                return this._xhr.getResponseHeader(name);
+            };
+
+            PatchedXMLHttpRequest.prototype.getAllResponseHeaders = function () {
+                if (this._intercepted) return 'content-type: application/json\r\n';
+                return this._xhr.getAllResponseHeaders();
+            };
+
+            PatchedXMLHttpRequest.prototype.abort = function () {
+                if (this._intercepted) {
+                    __fireXhrEvent(this, 'abort');
+                    __fireXhrEvent(this, 'loadend');
+                    return;
+                }
+                return this._xhr.abort();
+            };
+
+            PatchedXMLHttpRequest.prototype.overrideMimeType = function (mimeType) {
+                if (this._xhr.overrideMimeType) this._xhr.overrideMimeType(mimeType);
+            };
+
+            PatchedXMLHttpRequest.prototype.send = function (body) {
+                var self = this;
+                var reqUrl = this._url;
+                var payload = null;
+
+                try {
+                    if (__isTwikooEndpoint(reqUrl) && typeof body === 'string' && body) {
+                        payload = JSON.parse(body);
+                    }
+                } catch (e) {}
+
+                if (payload && payload.event === 'COMMENT_GET' && twikooUrlCandidates.length > 1) {
+                    Promise.all(twikooUrlCandidates.map(function (urlValue) {
+                        return __xhrCommentList(reqUrl, self._headers, payload, urlValue);
+                    })).then(function (jsonList) {
+                        var validResponses = jsonList.filter(Boolean);
+                        var merged = validResponses.length
+                            ? __mergeCommentsResponse(validResponses, payload.sort)
+                            : { data: [], more: false, count: 0 };
+                        __completeInterceptedXhr(self, 200, JSON.stringify(merged));
+                    });
+                    return;
+                }
+
+                if (payload && payload.event === 'COMMENT_SUBMIT') {
+                    payload.url = legacyPath;
+                    payload.href = __normalizeHref(legacyPath);
+                    body = JSON.stringify(payload);
+                }
+
+                this._xhr.onreadystatechange = function () {
+                    __fireXhrEvent(self, 'readystatechange');
+                };
+                this._xhr.onload = function () {
+                    __fireXhrEvent(self, 'load');
+                };
+                this._xhr.onloadend = function () {
+                    __fireXhrEvent(self, 'loadend');
+                };
+                this._xhr.onerror = function () {
+                    __fireXhrEvent(self, 'error');
+                };
+                this._xhr.onabort = function () {
+                    __fireXhrEvent(self, 'abort');
+                };
+                this._xhr.ontimeout = function () {
+                    __fireXhrEvent(self, 'timeout');
+                };
+                this._xhr.open.apply(this._xhr, this._openArgs);
+                for (var name in this._headers) {
+                    if (Object.prototype.hasOwnProperty.call(this._headers, name)) {
+                        this._xhr.setRequestHeader(name, this._headers[name]);
+                    }
+                }
+                this._xhr.send(body);
+            };
+
+            window.XMLHttpRequest = PatchedXMLHttpRequest;
+            twikooPatchedXhr = true;
+        }
+    }
+
+    // 判断某个后代节点是否属于 commentEl 自身（不跨越嵌套的 .tk-comment）
+    function __isOwnDescendant(commentEl, el) {
+        if (!el || !commentEl) return false;
+        var cur = el.parentNode;
+        while (cur && cur !== commentEl) {
+            if (cur.nodeType === 1 && cur.classList && cur.classList.contains('tk-comment')) {
+                return false;
+            }
+            cur = cur.parentNode;
+        }
+        return cur === commentEl;
+    }
+
+    // 仅在 commentEl 自身范围内查找（排除嵌套子评论）
+    function __ownQueryFirst(commentEl, selector) {
+        var all = commentEl.querySelectorAll(selector);
+        for (var i = 0; i < all.length; i++) {
+            if (__isOwnDescendant(commentEl, all[i])) return all[i];
+        }
+        return null;
+    }
+
+    function __ownQueryAll(commentEl, selector) {
+        var all = commentEl.querySelectorAll(selector);
+        var own = [];
+        for (var i = 0; i < all.length; i++) {
+            if (__isOwnDescendant(commentEl, all[i])) own.push(all[i]);
+        }
+        return own;
+    }
+
+    function __ownText(commentEl, selector) {
+        var el = __ownQueryFirst(commentEl, selector);
+        return el ? (el.textContent || '').trim() : '';
+    }
+
+    function __isBloggerComment(commentEl) {
+        if (!commentEl) return false;
+        // tk-admin 类只看自身，不受子回复影响，作为最可信证据
+        if (commentEl.classList.contains('tk-admin')) return true;
+
+        var nickText = __ownText(commentEl, '.tk-nick') || __ownText(commentEl, '.tk-nick-link');
+        if (nickText && nickText === bloggerNick) return true;
+
+        var tagNodes = __ownQueryAll(commentEl, '.tk-tag, .tk-extra, .tk-meta span, .tk-nick + span');
+        for (var i = 0; i < tagNodes.length; i++) {
+            var text = (tagNodes[i].textContent || '').trim();
+            if (text === bloggerLabel) return true;
+        }
+        return false;
+    }
+
+    function __replaceAvatar(commentEl) {
+        if (!bloggerAvatar || !__isBloggerComment(commentEl)) return;
+
+        // 头像也必须取自身的，避免拿到嵌套子评论的头像
+        var avatarImg = __ownQueryFirst(commentEl, '.tk-avatar img, .tk-avatar-img');
+        if (!avatarImg) return;
+
+        if (avatarImg.getAttribute('src') !== bloggerAvatar) {
+            avatarImg.setAttribute('src', bloggerAvatar);
+        }
+        avatarImg.removeAttribute('srcset');
+        avatarImg.setAttribute('data-force-blogger-avatar', 'true');
+    }
+
+    function __applyBloggerAvatar(root) {
+        if (!bloggerAvatar) return;
+        var scope = root || document;
+        var comments = scope.querySelectorAll('.tk-comment');
+        for (var i = 0; i < comments.length; i++) {
+            __replaceAvatar(comments[i]);
+        }
+    }
+
+    function __watchComments() {
+        var target = document.querySelector('#twikoo, #tcomment, .twikoo');
+        if (!target || observer) return;
+
+        observer = new MutationObserver(function (mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+                var mutation = mutations[i];
+                for (var j = 0; j < mutation.addedNodes.length; j++) {
+                    var node = mutation.addedNodes[j];
+                    if (!node || node.nodeType !== 1) continue;
+                    if (node.matches && node.matches('.tk-comment')) {
+                        __replaceAvatar(node);
+                    } else if (node.querySelectorAll) {
+                        __applyBloggerAvatar(node);
+                    }
+                }
+            }
+        });
+        observer.observe(target, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    function __initTwikoo() {
+        if (!window.twikoo) return;
+        __patchTwikooRequestPath();
+        var opts = {
+            envId: envId,
+            el: '#tcomment',
+            lang: lang,
+            onCommentLoaded: function () {
+                __applyBloggerAvatar();
+                __watchComments();
+            }
+        };
+        if (twikooPath) opts.path = twikooPath;
+        twikoo.init(opts);
+    }
+
+    function __loadTwikoo() {
+        __patchTwikooRequestPath();
+        if (window.twikoo) {
+            __initTwikoo();
+            return;
+        }
+        if (twikooScriptLoading) return;
+        twikooScriptLoading = true;
+
+        var script = document.createElement('script');
+        script.src = twikooJsUrl;
+        script.async = true;
+        script.onload = __initTwikoo;
+        script.onerror = function () {
+            twikooScriptLoading = false;
+        };
+        document.head.appendChild(script);
+    }
+
+    // 从首页卡片一镜到底进来时，等过渡结束再加载：脚本解析执行与加载动画都不与过渡抢主线程（vtSettled 见 _partial/post-vt.ejs）
+    // 评论区快进入视口（约一屏内）才加载 Twikoo：读长文时不必一进页面就去请求评论后端；留言板这类评论在首屏附近的页面立即加载
+    function __whenNear(fn) {
+        // 带着页内找不到的锚点打开（如评论通知里指向某条评论的链接）时立即加载，否则 Twikoo 来不及定位
+    var hash = '';
+    try { hash = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
+    if (!window.IntersectionObserver || (hash && !document.getElementById(hash))) { fn(); return; }
+        var io = new IntersectionObserver(function (entries) {
+            if (!entries.some(function (en) { return en.isIntersecting; })) return;
+            io.disconnect();
+            fn();
+        }, { rootMargin: '100% 0px' });
+        io.observe(container);
+    }
+    function __start() {
+        if (window.vtSettled) window.vtSettled.then(function () { __whenNear(__loadTwikoo); });
+        else __whenNear(__loadTwikoo);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', __start);
+    } else {
+        __start();
+    }
+})();

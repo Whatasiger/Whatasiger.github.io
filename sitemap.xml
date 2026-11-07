@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://whatasiger.xyz/posts/10/</loc>
+    
+    <lastmod>2026-11-07</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://whatasiger.xyz/about-website/</loc>
     
     <lastmod>2026-11-05</lastmod>
@@ -86,15 +95,6 @@
     <loc>https://whatasiger.xyz/posts/11/</loc>
     
     <lastmod>2026-09-24</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://whatasiger.xyz/posts/10/</loc>
-    
-    <lastmod>2026-07-31</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -194,23 +194,4 @@
 
   
   <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;soon&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;sin&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;pathos&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;mamihlapinatapei-1&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;anecdoche&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;eden&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;airs-1&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;mamihlapinatapei-2&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;eric&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;airs-2&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;remy&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;mamihlapinatapei-3&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;mora&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;sonder&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;mamihlapinatapei-4&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;enouement&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;airs-3&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;limbo&#x2F;</loc></url>
-  <url><loc>https:&#x2F;&#x2F;whatasiger.xyz&#x2F;carrier_wave&#x2F;carrier-wave&#x2F;</loc></url>
 </urlset>

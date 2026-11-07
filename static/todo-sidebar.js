@@ -1,1 +1,240 @@
-(function(){var l=document.getElementById("todo-sidebar"),s=l&&l.parentNode,a=s&&s.querySelector(".todo-toggle");if(!a)return;var Y=l.querySelector(".todo-close"),_=l.querySelector(".todo-bgm"),T=l.getAttribute("data-bgm-user"),S="todo_sidebar_open",I=[2,4],N={2:"在看",4:"在玩"},A=!1,h=!1,v=null,b=null,y=!1;function O(){[].forEach.call(l.querySelectorAll("img[data-src]"),function(e){e.src=e.getAttribute("data-src"),e.removeAttribute("data-src")})}function p(e){if(e!==s.classList.contains("active")){e&&!y&&(y=!0,O()),!e&&l.contains(document.activeElement)&&a.focus({preventScroll:!0}),l.inert=!e,s.classList.toggle("active",e),a.setAttribute("aria-expanded",e?"true":"false");try{sessionStorage.setItem(S,e?"1":"0")}catch{}h=!0,clearTimeout(b),b=setTimeout(k,700),C()}}function k(){if(clearTimeout(b),h=!1,v){var e=v;v=null,j(e)}}s.addEventListener("transitionend",function(e){e.target!==s||e.propertyName!=="transform"||k()});var H="todo_toggle_pos",R=5,f=1/3,d=null,m=!1;try{var w=parseFloat(localStorage.getItem(H));w>=0&&w<=1&&(f=w)}catch{}var x=window.innerWidth,M=window.innerHeight;function E(){return window.innerWidth!==x&&(x=window.innerWidth,M=window.innerHeight),M}function L(){var e=window.innerHeight,n=a.offsetHeight/2,t=document.querySelector("header"),r=(t?t.getBoundingClientRect().bottom:0)+n+8,i=e-n-8,o=Math.min(Math.max(f*E(),r),Math.max(r,i));return a.style.top=o-s.offsetTop+"px",o}a.addEventListener("pointerdown",function(e){e.button===0&&(d={id:e.pointerId,startY:e.clientY,startPos:f,moved:!1})}),a.addEventListener("pointermove",function(e){if(!(!d||e.pointerId!==d.id)){var n=e.clientY-d.startY;if(!d.moved){if(Math.abs(n)<R)return;d.moved=!0,a.setPointerCapture(e.pointerId),a.classList.add("dragging")}f=d.startPos+n/E(),f=L()/E()}});function P(e){if(!(!d||e.pointerId!==d.id)){if(d.moved){m=!0,setTimeout(function(){m=!1},0),a.classList.remove("dragging");try{localStorage.setItem(H,String(f))}catch{}}d=null}}a.addEventListener("pointerup",P),a.addEventListener("pointercancel",P),window.addEventListener("resize",L),L(),a.addEventListener("click",function(){if(m){m=!1;return}p(!s.classList.contains("active"))}),Y.addEventListener("click",function(){p(!1)}),document.addEventListener("keydown",function(e){e.key==="Escape"&&s.classList.contains("active")&&p(!1)}),document.addEventListener("click",function(e){s.classList.contains("active")&&(s.contains(e.target)||p(!1))});function c(e,n,t){var r=document.createElement(e);return n&&(r.className=n),t!=null&&(r.textContent=t),r}function W(e,n){var t=e.subject||{},r=t.images||{},i=c("li");i.style.setProperty("--i",n);var o=c("a");o.href="https://bgm.tv/subject/"+e.subject_id,o.target="_blank",o.rel="noopener";var u=c("img"),B=r.small||r.grid||"";y?u.src=B:u.setAttribute("data-src",B),u.alt="",u.loading="lazy",u.referrerPolicy="no-referrer";var g=c("span","todo-text");if(g.appendChild(c("span","todo-title",t.name_cn||t.name||"")),e.subject_type===2&&(g.appendChild(c("span","todo-meta",(e.ep_status||0)+" / "+(t.eps||"?"))),t.eps)){var D=c("span","todo-progress");D.style.setProperty("--p",Math.min(1,(e.ep_status||0)/t.eps).toFixed(3)),g.appendChild(D)}return o.appendChild(u),o.appendChild(g),i.appendChild(o),i}function j(e){var n=document.createDocumentFragment();I.forEach(function(t){var r=e.filter(function(o){return o.subject_type===t});if(r.length){n.appendChild(c("p","todo-sub",N[t]));var i=c("ul","todo-list");r.forEach(function(o,u){i.appendChild(W(o,u))}),n.appendChild(i)}}),n.childNodes.length||n.appendChild(c("p","todo-empty","暂无数据")),_.innerHTML="",_.appendChild(n)}function C(){if(!(A||!T||!window.fetch||document.body.classList.contains("hide-todo"))){A=!0;var e="https://api.bgm.tv/v0/users/"+encodeURIComponent(T)+"/collections?type=3&limit=30&subject_type=";Promise.all(I.map(function(n){return fetch(e+n).then(function(t){if(!t.ok)throw new Error("HTTP "+t.status);return t.json()}).then(function(t){return t.data||[]})})).then(function(n){var t=[].concat.apply([],n);t.sort(function(r,i){return Date.parse(i.updated_at)-Date.parse(r.updated_at)}),h?v=t:j(t)}).catch(function(){})}}[].forEach.call(document.querySelectorAll(".todo-note[data-time]"),function(e){var n=new Date(e.getAttribute("data-time"));if(isNaN(n))return;function t(i){return Math.floor((i.getTime()-i.getTimezoneOffset()*6e4)/864e5)}var r=t(new Date)-t(n);r<0||r>60||(e.textContent="更新于 "+(r===0?"今天":r===1?"昨天":r+" 天前"))});var q=!1;try{q=sessionStorage.getItem(S)==="1"}catch{}q&&p(!0),"requestIdleCallback"in window?requestIdleCallback(C,{timeout:3e3}):setTimeout(C,1500)})();
+// 首页「TO DO」侧边栏：展开/收起 + Bangumi 实时刷新（失败时保留构建时数据）
+(function () {
+    var sidebar = document.getElementById("todo-sidebar");
+    var drawer = sidebar && sidebar.parentNode;
+    var toggle = drawer && drawer.querySelector(".todo-toggle");
+    if (!toggle) return;
+
+    var closeBtn = sidebar.querySelector(".todo-close");
+    var bgmList = sidebar.querySelector(".todo-bgm");
+    var bgmUser = sidebar.getAttribute("data-bgm-user");
+    var STATE_KEY = "todo_sidebar_open";
+    var BGM_TYPES = [2, 4]; // 2 动画 / 4 游戏
+    var BGM_LABEL = { 2: "在看", 4: "在玩" };
+    var bgmLoaded = false;
+    var animating = false;
+    var pendingRender = null;
+    var animTimer = null;
+
+    // 封面图要等第一次展开才加载：抽屉靠 transform 移出屏幕，loading="lazy" 仍会把它们算作视口附近而提前下载
+    var opened = false;
+    function revealImages() {
+        [].forEach.call(sidebar.querySelectorAll("img[data-src]"), function (img) {
+            img.src = img.getAttribute("data-src");
+            img.removeAttribute("data-src");
+        });
+    }
+
+    function setOpen(open) {
+        if (open === drawer.classList.contains("active")) return;
+        if (open && !opened) { opened = true; revealImages(); }
+        // 收起时整张卡片 inert：屏外的链接不再能被 Tab 聚焦；焦点在卡片里就先还给标签
+        if (!open && sidebar.contains(document.activeElement)) toggle.focus({ preventScroll: true });
+        sidebar.inert = !open;
+        drawer.classList.toggle("active", open);
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        try { sessionStorage.setItem(STATE_KEY, open ? "1" : "0"); } catch (e) {}
+        animating = true;
+        clearTimeout(animTimer);
+        animTimer = setTimeout(finishAnimation, 700); // 兜底：无过渡（减少动态效果）时不会触发 transitionend
+        loadBangumi();
+    }
+
+    function finishAnimation() {
+        clearTimeout(animTimer);
+        animating = false;
+        if (pendingRender) {
+            var items = pendingRender;
+            pendingRender = null;
+            renderBangumi(items);
+        }
+    }
+
+    // 开合动画期间不替换列表，避免重排导致掉帧
+    drawer.addEventListener("transitionend", function (e) {
+        if (e.target !== drawer || e.propertyName !== "transform") return;
+        finishAnimation();
+    });
+
+    // 标签可上下拖动：位置存为视口高度比例，限制在页眉以下、视口以内
+    var POS_KEY = "todo_toggle_pos";
+    var DRAG_THRESHOLD = 5; // 移动超过这个距离才算拖动，否则视为点击
+    var togglePos = 1 / 3;
+    var drag = null;
+    var suppressClick = false;
+
+    try {
+        var savedPos = parseFloat(localStorage.getItem(POS_KEY));
+        if (savedPos >= 0 && savedPos <= 1) togglePos = savedPos;
+    } catch (e) {}
+
+    // 比例换算的基准高度只在宽度变化（转屏）时更新：手机地址栏 / 工具栏伸缩只改视口高度，按实时高度换算标签会上下跳
+    var baseWidth = window.innerWidth, baseHeight = window.innerHeight;
+    function baseH() {
+        if (window.innerWidth !== baseWidth) {
+            baseWidth = window.innerWidth;
+            baseHeight = window.innerHeight;
+        }
+        return baseHeight;
+    }
+
+    // 标签贴在抽屉卡片右缘，卡片本身不从视口顶端开始：脚本按视口坐标算好，写入时扣掉卡片的顶边
+    function placeToggle() {
+        var vh = window.innerHeight;
+        var half = toggle.offsetHeight / 2;
+        var header = document.querySelector("header");
+        var min = (header ? header.getBoundingClientRect().bottom : 0) + half + 8;
+        var max = vh - half - 8;                    // 仍按实际视口夹紧，标签不会被工具栏遮住
+        var y = Math.min(Math.max(togglePos * baseH(), min), Math.max(min, max));
+        toggle.style.top = (y - drawer.offsetTop) + "px";
+        return y;
+    }
+
+    toggle.addEventListener("pointerdown", function (e) {
+        if (e.button !== 0) return;
+        drag = { id: e.pointerId, startY: e.clientY, startPos: togglePos, moved: false };
+    });
+
+    toggle.addEventListener("pointermove", function (e) {
+        if (!drag || e.pointerId !== drag.id) return;
+        var dy = e.clientY - drag.startY;
+        if (!drag.moved) {
+            if (Math.abs(dy) < DRAG_THRESHOLD) return;
+            drag.moved = true;
+            toggle.setPointerCapture(e.pointerId);
+            toggle.classList.add("dragging");
+        }
+        togglePos = drag.startPos + dy / baseH();
+        // 夹紧后回写实际位置，避免拖出边界后再拖回时“空走”
+        togglePos = placeToggle() / baseH();
+    });
+
+    function endDrag(e) {
+        if (!drag || e.pointerId !== drag.id) return;
+        if (drag.moved) {
+            suppressClick = true;
+            setTimeout(function () { suppressClick = false; }, 0); // 松手处不在标签上时不会触发 click，别吞掉下一次点击
+            toggle.classList.remove("dragging");
+            try { localStorage.setItem(POS_KEY, String(togglePos)); } catch (err) {}
+        }
+        drag = null;
+    }
+    toggle.addEventListener("pointerup", endDrag);
+    toggle.addEventListener("pointercancel", endDrag);
+
+    window.addEventListener("resize", placeToggle);
+    placeToggle();
+
+    toggle.addEventListener("click", function () {
+        if (suppressClick) { suppressClick = false; return; }
+        setOpen(!drawer.classList.contains("active"));
+    });
+    closeBtn.addEventListener("click", function () { setOpen(false); });
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && drawer.classList.contains("active")) setOpen(false);
+    });
+
+    document.addEventListener("click", function (e) {
+        if (!drawer.classList.contains("active")) return;
+        if (drawer.contains(e.target)) return;
+        setOpen(false);
+    });
+
+    function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
+    }
+
+    function renderItem(c, i) {
+        var subject = c.subject || {};
+        var images = subject.images || {};
+        var li = el("li");
+        li.style.setProperty("--i", i);         // 展开时逐条浮现的次序（glint.css「TO DO」）
+        var a = el("a");
+        a.href = "https://bgm.tv/subject/" + c.subject_id;
+        a.target = "_blank";
+        a.rel = "noopener";
+
+        var img = el("img");
+        var src = images.small || images.grid || "";
+        if (opened) img.src = src; else img.setAttribute("data-src", src);
+        img.alt = "";
+        img.loading = "lazy";
+        img.referrerPolicy = "no-referrer";
+
+        var text = el("span", "todo-text");
+        text.appendChild(el("span", "todo-title", subject.name_cn || subject.name || ""));
+        if (c.subject_type === 2) {
+            text.appendChild(el("span", "todo-meta", (c.ep_status || 0) + " / " + (subject.eps || "?")));
+            if (subject.eps) {
+                var bar = el("span", "todo-progress");
+                bar.style.setProperty("--p", Math.min(1, (c.ep_status || 0) / subject.eps).toFixed(3));
+                text.appendChild(bar);
+            }
+        }
+
+        a.appendChild(img);
+        a.appendChild(text);
+        li.appendChild(a);
+        return li;
+    }
+
+    // 按类型分组：「在看」在上、「在玩」在下，空组不显示
+    function renderBangumi(items) {
+        var frag = document.createDocumentFragment();
+        BGM_TYPES.forEach(function (type) {
+            var group = items.filter(function (c) { return c.subject_type === type; });
+            if (!group.length) return;
+            frag.appendChild(el("p", "todo-sub", BGM_LABEL[type]));
+            var ul = el("ul", "todo-list");
+            group.forEach(function (c, i) { ul.appendChild(renderItem(c, i)); });
+            frag.appendChild(ul);
+        });
+        if (!frag.childNodes.length) frag.appendChild(el("p", "todo-empty", "暂无数据"));
+        bgmList.innerHTML = "";
+        bgmList.appendChild(frag);
+    }
+
+    function loadBangumi() {
+        if (bgmLoaded || !bgmUser || !window.fetch || document.body.classList.contains("hide-todo")) return;   // 设置里关掉了 TO DO 就不去请求
+        bgmLoaded = true;
+        var base = "https://api.bgm.tv/v0/users/" + encodeURIComponent(bgmUser) + "/collections?type=3&limit=30&subject_type=";
+        Promise.all(BGM_TYPES.map(function (t) {
+            return fetch(base + t).then(function (res) {
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                return res.json();
+            }).then(function (json) { return json.data || []; });
+        })).then(function (lists) {
+            var all = [].concat.apply([], lists);
+            all.sort(function (a, b) { return Date.parse(b.updated_at) - Date.parse(a.updated_at); });
+            if (animating) pendingRender = all;
+            else renderBangumi(all);
+        }).catch(function () {
+            // 保留构建时渲染的数据
+        });
+    }
+
+    // 周榜的抓取时间换成相对说法：今天 / 昨天 / x 天前（超过 60 天仍写日期）——数据只在构建时更新，读者能看出新旧
+    [].forEach.call(document.querySelectorAll(".todo-note[data-time]"), function (el) {
+        var t = new Date(el.getAttribute("data-time"));
+        if (isNaN(t)) return;
+        function dayNo(d) { return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 864e5); }
+        var n = dayNo(new Date()) - dayNo(t);
+        if (n < 0 || n > 60) return;
+        el.textContent = "更新于 " + (n === 0 ? "今天" : n === 1 ? "昨天" : n + " 天前");
+    });
+
+    var savedOpen = false;
+    try { savedOpen = sessionStorage.getItem(STATE_KEY) === "1"; } catch (e) {}
+    if (savedOpen) setOpen(true);
+
+    // 空闲时预取 Bangumi，展开时已是最新数据
+    if ("requestIdleCallback" in window) {
+        requestIdleCallback(loadBangumi, { timeout: 3000 });
+    } else {
+        setTimeout(loadBangumi, 1500);
+    }
+})();
