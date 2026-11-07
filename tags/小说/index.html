@@ -68,7 +68,7 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=06f798f2">
+    <link rel="stylesheet" href="/static/glint.css?v=78b5509a">
     
     <link rel="stylesheet" href="/static/fa/fa.css?v=79527eff">
 
@@ -247,20 +247,28 @@
             // 忽略错误，使用默认 0.55
         }
 
-        // 0.2 背景模糊度：文章页使用用户保存值（默认8px），首页始终为0
+        // 0.2 背景模糊度：设置里分两项——阅读页 bgBlur（默认 8px，CW 预告页也用它）与首页 homeBlur（默认 0，首页、归档等其余页面）
         var DEFAULT_ARTICLE_BLUR = 8;
-        var savedBlur = DEFAULT_ARTICLE_BLUR;
+        var savedBlur = DEFAULT_ARTICLE_BLUR, homeBlur = 0;
         try {
             if (readerSettings && typeof readerSettings.bgBlur === "number") {
                 var bv = readerSettings.bgBlur;
                 if (bv >= 0 && bv <= 20) savedBlur = bv;
             }
+            if (readerSettings && typeof readerSettings.homeBlur === "number") {
+                var hv = readerSettings.homeBlur;
+                if (hv >= 0 && hv <= 20) homeBlur = hv;
+            }
         } catch (e) {}
-        // 目标模糊度：文章页=用户设置，首页=0
-        var targetBgBlur = isArticle ? savedBlur : 0;
-        // 初始（瞬间）模糊度：阅读页首帧就是最终模糊度；从阅读页回主页则从 savedBlur 开始，便于过渡动画
-        var initialBgBlur = (isArticle || isFromArticle) ? savedBlur : 0;
-        // 阅读页 initialBgBlur == targetBgBlur，rAF 不触发动画
+        var isBlurPage = isArticle || false;   // 用阅读页模糊度的页面
+        var targetBgBlur = isBlurPage ? savedBlur : homeBlur;
+        // 初始（瞬间）模糊度：阅读页首帧就是最终模糊度（载入时主线程忙，过渡会被硬切）；
+        // 其余页面从上一页的模糊度（sessionStorage glint-bg-blur）开始、两帧后过渡到自己的值：从阅读页回首页时变清晰，从首页进 CW 预告页时变模糊
+        var lastBgBlur = NaN;
+        try { lastBgBlur = parseFloat(sessionStorage.getItem("glint-bg-blur")); } catch (e) {}
+        if (!(lastBgBlur >= 0 && lastBgBlur <= 20)) lastBgBlur = isFromArticle ? savedBlur : targetBgBlur;
+        var initialBgBlur = isArticle ? savedBlur : lastBgBlur;
+        try { sessionStorage.setItem("glint-bg-blur", String(targetBgBlur)); } catch (e) {}
 
         // 1. 初始状态：全面封印动画，防止页面刚加载时的任何闪烁
         document.body.classList.add("no-bg-transition");
@@ -410,9 +418,13 @@
                     <label class="settings-chip"><input type="checkbox" id="setting-hide-todo"><i class="fa fa-list-ul"></i>隐藏首页 TODO</label>
                 </div>
                 <div class="settings-tiles">
-                    <label class="settings-tile">
+                    <label class="settings-tile is-wide">
                         <span class="settings-tile-label"><i class="fa fa-eye"></i>背景可见度</span>
                         <input type="range" id="setting-bg-opacity" min="0" max="50" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-tint"></i>背景模糊<small>首页</small></span>
+                        <input type="range" id="setting-home-blur" min="0" max="20" step="any">
                     </label>
                     <label class="settings-tile">
                         <span class="settings-tile-label"><i class="fa fa-tint"></i>背景模糊<small>阅读页</small></span>
@@ -838,7 +850,7 @@
 
 <script>window.GLINT_RELEASE = {"name":"Ciel","date":"2026-10-27","url":"/about-website/"};</script>
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=488aedf2"></script>
+<script src="/static/glint.js?v=b6ed5056"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 
