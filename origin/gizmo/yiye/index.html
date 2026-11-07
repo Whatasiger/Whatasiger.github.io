@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>一叶 · Gizmo | Whatasiger</title>
+    <meta name="description" content="点水成涟，送一片叶子回到夕照里。Whatasiger 的 Gizmo 小游戏。">
+    <meta name="theme-color" content="#101722">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 40'%3E%3Cpath d='M4 21C14 6 40 2 62 18C42 34 16 36 4 21Z' fill='%239fcff7'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@400;500&family=Noto+Serif+SC:wght@300;500&display=swap">
+    <script>
+        /* 与博客同步：主题色（localStorage whatasiger_reader_settings.accent）与日夜（sessionStorage theme=light 为白天），首帧前挂上 */
+        (function () {
+            var h = document.documentElement;
+            try {
+                var s = JSON.parse(localStorage.getItem("whatasiger_reader_settings") || "{}");
+                if (s.accent) h.setAttribute("data-accent", s.accent);
+            } catch (e) {}
+            try { if (sessionStorage.getItem("theme") === "light") h.classList.add("day"); } catch (e) {}
+        })();
+    </script>
+    <style>
+        /* ── 0 变量 ─────────────────────────────────────────── */
+        :root {
+            --tc-ice: #cfe5fb;
+            --tc-light: #a6cff5;
+            --tc-glow: #9fcff7;
+            --tc-soft: #8bb4e0;
+            --tc-main: #6f9fc7;
+            --tc-dim: #6e8aad;
+            --tc-deep: #5481ae;
+            --sun: #f3a462;                                  /* 夕照：取自博客背景图的落日 */
+            --sun-pale: #ffe2b8;
+            --ink: #e8eef6;                                  /* 主要文字 */
+            --ink-dim: rgba(232, 238, 246, 0.62);
+            --page: #0c121b;                                 /* 岸 / 页面底色 */
+            --glass-bg: rgba(22, 31, 45, 0.56);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-filter: blur(22px) saturate(160%);
+            --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 44px -14px rgba(0, 0, 0, 0.55);
+            --glass-radius: 18px;
+            --tile: rgba(255, 255, 255, 0.06);
+            --tile-hover: rgba(255, 255, 255, 0.11);
+            --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+            --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
+            --sans: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        /* 其他主题色：与博客 glint.css 第 0 节同一套 OKLCH（同明度彩度只换色相） */
+        html[data-accent="lavender"] { --tc-h: 300; }
+        html[data-accent="sakura"] { --tc-h: 355; }
+        html[data-accent="mikan"] { --tc-h: 62; }
+        html[data-accent="wakakusa"] { --tc-h: 135; }
+        html[data-accent="mint"] { --tc-h: 185; }
+        html[data-accent]:not([data-accent="blue"]) {
+            --tc-ice: oklch(0.912 0.038 var(--tc-h));
+            --tc-light: oklch(0.838 0.069 var(--tc-h));
+            --tc-glow: oklch(0.835 0.076 var(--tc-h));
+            --tc-soft: oklch(0.756 0.078 var(--tc-h));
+            --tc-main: oklch(0.684 0.079 var(--tc-h));
+            --tc-dim: oklch(0.625 0.062 var(--tc-h));
+        }
+        @supports (corner-shape: squircle) {
+            :root { --glass-radius: 28px; }
+        }
+        html.day {
+            --ink: #1f2c3d;
+            --ink-dim: rgba(31, 44, 61, 0.6);
+            --page: #9db4cb;
+            --glass-bg: rgba(255, 255, 255, 0.62);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 18px 44px -14px rgba(30, 45, 70, 0.35);
+            --tile: rgba(255, 255, 255, 0.5);
+            --tile-hover: rgba(255, 255, 255, 0.8);
+            --sun: #e0894c;
+        }
+
+        * { box-sizing: border-box; }
+        html, body { margin: 0; height: 100%; }
+        body {
+            background: var(--page);
+            color: var(--ink);
+            font-family: var(--sans);
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        button { font: inherit; color: inherit; }
+        canvas#pond {
+            position: fixed; inset: 0;
+            width: 100%; height: 100%;
+            display: block;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        /* ── 1 毛玻璃 ───────────────────────────────────────── */
+        .glass {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border-radius: var(--glass-radius);
+            corner-shape: squircle;
+        }
+
+        /* ── 2 顶栏 ─────────────────────────────────────────── */
+        .hud {
+            position: fixed; left: 0; right: 0; top: 0;
+            display: flex; align-items: center; gap: 10px;
+            padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+            pointer-events: none;
+            transition: opacity .5s ease, translate .6s var(--ease-spring);
+        }
+        .hud > * { pointer-events: auto; }
+        body.at-title .hud .play-only { opacity: 0; pointer-events: none; translate: 0 -8px; }
+        body.at-title .hud-btns .play-only { display: none; }
+        .play-only { transition: opacity .4s ease, translate .6s var(--ease-spring); }
+        .icon-btn {
+            width: 42px; height: 42px; flex: none;
+            display: grid; place-items: center;
+            border-radius: 50%;
+            border: 0; padding: 0;
+            background: transparent;
+            cursor: pointer;
+            text-decoration: none; color: inherit;
+            transition: background .2s ease, scale .3s var(--ease-spring);
+        }
+        .icon-btn:hover { background: var(--tile-hover); }
+        .icon-btn:active { scale: .92; }
+        .icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .icon-btn.glass { border-radius: 50%; }
+        .level-tag {
+            display: flex; align-items: baseline; gap: .5em;
+            padding: 0 4px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, .35);
+            white-space: nowrap;
+        }
+        html.day .level-tag { text-shadow: 0 1px 8px rgba(255, 255, 255, .5); }
+        .level-tag small { font-size: 13px; color: var(--ink-dim); letter-spacing: .1em; }
+        .level-tag b { font-family: var(--serif); font-weight: 500; font-size: 19px; letter-spacing: .12em; }
+        .hud-gap { flex: 1; }
+        .stats {
+            display: flex; align-items: center; gap: 2px;
+            height: 42px; padding: 0 6px;
+            border-radius: 21px;
+        }
+        .stat {
+            display: flex; align-items: center; gap: 6px;
+            padding: 0 10px;
+            font-variant-numeric: tabular-nums;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .stat i { font-style: normal; font-family: var(--serif); color: var(--ink-dim); }
+        .stat .of { color: var(--ink-dim); }
+        .stat.over b { color: var(--sun); }
+        .stat.pulse { animation: pulse .5s var(--ease-spring); }
+        @keyframes pulse { 40% { scale: 1.18; } }
+        .stats .sep { width: 1px; height: 16px; background: var(--glass-border); }
+        .mote-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #ffe7a6;
+            box-shadow: 0 0 8px 2px rgba(255, 214, 120, .7);
+        }
+        .hud-btns { display: flex; gap: 2px; padding: 0; border-radius: 21px; }
+
+        /* ── 3 提示 ─────────────────────────────────────────── */
+        .hint {
+            position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom));
+            translate: -50% 0;
+            width: max-content;                          /* left: 50% 时默认宽度只剩半屏，会过早折行 */
+            max-width: calc(100vw - 32px);
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 14px; letter-spacing: .06em;
+            color: var(--ink);
+            text-align: center;
+            opacity: 0;
+            transition: opacity .6s ease, translate .7s var(--ease-spring);
+            pointer-events: none;
+        }
+        .hint.show { opacity: 1; translate: -50% -4px; }
+
+        /* ── 4 浮层（标题、选汀、结算） ─────────────────────── */
+        .layer {
+            position: fixed; inset: 0;
+            display: grid; place-items: center;
+            padding: 72px 16px 24px;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity .45s ease, visibility 0s .45s;
+        }
+        .layer.open { visibility: visible; opacity: 1; transition: opacity .45s ease; }
+        .layer.dim { background: color-mix(in srgb, var(--page) 35%, transparent); }
+        .card {
+            width: min(440px, 100%);
+            padding: 28px 26px 24px;
+            text-align: center;
+            scale: .96; translate: 0 10px;
+            transition: scale .6s var(--ease-spring), translate .6s var(--ease-spring);
+        }
+        .layer.open .card { scale: 1; translate: 0 0; }
+
+        /* 标题 */
+        #title { padding-top: 24px; }
+        #title.open { pointer-events: none; }           /* 标题画面也能点到底下的水面 */
+        #title.open .row, #title.open .credit { pointer-events: auto; }
+        .title-wrap { text-align: center; max-width: 100%; }
+        .eyebrow {
+            font-size: 12px; letter-spacing: .4em; text-indent: .4em;
+            color: var(--ink-dim);
+            text-transform: uppercase;
+        }
+        .title-wrap h1 {
+            margin: .15em 0 .1em;
+            font-family: var(--serif); font-weight: 300;
+            font-size: clamp(72px, 16vw, 140px);
+            letter-spacing: .32em; text-indent: .32em;
+            line-height: 1.15;
+            text-shadow: 0 4px 40px rgba(0, 0, 0, .35);
+        }
+        html.day .title-wrap h1 { text-shadow: 0 4px 40px rgba(255, 255, 255, .5); }
+        .title-wrap p {
+            margin: 0 0 2.2em;
+            font-family: var(--serif);
+            font-size: clamp(14px, 3.6vw, 17px);
+            letter-spacing: .24em; text-indent: .24em;
+            color: var(--ink-dim);
+        }
+        .title-wrap > * { animation: rise 1.2s var(--ease-spring) backwards; }
+        .title-wrap > :nth-child(2) { animation-delay: .1s; }
+        .title-wrap > :nth-child(3) { animation-delay: .22s; }
+        .title-wrap > :nth-child(4) { animation-delay: .34s; }
+        @keyframes rise { from { opacity: 0; translate: 0 18px; } }
+        .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            min-width: 112px; height: 44px; padding: 0 22px;
+            border-radius: 22px;
+            border: 1px solid var(--glass-border);
+            background: var(--tile);
+            cursor: pointer;
+            font-size: 15px; letter-spacing: .2em; text-indent: .2em;
+            transition: background .2s ease, scale .3s var(--ease-spring), box-shadow .3s ease;
+        }
+        .btn:hover { background: var(--tile-hover); }
+        .btn:active { scale: .95; }
+        .btn.primary {
+            background: color-mix(in srgb, var(--tc-main) 70%, transparent);
+            border-color: color-mix(in srgb, var(--tc-glow) 50%, transparent);
+            color: #fff;
+            box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--tc-main) 80%, transparent);
+        }
+        .btn.primary:hover { background: color-mix(in srgb, var(--tc-main) 88%, transparent); }
+        .btn:focus-visible, .icon-btn:focus-visible, .lv:focus-visible { outline: 2px solid var(--tc-glow); outline-offset: 2px; }
+        .credit {
+            position: fixed; left: 0; right: 0; bottom: max(14px, env(safe-area-inset-bottom));
+            text-align: center; font-size: 12px; letter-spacing: .12em; color: var(--ink-dim);
+        }
+
+        /* 选汀 */
+        .card h2, .card h3 {
+            margin: 0;
+            font-family: var(--serif); font-weight: 500;
+            letter-spacing: .3em; text-indent: .3em;
+        }
+        .card h2 { font-size: 22px; }
+        .card .sub { margin: .5em 0 1.4em; font-size: 13px; color: var(--ink-dim); letter-spacing: .1em; }
+        .levels {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+            margin-bottom: 18px;
+        }
+        .lv {
+            aspect-ratio: 1 / 1.12;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            background: var(--tile);
+            cursor: pointer;
+            padding: 0;
+            transition: background .2s ease, scale .3s var(--ease-spring);
+        }
+        .lv:hover { background: var(--tile-hover); }
+        .lv:active { scale: .94; }
+        .lv b { font-family: var(--serif); font-weight: 500; font-size: 17px; letter-spacing: .04em; }
+        .lv small { font-size: 11px; color: var(--ink-dim); letter-spacing: .1em; }
+        .lv.cur { border-color: color-mix(in srgb, var(--tc-glow) 60%, transparent); }
+        .lv[disabled] { opacity: .32; cursor: default; }
+        .lv[disabled]:hover { background: var(--tile); }
+        .marks { display: flex; gap: 3px; }
+        .marks svg { width: 13px; height: 9px; }
+        .mark-off, .rm svg { color: color-mix(in srgb, var(--ink) 18%, transparent); }
+        .mark-on, .rm.on svg { color: var(--tc-glow); filter: drop-shadow(0 0 3px color-mix(in srgb, var(--tc-glow) 60%, transparent)); }
+
+        /* 结算 */
+        .result-marks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 1.4em 0 1.6em; }
+        .rm {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            padding: 14px 4px 12px;
+            border-radius: 14px;
+            background: var(--tile);
+            font-size: 12px; color: var(--ink-dim); letter-spacing: .08em;
+        }
+        .rm svg { width: 38px; height: 24px; }
+        .rm b { font-size: 13px; font-weight: 500; color: var(--ink); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+        .rm.on svg { animation: pop .7s var(--ease-spring) backwards; }
+        .rm:nth-child(2).on svg { animation-delay: .12s; }
+        .rm:nth-child(3).on svg { animation-delay: .24s; }
+        @keyframes pop { from { scale: .2; opacity: 0; rotate: -30deg; } }
+
+        /* 窄屏 */
+        @media (max-width: 520px) {
+            .level-tag small { display: none; }
+            .level-tag b { font-size: 17px; }
+            .stat { padding: 0 7px; font-size: 13px; }
+            .hud { gap: 6px; }
+            .icon-btn { width: 38px; height: 38px; }
+            .stats { height: 38px; }
+            .card { padding: 24px 16px 20px; }
+            .levels { gap: 6px; }
+        }
+        @media (max-width: 380px) { .hud .stat i { display: none; } }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition-duration: .01s !important; }
+        }
+    </style>
+</head>
+<body class="at-title">
+    <canvas id="pond" aria-label="水面：点击水面激起涟漪"></canvas>
+
+    <header class="hud">
+        <a class="icon-btn glass" href="../" aria-label="返回 Gizmo" title="返回 Gizmo">
+            <svg viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+        </a>
+        <div class="level-tag play-only"><small id="lv-no">其一</small><b id="lv-name">初涟</b></div>
+        <div class="hud-gap"></div>
+        <div class="stats glass play-only" aria-live="polite">
+            <span class="stat" id="stat-rip" title="已用涟漪 / 标准"><i>涟</i><b id="rip-n">0</b><span class="of">/<span id="rip-par">2</span></span></span>
+            <span class="sep"></span>
+            <span class="stat" id="stat-mote" title="萤火"><span class="mote-dot"></span><b id="mote-n">0</b><span class="of">/<span id="mote-all">1</span></span></span>
+        </div>
+        <div class="hud-btns glass">
+            <button class="icon-btn play-only" id="btn-restart" aria-label="重来（R）" title="重来（R）">
+                <svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.1-5"/><path d="M5 4.5V8h3.5"/></svg>
+            </button>
+            <button class="icon-btn" id="btn-levels" aria-label="选汀" title="选汀">
+                <svg viewBox="0 0 24 24"><rect x="4.5" y="4.5" width="5.5" height="5.5" rx="1.6"/><rect x="14" y="4.5" width="5.5" height="5.5" rx="1.6"/><rect x="4.5" y="14" width="5.5" height="5.5" rx="1.6"/><rect x="14" y="14" width="5.5" height="5.5" rx="1.6"/></svg>
+            </button>
+            <button class="icon-btn" id="btn-sound" aria-label="声音" title="声音">
+                <svg viewBox="0 0 24 24"><path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3z"/><path class="snd-on" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="snd-off" d="M16 9.5l5 5M21 9.5l-5 5" style="display:none"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="hint glass" id="hint"></div>
+
+    <!-- 标题 -->
+    <section class="layer open" id="title" aria-label="一叶">
+        <div class="title-wrap">
+            <div class="eyebrow">Gizmo · 小游戏</div>
+            <h1>一叶</h1>
+            <p>点水成涟，送一片叶子回到夕照里</p>
+            <div class="row">
+                <button class="btn primary" id="btn-start">启程</button>
+                <button class="btn" id="btn-pick">选汀</button>
+            </div>
+        </div>
+        <div class="credit">Whatasiger · 2026</div>
+    </section>
+
+    <!-- 选汀 -->
+    <section class="layer dim" id="picker" aria-label="选汀">
+        <div class="card glass">
+            <h2>选汀</h2>
+            <p class="sub">十处水面，一片叶子 · <span id="mark-total">0</span> / 30 枚印记</p>
+            <div class="levels" id="levels"></div>
+            <div class="row"><button class="btn" id="btn-pick-close">回到水面</button></div>
+        </div>
+    </section>
+
+    <!-- 结算 -->
+    <section class="layer dim" id="result" aria-label="结算">
+        <div class="card glass">
+            <h2 id="res-title">初涟</h2>
+            <p class="sub" id="res-sub">叶子回到了夕照里</p>
+            <div class="result-marks">
+                <div class="rm" id="rm-0"><svg viewBox="0 0 64 40"><use href="#leaf-mark"/></svg>抵达<b>✓</b></div>
+                <div class="rm" id="rm-1"><svg viewBox="0 0 64 40"><use href="#leaf-mark"/></svg>萤火<b id="rm-1-v">0/1</b></div>
+                <div class="rm" id="rm-2"><svg viewBox="0 0 64 40"><use href="#leaf-mark"/></svg>涟漪<b id="rm-2-v">2 ≤ 2</b></div>
+            </div>
+            <div class="row">
+                <button class="btn" id="btn-again">再漂一次</button>
+                <button class="btn primary" id="btn-next">下一汀</button>
+            </div>
+        </div>
+    </section>
+
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <defs><path id="leaf-mark" fill="currentColor" d="M4 21C14 6 40 2 62 18C42 34 16 36 4 21Z"/></defs>
+    </svg>
+
+    <noscript><p style="position:fixed;inset:0;display:grid;place-items:center">这片水面需要 JavaScript 才能泛起涟漪。</p></noscript>
+
+    <script src="sim.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+</body>
+</html>
