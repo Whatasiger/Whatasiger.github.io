@@ -29,7 +29,7 @@
 
     
 
-<script src="/static/vt-flip.js?v=28f16d01"></script>
+<script src="/static/vt-flip.js?v=0768fb73"></script>
 
 
     <script>
@@ -84,7 +84,8 @@
                     vtFlip(e.viewTransition, {
                         'cw-stage': { new: 'cover', radius: 24 },
                         // 载波的终点是画布上真实载波所在：滚过吸顶点后它停在顶部，不随轴线滚走（cw.js 的 cwCarrierRect）
-                        'cw-hero-wave': { el: function () {
+                        // box：带这个过渡名的元素，函数终点按它的盒子换算（坐标系见 vt-flip.js），不写会在手机上整体错位
+                        'cw-hero-wave': { box: '.cw-axis', el: function () {
                             return window.cwCarrierRect ? window.cwCarrierRect() : document.querySelector('.cw-axis').getBoundingClientRect();
                         } },
                         'cw-hero-title': { old: 'auto', new: 'auto', el: '.cw-title' },
@@ -381,7 +382,7 @@
     
     
     <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=e1aedba0">
-    <script src="/static/carrier-wave/cw.js?v=280bbeb2" defer></script>
+    <script src="/static/carrier-wave/cw.js?v=496ad0cc" defer></script>
 <meta name="generator" content="Hexo 8.1.1"></head>
 
 
@@ -799,15 +800,26 @@
     
     <script>
         (function () {
-            var read = [], items = [].slice.call(document.querySelectorAll(".cw-track[data-slug]"));
-            try { read = JSON.parse(localStorage.getItem("whatasiger_cw_read")) || []; } catch (e) {}
-            items.forEach(function (li) {
-                if (read.indexOf(li.getAttribute("data-slug")) === -1) return;
-                li.classList.add("is-read");
-                var meta = li.querySelector(".cw-meta");
-                if (meta) meta.setAttribute("title", "读过");
-            });
-            try { localStorage.setItem("whatasiger_cw_seen", JSON.stringify(items.map(function (li) { return li.getAttribute("data-slug"); }))); } catch (e) {}
+            var items = [].slice.call(document.querySelectorAll(".cw-track[data-slug]"));
+            function markRead() {
+                var read = [];
+                try { read = JSON.parse(localStorage.getItem("whatasiger_cw_read")) || []; } catch (e) {}
+                items.forEach(function (li) {
+                    var on = read.indexOf(li.getAttribute("data-slug")) > -1;
+                    li.classList.toggle("is-read", on);
+                    var meta = li.querySelector(".cw-meta");
+                    if (meta) { if (on) meta.setAttribute("title", "读过"); else meta.removeAttribute("title"); }
+                });
+            }
+            function markSeen() {
+                try { localStorage.setItem("whatasiger_cw_seen", JSON.stringify(items.map(function (li) { return li.getAttribute("data-slug"); }))); } catch (e) {}
+            }
+            markRead();
+            // 首页悬停 CW 卡片就会预渲染本页：预渲染中不算「见过」，读者真的打开了才记，否则首页的「新信号」会被悄悄清掉
+            if (document.prerendering) document.addEventListener("prerenderingchange", markSeen, { once: true });
+            else markSeen();
+            // 读完一篇后退回目录（往返缓存）时重新标已读
+            addEventListener("pageshow", function (e) { if (e.persisted) markRead(); });
         })();
     </script>
 </body>

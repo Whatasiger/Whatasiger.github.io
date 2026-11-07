@@ -29,7 +29,7 @@
 
     
 
-<script src="/static/vt-flip.js?v=28f16d01"></script>
+<script src="/static/vt-flip.js?v=0768fb73"></script>
 
 
     <script>
@@ -84,7 +84,8 @@
                     vtFlip(e.viewTransition, {
                         'cw-stage': { new: 'cover', radius: 24 },
                         // 载波的终点是画布上真实载波所在：滚过吸顶点后它停在顶部，不随轴线滚走（cw.js 的 cwCarrierRect）
-                        'cw-hero-wave': { el: function () {
+                        // box：带这个过渡名的元素，函数终点按它的盒子换算（坐标系见 vt-flip.js），不写会在手机上整体错位
+                        'cw-hero-wave': { box: '.cw-axis', el: function () {
                             return window.cwCarrierRect ? window.cwCarrierRect() : document.querySelector('.cw-axis').getBoundingClientRect();
                         } },
                         'cw-hero-title': { old: 'auto', new: 'auto', el: '.cw-title' },
@@ -378,7 +379,7 @@
     
     
     <link rel="stylesheet" href="/static/carrier-wave/cw.css?v=e1aedba0">
-    <script src="/static/carrier-wave/cw.js?v=280bbeb2" defer></script>
+    <script src="/static/carrier-wave/cw.js?v=496ad0cc" defer></script>
 <meta name="generator" content="Hexo 8.1.1"></head>
 
 
