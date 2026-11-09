@@ -397,6 +397,48 @@
 <p>基础主题：<a target="_blank" rel="noopener" href="https://github.com/Dreamer-Paul/Hingle"><strong>Hingle</strong></a></p>
 <p>托管：<a target="_blank" rel="noopener" href="https://www.cloudflare.com/"><strong>Cloudflare Pages</strong></a></p>
 <hr>
+<h3 id="订阅"><a href="#订阅" class="headerlink" title="订阅"></a><strong>订阅</strong></h3><style>
+.feed-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: 1.1rem 1.3rem;
+  border-radius: 16px;
+  color: inherit;
+  text-decoration: none !important;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  transition: transform .25s, box-shadow .25s;
+}
+.feed-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.11); }
+.feed-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  color: #fff;
+  background: var(--blue);
+}
+.feed-text { display: flex; flex-direction: column; gap: .1rem; line-height: 1.5; }
+.feed-text strong { color: var(--blue); }
+.feed-text span { font-size: .85rem; opacity: .7; }
+.dark-theme .feed-card {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+</style>
+
+<p><a class="feed-card" href="/atom.xml"><span class="feed-icon"><i class="fa fa-rss"></i></span><span class="feed-text"><strong>订阅本站（RSS &#x2F; Atom）</strong><span>加进 RSS 阅读器，有新文章时自动送到；点开查看订阅方法</span></span></a></p>
+<p>订阅地址：<code>https://whatasiger.xyz/atom.xml</code>（阅读器只认 RSS 2.0 时可用 <a href="/rss2.xml"><strong>rss2.xml</strong></a>）</p>
+<hr>
 <h3 id="版权声明"><a href="#版权声明" class="headerlink" title="版权声明"></a><strong>版权声明</strong></h3><p>对于转载 &#x2F; 二创等：<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans"><strong>CC BY-NC-SA 4.0</strong></a></p>
 <p>对于 LLM 训练：<a target="_blank" rel="noopener" href="https://creativecommons.org/publicdomain/zero/1.0/deed.zh-hans"><strong>CC0 1.0</strong></a></p>
 <hr>

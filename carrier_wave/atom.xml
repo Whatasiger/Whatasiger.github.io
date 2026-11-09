@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="/feed.xsl"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>CARRiER WAVE. 载波 · Whatasiger</title>
   <subtitle>被留下的成为信号，被遗漏的进入 limbo。</subtitle>

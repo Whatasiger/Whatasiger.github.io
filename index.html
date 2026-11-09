@@ -68,9 +68,9 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=d42d2957">
+    <link rel="stylesheet" href="/static/glint.css?v=deafd9b0">
     
-    <link rel="stylesheet" href="/static/fa/fa.css?v=79527eff">
+    <link rel="stylesheet" href="/static/fa/fa.css?v=5e5a2803">
 
     
     
@@ -116,7 +116,7 @@
     
     
 
-<script src="/static/vt-flip.js?v=0768fb73"></script>
+<script src="/static/vt-flip.js?v=ecd3feac"></script>
 
     
     
@@ -239,13 +239,14 @@
     </script>
     <!-- 卡片副题「载波·短篇辑」与目录页同用思源宋体；只取这几个字，字体文件很小 -->
     <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@300&text=%E8%BD%BD%E6%B3%A2%E7%9F%AD%E7%AF%87%E8%BE%91&display=swap">
-    <!-- 跨页面过渡只用于「首页 ↔ CARRiER WAVE.」「首页 → 文章」（文章卡片一镜到底）与「首页 → Gizmo」（叶片一镜到底），其余跳转一律跳过 -->
+    <!-- 跨页面过渡只用于「首页 ↔ CARRiER WAVE.」「首页 → CW 预告页」「首页 → 文章」（文章卡片一镜到底）与「首页 → Gizmo」（叶片一镜到底），其余跳转一律跳过 -->
     <style>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
     <script>
         (function () {
             var root = document.documentElement;
             var target = '/carrier_wave/';
             var gizmo = '/gizmo/';
+            var soon = '/carrier_wave/soon/';
             function norm(u) {
                 try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
             }
@@ -256,6 +257,7 @@
                 if (!e.viewTransition) return;
                 if (takeTitleHop(e)) return;     // 从搜索结果点进文章：标题飞过去（_partial/title-hop.ejs）
                 if (to && norm(to) === gizmo && leaveToGizmo()) return;
+                if (to && norm(to) === soon && leaveToSoon()) return;
                 if (to && norm(to) !== target && leaveToPost(norm(to))) return;
                 if (!to || norm(to) !== target) { e.viewTransition.skipTransition(); return; }
                 // 快照前把卡片收回静止状态：悬停时标题字距变宽、载波鼓起变色，与目录页首屏对不上，交叉淡化时会出现重影
@@ -312,6 +314,16 @@
                 try { sessionStorage.setItem('gizmo-leaf-hop', String(Date.now())); } catch (err) {}
                 return true;
             }
+            // CW 预告卡片一镜到底：卡片沉成预告页拼贴里的夜空底片，胶带、载波、标题、手写字各自飞到对应位置（落点与编排见 _partial/soon-vt.ejs）
+            // 卡片不在视口内就不做；留一份记录，预告页据此决定是否接过渡
+            function leaveToSoon() {
+                var card = document.querySelector('.post-item.cw-card.is-soon');
+                var r = card && card.getBoundingClientRect();
+                if (!r || r.bottom <= 0 || r.top >= innerHeight) return false;
+                root.classList.add('soon-leaving');
+                try { sessionStorage.setItem('soon-hop', String(Date.now())); } catch (err) {}
+                return true;
+            }
             function resetGizmoLeaf() {
                 root.classList.remove('gizmo-leaving');
                 var body = document.querySelector('.gizmo-leaf-body');
@@ -338,7 +350,7 @@
             window.addEventListener('pagereveal', function (e) {
                 var restored = revealed;
                 revealed = true;
-                root.classList.remove('cw-back', 'cw-leaving');
+                root.classList.remove('cw-back', 'cw-leaving', 'soon-leaving');
                 resetWave();
                 resetPostCard();
                 resetGizmoLeaf();
@@ -418,6 +430,7 @@
 
 <script>try { if (localStorage.getItem('cw-vt-debug') === '1') document.write('<script src="/static/vt-debug.js?v=f21ae93a"><\/script>'); } catch (err) {}</script>
 
+    
     
     
     
@@ -1544,13 +1557,13 @@
                 <ul class="todo-list">
                     
                     <li style="--i: 0">
-                        <a href="https://bgm.tv/subject/495291" target="_blank" rel="noopener">
-                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/18/af/495291_9WuBW.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <a href="https://bgm.tv/subject/248175" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/2a/f7/248175_2w4zT.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
                             <span class="todo-text">
-                                <span class="todo-title">再见菈菈</span>
+                                <span class="todo-title">辉夜大小姐想让我告白～天才们的恋爱头脑战～</span>
                                 
-                                <span class="todo-meta">8 / 12</span>
-                                <span class="todo-progress" style="--p: 0.667"></span>
+                                <span class="todo-meta">0 / 12</span>
+                                <span class="todo-progress" style="--p: 0.000"></span>
                                 
                             </span>
                         </a>
@@ -1690,20 +1703,9 @@
             
                 
                 <li style="--i: 0">
-                    <a href="https://music.163.com/#/song?id=2111740365" target="_blank" rel="noopener">
-                        <span class="todo-rank">1</span>
-                        <img data-src="https://p2.music.126.net/19xlS-oxqi3yG7890PEehA==/109951173986849987.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">itsuka</span>
-                            <span class="todo-meta">ひとひら</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li style="--i: 1">
                     <a href="https://music.163.com/#/song?id=438580723" target="_blank" rel="noopener">
-                        <span class="todo-rank">2</span>
-                        <img data-src="https://p2.music.126.net/9kgIXjxfcDR335N4Hljnjg==/17918740998092311.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">1</span>
+                        <img data-src="https://p1.music.126.net/9kgIXjxfcDR335N4Hljnjg==/17918740998092311.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">雨上がり</span>
                             <span class="todo-meta">きのこ帝国</span>
@@ -1711,10 +1713,21 @@
                     </a>
                 </li>
                 
+                <li style="--i: 1">
+                    <a href="https://music.163.com/#/song?id=2111740365" target="_blank" rel="noopener">
+                        <span class="todo-rank">2</span>
+                        <img data-src="https://p1.music.126.net/19xlS-oxqi3yG7890PEehA==/109951173986849987.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">itsuka</span>
+                            <span class="todo-meta">ひとひら</span>
+                        </span>
+                    </a>
+                </li>
+                
                 <li style="--i: 2">
                     <a href="https://music.163.com/#/song?id=2722426126" target="_blank" rel="noopener">
                         <span class="todo-rank">3</span>
-                        <img data-src="https://p2.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img data-src="https://p1.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">おとぎ</span>
                             <span class="todo-meta">RAY</span>
@@ -1725,7 +1738,7 @@
                 <li style="--i: 3">
                     <a href="https://music.163.com/#/song?id=26405133" target="_blank" rel="noopener">
                         <span class="todo-rank">4</span>
-                        <img data-src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img data-src="https://p1.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">Girl meets NUMBER GIRL</span>
                             <span class="todo-meta">きのこ帝国</span>
@@ -1734,31 +1747,20 @@
                 </li>
                 
                 <li style="--i: 4">
-                    <a href="https://music.163.com/#/song?id=3363527827" target="_blank" rel="noopener">
+                    <a href="https://music.163.com/#/song?id=438580725" target="_blank" rel="noopener">
                         <span class="todo-rank">5</span>
-                        <img data-src="https://p2.music.126.net/mkcHO_3dQ9jgyoK6fpFCmw==/109951172946101598.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img data-src="https://p1.music.126.net/9kgIXjxfcDR335N4Hljnjg==/17918740998092311.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">芽吹くとき</span>
-                            <span class="todo-meta">yonige</span>
-                        </span>
-                    </a>
-                </li>
-                
-                <li style="--i: 5">
-                    <a href="https://music.163.com/#/song?id=26405131" target="_blank" rel="noopener">
-                        <span class="todo-rank">6</span>
-                        <img data-src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
-                        <span class="todo-text">
-                            <span class="todo-title">スクールフィクション</span>
+                            <span class="todo-title">死がふたりをわかつまで</span>
                             <span class="todo-meta">きのこ帝国</span>
                         </span>
                     </a>
                 </li>
                 
-                <li style="--i: 6">
+                <li style="--i: 5">
                     <a href="https://music.163.com/#/song?id=2066755272" target="_blank" rel="noopener">
-                        <span class="todo-rank">7</span>
-                        <img data-src="https://p2.music.126.net/cGIdZW4EEtPhd3rB775SaQ==/109951168857920159.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-rank">6</span>
+                        <img data-src="https://p1.music.126.net/cGIdZW4EEtPhd3rB775SaQ==/109951168857920159.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">飞松</span>
                             <span class="todo-meta">陈粒</span>
@@ -1766,13 +1768,24 @@
                     </a>
                 </li>
                 
-                <li style="--i: 7">
-                    <a href="https://music.163.com/#/song?id=2600524616" target="_blank" rel="noopener">
-                        <span class="todo-rank">8</span>
-                        <img data-src="https://p2.music.126.net/TZyy6V0geCU5zP0j9lLDZg==/109951169703704961.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                <li style="--i: 6">
+                    <a href="https://music.163.com/#/song?id=26405131" target="_blank" rel="noopener">
+                        <span class="todo-rank">7</span>
+                        <img data-src="https://p1.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">流れゆく季節</span>
-                            <span class="todo-meta">Haruka Nakamura</span>
+                            <span class="todo-title">スクールフィクション</span>
+                            <span class="todo-meta">きのこ帝国</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 7">
+                    <a href="https://music.163.com/#/song?id=3363527827" target="_blank" rel="noopener">
+                        <span class="todo-rank">8</span>
+                        <img data-src="https://p1.music.126.net/mkcHO_3dQ9jgyoK6fpFCmw==/109951172946101598.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">芽吹くとき</span>
+                            <span class="todo-meta">yonige</span>
                         </span>
                     </a>
                 </li>
@@ -1780,7 +1793,7 @@
                 <li style="--i: 8">
                     <a href="https://music.163.com/#/song?id=2712589107" target="_blank" rel="noopener">
                         <span class="todo-rank">9</span>
-                        <img data-src="https://p2.music.126.net/jd5vRmlAEaJ40ao4HK2Wag==/109951171268447043.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img data-src="https://p1.music.126.net/jd5vRmlAEaJ40ao4HK2Wag==/109951171268447043.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
                             <span class="todo-title">春の嵐</span>
                             <span class="todo-meta">羊文学</span>
@@ -1789,12 +1802,12 @@
                 </li>
                 
                 <li style="--i: 9">
-                    <a href="https://music.163.com/#/song?id=1942841969" target="_blank" rel="noopener">
+                    <a href="https://music.163.com/#/song?id=2647387719" target="_blank" rel="noopener">
                         <span class="todo-rank">10</span>
-                        <img data-src="https://p2.music.126.net/8Aye9i1Pa9-9gNPs_lOiDQ==/109951167356356670.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <img data-src="https://p1.music.126.net/1Xs6-9ZsQVYqdE9fdqnXEA==/109951172449490832.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span class="todo-text">
-                            <span class="todo-title">透明人間</span>
-                            <span class="todo-meta">RAY</span>
+                            <span class="todo-title">I Must Come Back（重回巅峰）</span>
+                            <span class="todo-meta">我好像在哪见过你</span>
                         </span>
                     </a>
                 </li>
@@ -1803,7 +1816,7 @@
         </ol>
         
             
-            <p class="todo-note" data-time="2026-11-08T07:37:13.885Z" title="2026-11-08">更新于 2026-11-08</p>
+            <p class="todo-note" data-time="2026-11-09T15:21:21.435Z" title="2026-11-09">更新于 2026-11-09</p>
         
     </section>
 </aside>

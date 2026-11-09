@@ -68,9 +68,9 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=d42d2957">
+    <link rel="stylesheet" href="/static/glint.css?v=deafd9b0">
     
-    <link rel="stylesheet" href="/static/fa/fa.css?v=79527eff">
+    <link rel="stylesheet" href="/static/fa/fa.css?v=5e5a2803">
 
     
     
@@ -115,6 +115,11 @@
     
     
     
+
+<script src="/static/vt-flip.js?v=ecd3feac"></script>
+
+    
+    
 <script>
     (function () {
         var root = document.documentElement;
@@ -154,18 +159,50 @@
     })();
 </script>
 
-<style>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
-<script>
-    window.addEventListener('pageswap', function (e) {
-        if (e.viewTransition && !takeTitleHop(e)) e.viewTransition.skipTransition();
-    });
-    window.addEventListener('pagereveal', function (e) {
-        if (e.viewTransition) e.viewTransition.skipTransition();
-    });
-</script>
-
 
     
+    
+    
+    
+
+<link rel="expect" href="#soon-hand" blocking="render">
+<style>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
+<script>
+    (function () {
+        var root = document.documentElement;
+        window.addEventListener('pagereveal', function (e) {
+            if (!e.viewTransition) return;
+            var hop = 0;
+            try { hop = +sessionStorage.getItem('soon-hop') || 0; sessionStorage.removeItem('soon-hop'); } catch (err) {}
+            if (Date.now() - hop > 10000) { e.viewTransition.skipTransition(); return; }
+            // soon-from-card：过渡期间给落点挂上过渡名（过渡结束撤掉，免得之后离页时被多截几张快照）
+            // soon-scraps-wait：其余碎片先藏着，撤掉后它们的落下动画从头播（过渡中途撤，不碰过渡名）
+            // soon-card-in 不随过渡结束移除：它关掉了底片 / 纸条 / 手写字自带的入场动画（带名元素须静止），一旦恢复就会重播
+            root.classList.add('soon-from-card', 'soon-scraps-wait', 'soon-card-in');
+            var shown = false;
+            function show() {
+                if (shown) return;
+                shown = true;
+                root.classList.remove('soon-scraps-wait');
+            }
+            // 碎片在底片快落定时开始落下（新页快照是实时的，过渡中就看得到）；过渡被跳过或提前结束时立即显示
+            e.viewTransition.ready.then(function () { setTimeout(show, 380); }, show);
+            e.viewTransition.finished.finally(function () { show(); root.classList.remove('soon-from-card'); });
+            vtFlip(e.viewTransition, {
+                'soon-sheet': { el: '.soon-sheet' },
+                'soon-tape': { el: '.soon-tape.is-a' },
+                'soon-wave': { el: '.soon-sheet-wave' },
+                'soon-title': { old: 'auto', new: 'auto', el: '.soon-title' },
+                'soon-hand': { old: 'auto', new: 'auto', el: '#soon-hand' }
+            });
+        });
+        // 离开预告页：不做过渡（从搜索结果点进文章除外，见 _partial/title-hop.ejs）
+        window.addEventListener('pageswap', function (e) {
+            if (e.viewTransition && !takeTitleHop(e)) e.viewTransition.skipTransition();
+        });
+    })();
+</script>
+
     
     
     <noscript>
@@ -744,7 +781,7 @@
             <div class="soon-scrap soon-note">
                 <span class="soon-tape is-c" aria-hidden="true"></span>
                 <div class="soon-paper">
-                    <p class="soon-hand">Coming soon</p>
+                    <p class="soon-hand" id="soon-hand">Coming soon</p>
                 </div>
             </div>
         </section>
