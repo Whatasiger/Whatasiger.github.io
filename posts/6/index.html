@@ -72,13 +72,14 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=deafd9b0">
+    <link rel="stylesheet" href="/static/glint.css?v=f3f01482">
     
     <link rel="stylesheet" href="/static/fa/fa.css?v=5e5a2803">
 
     
     
-    <style>body{ --page-bg-image: url(/images/webp/b2b8c739cc0476f3.webp) }</style>
+    <style id="bg-base">body{ --page-bg-image: url(/images/webp/b2b8c739cc0476f3.webp) }</style>
+    
     
     
     
@@ -87,10 +88,20 @@
     <script>
         (function () {
             try {
-                var p = JSON.parse(sessionStorage.getItem('glint-bg-prebake'));
+                var list = JSON.parse(sessionStorage.getItem('glint-bg-prebake'));
                 var s = JSON.parse(localStorage.getItem('whatasiger_reader_settings')) || {};
                 var blur = typeof s.bgBlur === 'number' ? Math.max(0, Math.min(20, s.bgBlur)) : 8;
-                if (!p || p.src !== "/images/webp/b2b8c739cc0476f3.webp" || p.blur !== blur || p.w !== innerWidth || p.h !== innerHeight) return;
+                var p = null;
+                var want = "/images/webp/b2b8c739cc0476f3.webp";
+                var choice = document.getElementById('bg-choice');
+                
+                if (choice) return;   // 没封面的文章用的是读者自选的主页背景，不是卡片上那张默认图
+                
+                (Array.isArray(list) ? list : []).forEach(function (q) {
+                    if (!p && q && q.src === want && q.blur === blur && q.w === innerWidth &&
+                        Math.abs(q.h - innerHeight) < q.h * .3) p = q;
+                });
+                if (!p) return;
                 var st = document.createElement('style');
                 st.id = 'bg-prebake';
                 st.textContent = 'body{--page-bg-image:url("' + p.url + '")}';
@@ -162,7 +173,7 @@
     
     
 
-<script src="/static/vt-flip.js?v=ecd3feac"></script>
+<script src="/static/vt-flip.js?v=fddc1e66"></script>
 
     
     
@@ -264,15 +275,24 @@
             if (window.pageReveal) pageReveal();
             // vt-card-in 不随过渡结束移除：标题区的入场动画一旦恢复就会重播
             root.classList.add('vt-from-card', 'vt-card-in');
+            // 背景已是烤好模糊的图（首页预烤 → head.ejs 挂 bg-prebaked；或预渲染中 glint.js 已烤好 → body.bg-baked）：
+            // .vt-cover 画上它，作为封面组新页一侧的模糊层（glint.css「文章卡片一镜到底」）；否则是空层，只放大卡片快照
+            var live = false;
+            try {
+                var b = document.body;
+                live = (root.classList.contains('bg-prebaked') || b.classList.contains('bg-baked')) &&
+                    parseFloat(getComputedStyle(b).getPropertyValue('--bg-blur')) > 0;
+            } catch (err) {}
+            root.classList.toggle('vt-cover-live', live);
             // 封面与标题的形变只动 transform，交给合成线程：文章页正在加载时主线程再忙也不掉帧（见 _partial/vt-flip.ejs）
             vtFlip(e.viewTransition, {
-                'post-cover': { old: 'cover' },
+                'post-cover': live ? { old: 'cover', new: 'cover', radius: 24 } : { old: 'cover' },
                 'post-shadow': { follow: 'post-cover', how: 'box' },
                 'post-light': { follow: 'post-cover', how: 'box' },
                 'post-info': { follow: 'post-cover', how: 'content' },
                 'post-title': { old: 'auto', new: 'auto', el: '#vt-post-title' }
             });
-            e.viewTransition.finished.finally(function () { root.classList.remove('vt-from-card'); });
+            e.viewTransition.finished.finally(function () { root.classList.remove('vt-from-card', 'vt-cover-live'); });
         });
         // 离开文章页：不做过渡（从搜索结果点进另一篇文章除外，见 _partial/title-hop.ejs）
         window.addEventListener('pageswap', function (e) {
@@ -283,7 +303,7 @@
 
     
 
-<script>try { if (localStorage.getItem('cw-vt-debug') === '1') document.write('<script src="/static/vt-debug.js?v=f21ae93a"><\/script>'); } catch (err) {}</script>
+<script>try { if (localStorage.getItem('cw-vt-debug') === '1') document.write('<script src="/static/vt-debug.js?v=6b06ddcb"><\/script>'); } catch (err) {}</script>
 
     
     <noscript>
@@ -1008,7 +1028,7 @@
 
 <script>window.GLINT_RELEASE = {"name":"Ciel","date":"2026-10-27","url":"/about-website/"};</script>
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=196d6d20"></script>
+<script src="/static/glint.js?v=bd2be36c"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 
