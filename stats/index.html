@@ -68,7 +68,7 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=f3f01482">
+    <link rel="stylesheet" href="/static/glint.css?v=8bdb0f11">
     
     <link rel="stylesheet" href="/static/fa/fa.css?v=5e5a2803">
 
@@ -248,8 +248,8 @@
             // 忽略错误，使用默认 0.55
         }
 
-        // 0.2 背景模糊度：设置里分两项——阅读页 bgBlur（默认 8px，CW 预告页也用它）与首页 homeBlur（默认 0，首页、归档等其余页面）
-        var DEFAULT_ARTICLE_BLUR = 8;
+        // 0.2 背景模糊度：设置里分两项——阅读页 bgBlur（默认桌面 4.5px / 手机 8px，CW 预告页也用它）与首页 homeBlur（默认 0，首页、归档等其余页面）
+        var DEFAULT_ARTICLE_BLUR = matchMedia("(min-width: 600px)").matches ? 4.5 : 8; // 与 glint.js defaultSettings.bgBlur 一致
         var savedBlur = DEFAULT_ARTICLE_BLUR, homeBlur = 0;
         try {
             if (readerSettings && typeof readerSettings.bgBlur === "number") {
@@ -701,9 +701,9 @@
             <p class="archive-stats"><span>自 <b>2023 年 10 月</b> 起</span><i aria-hidden="true"></i><span>数据随每次构建更新</span></p>
             <div class="stats-tiles">
                 <div class="stats-tile"><b data-count="11">11</b><span>篇文章</span></div>
-                <div class="stats-tile"><b data-count="132932" data-wan>13.3 万</b><span>字</span></div>
+                <div class="stats-tile"><b data-count="132931" data-wan>13.3 万</b><span>字</span></div>
                 <div class="stats-tile"><b data-count="5">5</b><span>篇 CARRiER WAVE.<small>共 18 篇 · 4977字</small></span></div>
-                <div class="stats-tile"><b data-count="1128">1128</b><span>天</span></div>
+                <div class="stats-tile"><b data-count="1130">1130</b><span>天</span></div>
             </div>
         </section>
 
@@ -738,7 +738,7 @@
             </div>
             <details class="stats-table"><summary>表格</summary>
                 <table><thead><tr><th>年份</th><th>篇数</th><th>字数</th></tr></thead><tbody>
-                <tr><td>2023</td><td>1</td><td>7370</td></tr><tr><td>2024</td><td>1</td><td>42069</td></tr><tr><td>2025</td><td>4</td><td>55246</td></tr><tr><td>2026</td><td>5</td><td>28247</td></tr>
+                <tr><td>2023</td><td>1</td><td>7370</td></tr><tr><td>2024</td><td>1</td><td>42069</td></tr><tr><td>2025</td><td>4</td><td>55245</td></tr><tr><td>2026</td><td>5</td><td>28247</td></tr>
                 </tbody></table>
             </details>
         </section>
@@ -759,7 +759,7 @@
                     <span class="stats-row-val">1.8 万字 · 2 篇</span>
                 </a>
                 
-                <a class="stats-row" href="/tags/%E9%9A%8F%E7%AC%94/" style="--v: 0.1701; --i: 2" data-tip="#随笔：5 篇，约 1.7 万字">
+                <a class="stats-row" href="/tags/%E9%9A%8F%E7%AC%94/" style="--v: 0.1702; --i: 2" data-tip="#随笔：5 篇，约 1.7 万字">
                     <span class="stats-row-key">#随笔</span>
                     <span class="stats-row-track"><span class="stats-row-fill"></span></span>
                     <span class="stats-row-val">1.7 万字 · 5 篇</span>
@@ -893,7 +893,7 @@
             <div class="stats-legend" aria-hidden="true"><span>少</span><i class="lv-1"></i><i class="lv-2"></i><i class="lv-3"></i><i class="lv-4"></i><span>多</span></div>
             <details class="stats-table"><summary>表格</summary>
                 <table><thead><tr><th>月份</th><th>篇数</th><th>字数</th><th>文章</th></tr></thead><tbody>
-                <tr><td>2026-06</td><td>1</td><td>13253</td><td>在纸页的内侧消失——《Q君与世界的外侧》评析</td></tr><tr><td>2026-04</td><td>1</td><td>4844</td><td>「主播女孩重度依赖」动画分集浅读</td></tr><tr><td>2026-02</td><td>2</td><td>8914</td><td>2026-02-16 除夕、2026-02 ~ 2026-04 随笔</td></tr><tr><td>2026-01</td><td>1</td><td>1236</td><td>1月14日：失败了</td></tr><tr><td>2025-12</td><td>3</td><td>44736</td><td>2025年12月深夜日记、『Q君与世界的外侧』、我们的时间从什么时候起停下来了</td></tr><tr><td>2025-01</td><td>1</td><td>10510</td><td>『Shamrock』</td></tr><tr><td>2024-07</td><td>1</td><td>42069</td><td>『末班花火』</td></tr><tr><td>2023-10</td><td>1</td><td>7370</td><td>『原点』</td></tr>
+                <tr><td>2026-06</td><td>1</td><td>13253</td><td>在纸页的内侧消失——《Q君与世界的外侧》评析</td></tr><tr><td>2026-04</td><td>1</td><td>4844</td><td>「主播女孩重度依赖」动画分集浅读</td></tr><tr><td>2026-02</td><td>2</td><td>8914</td><td>2026-02-16 除夕、2026-02 ~ 2026-04 随笔</td></tr><tr><td>2026-01</td><td>1</td><td>1236</td><td>1月14日：失败了</td></tr><tr><td>2025-12</td><td>3</td><td>44735</td><td>2025年12月深夜日记、『Q君与世界的外侧』、我们的时间从什么时候起停下来了</td></tr><tr><td>2025-01</td><td>1</td><td>10510</td><td>『Shamrock』</td></tr><tr><td>2024-07</td><td>1</td><td>42069</td><td>『末班花火』</td></tr><tr><td>2023-10</td><td>1</td><td>7370</td><td>『原点』</td></tr>
                 </tbody></table>
             </details>
         </section>
@@ -1050,7 +1050,7 @@
 
 <script>window.GLINT_RELEASE = {"name":"Ciel","date":"2026-10-27","url":"/about-website/"};</script>
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=bd2be36c"></script>
+<script src="/static/glint.js?v=0b6c6df7"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 

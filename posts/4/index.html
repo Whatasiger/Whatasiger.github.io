@@ -72,7 +72,7 @@
     <!-- 主题样式 -->
     
     <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
-    <link rel="stylesheet" href="/static/glint.css?v=f3f01482">
+    <link rel="stylesheet" href="/static/glint.css?v=8bdb0f11">
     
     <link rel="stylesheet" href="/static/fa/fa.css?v=5e5a2803">
 
@@ -90,7 +90,7 @@
             try {
                 var list = JSON.parse(sessionStorage.getItem('glint-bg-prebake'));
                 var s = JSON.parse(localStorage.getItem('whatasiger_reader_settings')) || {};
-                var blur = typeof s.bgBlur === 'number' ? Math.max(0, Math.min(20, s.bgBlur)) : 8;
+                var blur = typeof s.bgBlur === 'number' ? Math.max(0, Math.min(20, s.bgBlur)) : (matchMedia('(min-width: 600px)').matches ? 4.5 : 8);
                 var p = null;
                 var want = "/images/webp/1490c4e34e780e6e.webp";
                 var choice = document.getElementById('bg-choice');
@@ -387,8 +387,8 @@
             // 忽略错误，使用默认 0.55
         }
 
-        // 0.2 背景模糊度：设置里分两项——阅读页 bgBlur（默认 8px，CW 预告页也用它）与首页 homeBlur（默认 0，首页、归档等其余页面）
-        var DEFAULT_ARTICLE_BLUR = 8;
+        // 0.2 背景模糊度：设置里分两项——阅读页 bgBlur（默认桌面 4.5px / 手机 8px，CW 预告页也用它）与首页 homeBlur（默认 0，首页、归档等其余页面）
+        var DEFAULT_ARTICLE_BLUR = matchMedia("(min-width: 600px)").matches ? 4.5 : 8; // 与 glint.js defaultSettings.bgBlur 一致
         var savedBlur = DEFAULT_ARTICLE_BLUR, homeBlur = 0;
         try {
             if (readerSettings && typeof readerSettings.bgBlur === "number") {
@@ -1090,7 +1090,7 @@
 
 <script>window.GLINT_RELEASE = {"name":"Ciel","date":"2026-10-27","url":"/about-website/"};</script>
 <script src="/static/kico.js?v=e374dc09"></script>
-<script src="/static/glint.js?v=bd2be36c"></script>
+<script src="/static/glint.js?v=0b6c6df7"></script>
 
 <script>var glint = new Glint({"copyright":false,"night":true});</script>
 
