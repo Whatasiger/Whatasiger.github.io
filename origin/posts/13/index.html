@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    
+<script>
+    (function () {
+        var CURRENT = "origin"; // 本套界面
+        var KEY = "whatasiger_ui";
+        function target(to) {
+            var path = location.pathname.replace(/^\/origin(?=\/|$)/, "") || "/";
+            return (to === "origin" ? "/origin" + path : path) + location.search + location.hash;
+        }
+        // 设置面板调用：记下选择并跳到另一套界面的同一页（会重新加载）
+        window.switchUI = function (to) {
+            try { localStorage.setItem(KEY, to); } catch (e) {}
+            if (to !== CURRENT) location.assign(target(to));
+        };
+        var want = null;
+        try { want = localStorage.getItem(KEY); } catch (e) {}
+        if ((want === "glint" || want === "origin") && want !== CURRENT) location.replace(target(want));
+    })();
+</script>
+
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>记梦 - Whatasiger</title>
+
+    <link rel="shortcut icon" href="/origin/static/img/icon.png">
+    <link rel="icon" href="/origin/static/img/icon.png" sizes="192x192"/>
+    
+    <link rel="canonical" href="https://whatasiger.xyz/posts/13/">
+    <meta name="robots" content="noindex, follow">
+
+    <!-- 基本 SEO -->
+    <meta name="description" content="近一年多有记录的梦境合集。">
+    <meta name="keywords" content="随笔">
+    <meta name="author" content="Whatasiger">
+    <meta name="theme-color" content="#0e0e10">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="Whatasiger">
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://whatasiger.xyz/origin/posts/13/">
+    <meta property="og:title" content="记梦 - Whatasiger">
+    <meta property="og:description" content="近一年多有记录的梦境合集。">
+    <meta property="og:image" content="https://whatasiger.xyz/origin/images/webp/bbcd7e7b11bb55ef.webp">
+    
+    <meta property="article:published_time" content="2026-11-14T16:00:00.000Z">
+    <meta property="article:modified_time" content="2026-11-15T15:34:39.188Z">
+    <meta property="article:tag" content="随笔">
+    
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="记梦 - Whatasiger">
+    <meta name="twitter:description" content="近一年多有记录的梦境合集。">
+    <meta name="twitter:image" content="https://whatasiger.xyz/origin/images/webp/bbcd7e7b11bb55ef.webp">
+
+    <!-- RSS / Atom（hexo-generator-feed 启用后可用） -->
+    <link rel="alternate" type="application/atom+xml" title="Whatasiger" href="/atom.xml"><link rel="alternate" type="application/rss+xml" title="Whatasiger" href="/rss2.xml">
+
+    <!-- Sitemap（hexo-generator-sitemap 启用后可用） -->
+    
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    
+
+    <!-- 主题样式 -->
+    
+<link rel="stylesheet" href="/origin/static/kico.css">
+<link rel="stylesheet" href="/origin/static/hingle.css">
+
+    
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    
+    <style>body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
+    
+
+    <!-- 思源黑体（Noto Sans SC）：国内镜像优先 + 本机字体名回退 -->
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="preload" as="style" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet"
+          href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+          media="print" onload="this.media='all'; this.onload=null;">
+    
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
+    </noscript>
+
+    <!-- 结构化数据：让搜索引擎更准确地理解文章 -->
+    
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":"https://whatasiger.xyz/origin/posts/13/","headline":"记梦","datePublished":"2026-11-14T16:00:00.000Z","dateModified":"2026-11-15T15:34:39.188Z","author":{"@type":"Person","name":"Whatasiger"},"publisher":{"@type":"Organization","name":"Whatasiger"},"image":"https://whatasiger.xyz/origin/images/webp/bbcd7e7b11bb55ef.webp","description":"近一年多有记录的梦境合集。"}</script>
+    
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+  <body class="dark-theme post-page">
+    <script>
+    (function() {
+        // 核心修复：把普通的博客文章 (is_post) 和独立页面 (is_page) 都视为"阅读界面"
+        var isArticle = true;
+        var isFromArticle = sessionStorage.getItem("is_from_article") === "true";
+        var theme = sessionStorage.getItem("theme");
+
+        // 0. 立即应用字体设置，避免字体闪烁
+        try {
+            var SETTINGS_KEY = "whatasiger_reader_settings";
+            var savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+            var fontChoice = (savedSettings && savedSettings.fontFamily) ? savedSettings.fontFamily : "noto-sans-sc";
+            var sourceHanFontStack = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
+            var systemFontStack = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
+            document.body.style.fontFamily = fontChoice === "noto-sans-sc" ? sourceHanFontStack : systemFontStack;
+            if (savedSettings && savedSettings.hideTodo) document.body.classList.add("hide-todo");
+        } catch (e) {
+            document.body.style.fontFamily = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
+        }
+
+        // 0.1 背景可见度：与设置面板共用唯一数据源 whatasiger_reader_settings.bgOpacity
+        var targetBgOpacity = 0.50; // 与 hingle.js defaultSettings.bgOpacity=35 对应
+        var defaultBgOpacityValue = 50; // 默认档位（0~100），用于“从文章回首页”时重置
+        try {
+            var readerSettings = JSON.parse(localStorage.getItem("whatasiger_reader_settings"));
+            if (readerSettings && typeof readerSettings.bgOpacity === "number") {
+                var v = readerSettings.bgOpacity;
+                if (v >= 0 && v <= 100) targetBgOpacity = v / 100;
+            }
+            // 从文章回到首页时：强制恢复为默认可见度，并写回设置
+            if (!isArticle && isFromArticle) {
+                targetBgOpacity = defaultBgOpacityValue / 100;
+                if (readerSettings && typeof readerSettings === "object") {
+                    readerSettings.bgOpacity = defaultBgOpacityValue;
+                    try { localStorage.setItem("whatasiger_reader_settings", JSON.stringify(readerSettings)); } catch (e) {}
+                }
+            }
+        } catch (e) {
+            // 忽略错误，使用默认 0.35
+        }
+
+        // 0.2 背景模糊度：文章页使用用户保存值（默认8px），首页始终为0
+        var DEFAULT_ARTICLE_BLUR = 8;
+        var savedBlur = DEFAULT_ARTICLE_BLUR;
+        try {
+            if (readerSettings && typeof readerSettings.bgBlur === "number") {
+                var bv = readerSettings.bgBlur;
+                if (bv >= 0 && bv <= 20) savedBlur = bv;
+            }
+        } catch (e) {}
+        // 目标模糊度：文章页=用户设置，首页=0
+        var targetBgBlur = isArticle ? savedBlur : 0;
+        // 初始（瞬间）模糊度：来自文章页则从 savedBlur 开始，便于过渡动画
+        var initialBgBlur = isFromArticle ? savedBlur : 0;
+        // 文章→文章时 initialBgBlur == targetBgBlur，rAF 不触发动画
+
+        // 1. 初始状态：全面封印动画，防止页面刚加载时的任何闪烁
+        document.body.classList.add("no-bg-transition");
+
+        // 1.1 立即设置背景可见度和模糊度（封印状态，无动画）
+        document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
+        document.body.style.setProperty("--bg-blur", initialBgBlur + "px");
+
+        // 2. 瞬间敲定日夜模式
+        if (theme === "light") {
+            document.body.classList.remove("dark-theme");
+        } else {
+            document.body.classList.add("dark-theme");
+            sessionStorage.setItem("theme", "dark");
+        }
+
+        // 3. 敲定刚进网页瞬间的背景状态
+        if (isArticle && isFromArticle) {
+            // 阅读页跳阅读页：瞬间淡化
+            document.body.classList.add("bg-faded");
+        } else if (!isArticle && isFromArticle) {
+            // 阅读页跳主页：必须先瞬间淡化，为后面的淡出动画做准备
+            document.body.classList.add("bg-faded");
+        }
+
+        // 4. 更新记忆，留给下一次跳转使用
+        sessionStorage.setItem("is_from_article", isArticle ? "true" : "false");
+
+        // 5. 释放封印，并触发需要的丝滑动画
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                // 解除动画封印
+                document.body.classList.remove("no-bg-transition");
+
+                // 背景可见度：与设置面板统一，不再在跳转时覆盖为固定值，保持当前 targetBgOpacity 即可
+                document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
+
+                // 背景模糊度：设置目标值，触发平滑过渡
+                // 文章→文章时 initialBgBlur == targetBgBlur，此处赋值无变化，不触发动画
+                document.body.style.setProperty("--bg-blur", targetBgBlur + "px");
+
+                // 触发跨界面的过渡动画（保留原有逻辑）
+                if (isArticle && !isFromArticle) {
+                    // 主页跳阅读页：此时开始平滑变淡
+                    document.body.classList.add("bg-faded");
+                } else if (!isArticle && isFromArticle) {
+                    // 阅读页跳主页：此时开始平滑变清晰
+                    document.body.classList.remove("bg-faded");
+                }
+            });
+        });
+    })();
+</script>
+<header>
+    <a href="/origin/" class="header-logo">Whatasiger - Ciel</a>
+    <div class="head-title">
+        <a href="/origin/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
+            <h4>Whatasiger</h4>
+        </a>
+    </div>
+    <div class="head-action">
+        <div class="toggle-btn"></div>
+        <div class="light-btn"></div>
+        <div class="settings-btn"></div>
+        
+    </div>
+
+    
+
+    <div class="settings-panel" id="reader-settings-panel">
+        <div class="settings-panel-inner">
+            <div class="settings-panel-header">
+                <span class="settings-panel-title">阅读设置</span>
+                <span class="settings-panel-hint"></span>
+            </div>
+            <div class="settings-panel-body">
+                
+                <label class="settings-row">
+                    <span>界面</span>
+                    <select id="setting-ui" onchange="window.switchUI && window.switchUI(this.value)">
+                        <option value="glint">Glint</option>
+                        <option value="origin" selected>Origin</option>
+                    </select>
+                </label>
+                <label class="settings-row">
+                    <span>显示「回到顶部」</span>
+                    <input type="checkbox" id="setting-show-top">
+                </label>
+                <label class="settings-row">
+                    <span>隐藏背景图片</span>
+                    <input type="checkbox" id="setting-hide-bg">
+                </label>
+                <label class="settings-row">
+                    <span>关闭首页 TODO 显示</span>
+                    <input type="checkbox" id="setting-hide-todo">
+                </label>
+                <label class="settings-row">
+                    <span>字体</span>
+                    <select id="setting-font-family">
+                        <option value="noto-sans-sc">思源黑体</option>
+                        <option value="system-default">系统默认</option>
+                    </select>
+                </label>
+                <div class="settings-group-title">文字设置 仅在文章页对正文生效</div>
+                <label class="settings-row settings-row-range">
+                    <span>字重</span>
+                    <input type="range" id="setting-font-weight" min="1" max="5" step="1">
+                </label>
+                <label class="settings-row settings-row-range">
+                    <span>字间距</span>
+                    <input type="range" id="setting-letter-spacing" min="-2" max="8" step="1">
+                </label>
+                <label class="settings-row settings-row-range">
+                    <span>字号</span>
+                    <input type="range" id="setting-font-size" min="90" max="130" step="10">
+                </label>
+                <div class="settings-group-title">背景</div>
+                <label class="settings-row settings-row-range">
+                    <span>背景可见度</span>
+                    <input type="range" id="setting-bg-opacity" min="0" max="50" step="2.5">
+                </label>
+                <label class="settings-row settings-row-range settings-row-range-rtl">
+                    <span>背景模糊度</span>
+                    <input type="range" id="setting-bg-blur" min="0" max="20" step="1">
+                </label>
+            </div>
+            <div class="settings-panel-footer">
+                <button id="setting-reset-btn" class="settings-reset-btn">重置</button>
+            </div>
+        </div>
+    </div>
+
+</header>
+<nav class="head-menu">
+    <a href="/origin/">首页</a>
+    
+        <a href="/origin/about-me">关于我</a>
+    
+        <a href="/origin/about-website">关于网站</a>
+    
+        <a href="/origin/comments">留言板</a>
+    
+</nav>
+
+    <main>
+    <div class="wrap min">
+        <section class="post-title">
+            <h2>记梦</h2>
+            <div class="post-meta">
+                <time class="date">2026.11.15</time>
+
+                
+                <span class="word-count">约 4900 字</span>
+                <span class="read-time">预计阅读 9 分钟</span>
+                <span id="busuanzi_container_page_pv" class="view" style="display:none;">
+                    <span id="busuanzi_value_page_pv"></span> 次阅读
+                </span>
+            
+            </div>
+        </section>
+        <article class="post-content">
+            <div class="quote-box quote-important"><div class="quote-header"><i class="quote-icon fa fa-pencil" aria-hidden="true"></i><span class="quote-title">作者注</span><button class="quote-toggle" type="button" aria-label="折叠/展开"><i class="fa fa-chevron-down" aria-hidden="true"></i></button></div><div class="quote-body">
+<p>近一年多有记录的梦境合集。</p>
+<p>注意时间顺序是乱的，无法推导精神状态的变化。</p>
+</div></div>
+<hr>
+<p>不知为何，班上的同学们跟我一起在看「EVA新剧场版：终」。EVA终开看的时候，电影画面是不断的在放着从第一到第七的守则。似乎是庵野秀明在搞意识流。应该是和真正的开场“迄今为止的EVA：序，破，Q”搞混了。我身后的同学一直不认真看，在写作业，我心里有些不畅快，明明是这么好看的电影。然后从第一到第七，我被神秘力量抛举到高空，越来越高，反复上下。教室处于类似是敦煌莫高窟的一个高大场景（黄色石头，巨大的镂空之地），但是被全息投影充满，摆着一堆座位，高台，像是本来在开什么科技会议，EVA终只是顺便在一旁放着。主题是什么AI。我作为一个发言人之一，巴拉巴拉说了一些。内容似乎有“你要知道，他们的模型参数量极小，不像隔壁xxx还有1.5B，你知道他们多小吗？194M！”然后全场哗然。接着似乎场景从莫高窟的巨大石头又悄悄变回普通课室了，既像是会议中场休息，又像是下课，我离开座位，想要去上个厕所。</p>
+<p>教室里，我在喧哗的人群间腾挪，因为太挤，我总得扶着点东西，结果下意识的撑住了某位女同学的课桌。那课桌竟直接下陷了！我没多想，直接走了。但转念，可能那课桌下陷已经压到她的腿。于是我没走两步又回头道了歉。她的眼神很不友善，盯着我，跟身边的人（或者自言自语？）嘟囔了几句，我没太听清，大概意思是“以后我不会让你好过”，我有些忐忑，但还是上厕所更重要。我推门去走廊。</p>
+<p>只是照着平时记忆中的路线，看见那种贴在墙上的小便池，我就走了进去。结果刚准备脱下裤子，发现在这里上厕所的都是女生（辨别方式：头发），包括像男生一样用立式小便池，我虽然有些疑惑，但更多的是走错厕所的惊讶，我说了一句“原来这里是女厕所啊。”（我当时似乎确实没有尴尬和慌张）然后不紧不慢走了出去，到隔壁厕所。隔壁应该确实是男厕所，但空空荡荡，不太像下课期间的样子。只有一个人刚准备从小便池穿上裤子走出去。整个厕所空间是，厕所的大门大敞开，门的右侧是墙上的一排小便池，门的对面是四五个隔间，门的左边墙啥都没有。整体空间很大，完全是空空荡荡的。甚至厕所门旁边还有镂空的窗子。从小便池还能看到在走廊上行走的人。我心想这还怎么上厕所，就前去把厕所大门关了起来，顺便锁住了。上锁的一瞬间，我注意到厕所内还有个人（但他的形象是黑皮卷发厚嘴唇，混血吗？什么小北。），他看我的眼神十分惊慌，似乎以为我锁门是要他的命。我意识到了这点，急忙跟他解释“我不是要干什么……我……”语无伦次。然后他立马逃跑了。</p>
+<p>差不多到这就有点醒了。印象中还有两场梦，很精彩但真忘了。只剩下这个多多少少让我尴尬和羞愧的梦，在记忆里很是深刻。貌似仰卧睡觉更容易做梦，对脊椎也更好一些，以后坚持一下仰卧睡觉。</p>
+<hr>
+<p>再次记录梦境。<br>虽然不知道为什么校园里会有这样的环境，但确实是。一个宽约10m的湖面，从一头到另一头。这一边有一个细高的“石柱”，大约高7m，另一边有延伸出来的类似“悬崖”的地方，但高度和石柱差不多。总体而言环境有那种假山造成的园林景观的感觉。我不知从什么地方绕路，在树枝和石头上爬来爬去，去到“悬崖”，俯身向前爬，然后一跃而下跳到石柱。我听到了老师的声响，于是大气不敢出地趴在那里，但还是被老师拿着手电筒抓到了，然后把我带去了某个地方。有老式小区的铁门，左边有简陋的板房，再左边是一个小厅，类似售票口，不知道能排队领什么东西。反正莫名其妙的白天了，我以为来的那么多人都是晚上违纪的，结果大部分是在旁边领一些什么东西。</p>
+<hr>
+<p>想起来昨晚做的梦的片段了。</p>
+<p>我和资讯一行人外出拍各种东西，穿梭地铁和商场。我拿着FX30。不知道什么时候我发现镜头变成了很长很细像竹竿一样的一根，大约四五米长，直径才5cm（也不知道怎么接上卡口的），然后我把它取下来。却发现原本的镜头找不到了。我就把cmos裸露地放在包里，被发现后被骂了。之后我也没找到原来的镜头在哪里。</p>
+<hr>
+<p>继续记梦。</p>
+<p>我独自一人搬到了一个阴暗租房里，第二天是开学。准确来说类似那种老式办公楼的租房。有电梯，有大堂，但都是灯光暗淡的。第二天一开始想去看电影，没换校服就下楼，坐电梯，然后意识到这是开学第一天。也不急，就想着马上下电梯重新上楼换校服。然后我突然发觉电梯里人越来越多，拥挤至极，我被挤到角落，几乎喘不上气。</p>
+<p>此时，我看见电梯的门没关上，还留着十几厘米的缝隙。电梯在进行同楼层平面的圆周运动，这很奇怪，按理来说没有这样的轨道。然后，转到了斜坡，再接着是垂直落下，但是却不像电梯，而是失重般的下坠。电梯里的人都惊讶了“哇啊”“这么惊险”，但似乎都没什么情绪，只是接受了“失重般的下坠”这一事实。</p>
+<p>当时电梯里的氛围给我的感觉，就像是一个寒冬，人们都裹着深色、暗淡的大衣，没什么精神。灯光昏黄，有些发绿。（只是描述氛围，不是说梦里就是这样）</p>
+<p>然后因为这种下坠的感觉过于恐怖，我惊醒了。</p>
+<hr>
+<p>梦。</p>
+<p>我在参观戏剧节排练的时候，理由匆匆忙忙赶了进来：“你，去把hzx书包里第二个夹层的笔记本拿过来。”我什么也没问，默认答应了。他指着行政楼，附上一句话：“我看看能不能给你开门。”</p>
+<p>“你的意思是，让我从行政楼上吗？”</p>
+<p>“对。”</p>
+<p>行政楼的地面如同传送带一样在滚动，必须找准时机跳上楼梯门边缘才能站上去（？）。电梯从来不对学生开放，只有一个极高极陡的楼梯，常常听说这是上楼「最快」的路径。我推开楼梯门，抬头望，两三个学生爬着楼梯。我先把包挂在门把手上，试着爬了几阶楼梯，实在太陡，一级台阶几乎半米高。我打了退堂鼓，离开了楼梯。整个楼梯的环境给人在体育馆一样的印象，但楼梯本身很窄，天花板很高，不是正常的楼梯间的样子。</p>
+<hr>
+<p>大半夜的，我夜班刚下班。朋友一个电话约我到街边某地，说一起吃烧烤。</p>
+<p>我去到那里，朋友在那。但店是关着的。我疑惑，朋友说再等等。我不时反复看着店顶部的招牌。注意到上面的字不断地在添加。朋友似乎试图跟我谈话转移注意力，但每次我瞟一眼都看到了逐渐出现的字：“逃”……“快逃”……“30秒内会出事”……“如果跑不掉，马上自杀，下次还有机会”</p>
+<hr>
+<p>短短十分钟就做了个诡异的梦，疑似梦中梦中梦。</p>
+<p>先从梦中梦中梦开始。疑似一个很高大的健身房？或者停车场？总之兼有二者的特征的场所，地面是橡胶的，灯光是暖橙昏暗的，靠墙是有健身器材的。教练（？）让我在一个偌大的房间里换衣服，这是唯一一个有大窗户，最亮堂的房间。正准备脱衣服时我看见旁边有个女生慌张地看着我。我马上意识到，收拾东西走出这个房间。之后我的衣服掉在了地上，怎么也捡不起来。再然后也不知道有什么联系，我好像在等着一个boss级别的人物，身边有个穿板正西装的人一直守着我。梦醒了，进入第二层梦。</p>
+<p>醒来，身处天花板极低的上铺，环境光暗淡，头脑昏沉，耳鸣严重，只记得用手指戳耳朵能发出金属碰撞声，然后还以为自己患上什么罕见怪病了。准备马上打开手机问 AI，结果一看时间15:05了，我怎么还在宿舍床上。然后梦中梦醒了，进入第一层梦。</p>
+<p>在这个梦里，我的雨伞可以按一个按钮变成一个超大的控制手柄，不知道能用来干嘛，但当时外面正在下雨，准备下车（那个场景更像是在出了严重车祸的车里，但意识上就是普通的准备下车），我却忘记怎么把雨伞从手柄形态切换回来了。这时后排的人（貌似是cyx）用惯常的语气说按那个按钮啊，我说哪个按钮？他身子探前来直接上手操作了，然后手柄回到雨伞形态了。下车，时间是14:07，不错，没有被宿管关在宿舍区。（当时心里是这么想的）</p>
+<p>然后终于醒了，感受到自己真实的身体，呼吸声。</p>
+<hr>
+<p>梦。</p>
+<p>以买东西为主线串联。场景路边小卖部，有类似迪卡侬的运动商店。</p>
+<p>比较有趣的一点是有一个牌子的果冻（名字有梗但忘了），貌似流出了个恶性变异的产品。这个产品会隔空感染其他未感染的果冻，把所有果冻都感染。尚未知人类吃了之后会发生什么。</p>
+<p>但马上要数学考试了，所以就不详细记下来了，再见了这一场梦，过十分钟我就会把你忘记吧。</p>
+<hr>
+<p>诡异的梦。大概就是我一个很久没交集的小学同学的朋友圈底下留言，把对面惹火了，直接私信轰炸辱骂我。我即使非常想道歉但回忆不起自己到底说了什么。大概是逻辑思维让我回忆，但“留言”本身的内容在梦里并没有被编织出来，于是我只能接受对方的辱骂，一遍又一遍道歉。</p>
+<hr>
+<p>最精彩的一集梦。<br>类似命运石之门发展到EP12的状况。一切已经无可挽回，世界已经毁灭。我乘坐时光机穿越回过去。时光机的启动需要在她手上的一种介质，只要我拥有那东西，随时随地都能发动穿越的能力。所以，我穿越回去第一件事永远是先找到她。然而，由于蝴蝶效应，每次穿越回去的时间点不定。<br>她会等待我何时来取介质。最短的一次只用了几秒，最长的一次是四千多天。</p>
+<p>主要的场景发生在一个比较赛博科技风的基地（？）里面。总之看上去类似「流浪地球 2」的空间站里，但房间很多，多为住宿，也许是一种酒店。</p>
+<hr>
+<p>父母去了香港一趟，顺便买了张彩票。回来一看，中了，让我独自去香港领取。我先去了香港银行，才发现我需要先将彩票兑换成支票。于是我想着我得先找到那个摊位。一路上遇到一堆在街边被家暴，被绑架，各种各样的方式受到折磨的孩子。意识到，那是一个在小区内的流动摊位。遂放弃。</p>
+<hr>
+<p>短短十几分钟半梦半醒，赶紧记录下来。<br>两个场景，场景的共同特点就是墙壁都是深绿色作底色的墙纸，上面有一些儿童卡通画，分布较为稀疏。</p>
+<p>第一个场景墙很高，似乎没有注意到天花板。<br>明明在同一个建筑内，却一边是幼儿园，一边是医院（仍然是深绿卡通墙纸）（应该类似社区诊所吧），人很稀少。嘛无所谓。医院貌似是有低矮的天花板的，但幼儿园没有，两个场所中间没有任何隔断。<br>我应该是因为鼻炎或者是咳嗽（总之是小毛病），来开一点药。<br>在等待排队的时候我看到身后的幼儿园里一个老师大吼道“……关你禁闭！”之类的，拽着一个小女孩出来，把她往一个小房间里推搡。还有另外一个老师（或者家长）牵着一个小男孩从里面走出来，这个印象有点浅。<br>然后我凑热闹去看了一下，什么也没做，想继续回去排队的时候有个幼儿园老师拍了拍我的背意思是让我走，好像也把我当小孩了。<br>排队的人已经走了，结果到我的时候说已经下班了（没有挂号，直接就是坐诊），医生嘟囔了几句我听不懂的话之后我放弃了说算了吧。<br>结果再一回头，本来幼儿园和医院中间没有隔断，此时却突然加上了铁栏杆，贴上了“休业”的纸条（不是这两个字，反正大概是不提供服务的意思）。旁边突然出现了类似地铁闸机的门，但就一两个，也过不去。<br>然后貌似出现了一个我性压抑的精神体现就不细说了……总之我在想办法怎么从医院出去的时候。↓</p>
+<p>紧接着第二个场景，不知道怎么过来的。是那种儿童室内游乐园，仍然绿色墙纸，各种气垫啊什么的东西都是深绿色。氛围比较昏暗，人也比较少。但是貌似还有地铁直接接到了游乐园里，真高科技。<br>好像我就一个人瞎转了一圈。然后突然站上了一个高速传送带，总共有四个。目测起码200m长，笔直，一点透视。<br>速度极快，甚至可能有20m&#x2F;s以上，必须跟着跑才能不摔跤。这大概也是个娱乐设施，就是比较刺激。刚站上去的时候后面有个人摔倒在我跟前，我还把他扶了起来。<br>然后我脑海里貌似植入了一个设定：这种传送带就是要跟着跑才行。<br>这个传送带非常刺激，风呼啸耳边，速度极快，跟着跑简直要飞起来，到终点之后的惯性仍然需要跑50m左右才停得下来，那时候人的速度肯定是爆杀博尔特的。终点处有四列蓝色靠背的椅子，是连片固定的那种，圆润的。差点撞上椅子，还好停下来了。有不少人在那里休息，应该也是跑坐完传送带。<br>后面应该还有一小段，但是想不起来了。</p>
+<hr>
+<p>不行了，又是噩梦。</p>
+<p>第一个是我不知为何独自到上海生活。妈妈担心我发了很多条消息。望着一望无际的天空和海在蓝调时刻的交融，我竟分不清天地。有这样的恐怖感。</p>
+<p>然后是一个类似咖啡店的精致的地方，露天的地方是个斜坡，阳光不错。具体发生什么已经忘了。只对一个穿灰色水手服的女生有印象。</p>
+<p>再然后是我和别人一起蹲同一个坑上厕所，疑似是咖啡店的厕所，外面有人硬是要进来。我死命抵住门，然后大腿内侧传来压迫感……我实在受不了惊醒了。</p>
+<p>这次居然忘得这么快。</p>
+
+        </article>
+
+        
+            <section class="post-tags">
+            <a class="-none-link" href="/origin/tags/%E9%9A%8F%E7%AC%94/" rel="tag">随笔</a>
+            </section>
+        
+    
+        <section class="post-author">
+        
+            <figure class="author-avatar">
+                <img src="/images/webp/40df5751567c0aeb.webp" alt="Whatasiger" />
+            </figure>
+        
+            <div class="author-info">
+                <h4>Whatasiger</h4>
+                <p>本站未注明转载的文章均为原创，并采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="nofollow">CC BY-NC-SA 4.0</a> 授权协议，<span style="color: #E91E63">转载请注明来源</span>。</p>
+            </div>
+        </section>
+    
+    
+
+<section class="post-comments">
+    <div
+        id="tcomment"
+        data-env-id="https://comment.whatasiger.xyz"
+        data-lang="zh-CN"
+        data-blogger-nick="Whatasiger"
+        data-blogger-label="博主"
+        data-blogger-avatar="/images/webp/40df5751567c0aeb.webp"
+        data-site-url="https://whatasiger.xyz/origin"
+        data-current-path="/posts/13/"
+        data-twikoo-js="https://cdn.jsdelivr.net/npm/twikoo@1.7.7/dist/twikoo.min.js"
+        data-twikoo-path="/13/"></div>
+    <script>
+        (function () {
+            var container = document.getElementById('tcomment');
+            if (!container) return;
+
+            var bloggerNick = container.dataset.bloggerNick || 'Whatasiger';
+            var bloggerLabel = container.dataset.bloggerLabel || '博主';
+            var bloggerAvatar = container.dataset.bloggerAvatar || '';
+            var envId = container.dataset.envId || '';
+            var lang = container.dataset.lang || 'zh-CN';
+            var twikooPath = container.dataset.twikooPath || '';
+            var twikooJsUrl = container.dataset.twikooJs || 'https://cdn.jsdelivr.net/npm/twikoo@1.7.7/dist/twikoo.min.js';
+            var configuredSiteUrl = container.dataset.siteUrl || '';
+            var generatedCurrentPath = container.dataset.currentPath || '';
+            var observer = null;
+            var twikooPatchedFetch = false;
+            var twikooPatchedXhr = false;
+            var twikooScriptLoading = false;
+
+            function __isTwikooEndpoint(url) {
+                if (!url || !envId) return false;
+                return String(url).indexOf(envId) === 0;
+            }
+
+            function __normalizeHref(pathValue) {
+                if (!pathValue) return window.location.href;
+                if (/^https?:\/\//i.test(pathValue)) return pathValue;
+                return window.location.origin + pathValue;
+            }
+
+            function __normalizeOrigin(originValue) {
+                return (originValue || '').replace(/\/+$/, '');
+            }
+
+            function __normalizePath(pathValue) {
+                var p = (pathValue || '').trim();
+                if (!p) return '/';
+                if (/^https?:\/\//i.test(p)) {
+                    try {
+                        p = new URL(p).pathname;
+                    } catch (e) {}
+                }
+                p = p.replace(/index\.html$/i, '');
+                if (p.charAt(0) !== '/') p = '/' + p;
+                if (p.charAt(p.length - 1) !== '/') p = p + '/';
+                return p;
+            }
+
+            function __trimTrailingSlash(pathValue) {
+                if (!pathValue || pathValue === '/') return pathValue;
+                return pathValue.replace(/\/+$/, '');
+            }
+
+            function __withIndexHtml(pathValue) {
+                var p = __normalizePath(pathValue);
+                return p === '/' ? '/index.html' : p + 'index.html';
+            }
+
+            function __pushUnique(list, value) {
+                if (!value) return;
+                if (list.indexOf(value) === -1) list.push(value);
+            }
+
+            function __pushPathVariants(list, pathValue) {
+                var normalized = __normalizePath(pathValue);
+                __pushUnique(list, normalized);
+                __pushUnique(list, __trimTrailingSlash(normalized));
+                __pushUnique(list, __withIndexHtml(normalized));
+            }
+
+            function __pushFullUrlVariants(list, pathValue) {
+                var origins = [
+                    __normalizeOrigin(window.location.origin),
+                    __normalizeOrigin(configuredSiteUrl)
+                ];
+                for (var i = 0; i < origins.length; i++) {
+                    if (!origins[i]) continue;
+                    var normalized = __normalizePath(pathValue);
+                    __pushUnique(list, origins[i] + normalized);
+                    __pushUnique(list, origins[i] + __trimTrailingSlash(normalized));
+                    __pushUnique(list, origins[i] + __withIndexHtml(normalized));
+                }
+            }
+
+            function __getTwikooUrlCandidates(legacyPath, currentPath) {
+                var candidates = [];
+                __pushPathVariants(candidates, legacyPath);
+                __pushPathVariants(candidates, currentPath);
+                __pushPathVariants(candidates, generatedCurrentPath);
+                __pushFullUrlVariants(candidates, legacyPath);
+                __pushFullUrlVariants(candidates, currentPath);
+                __pushFullUrlVariants(candidates, generatedCurrentPath);
+                return candidates;
+            }
+
+            function __commentKey(comment) {
+                if (!comment) return '';
+                return comment.id || comment._id || comment.objectId || [
+                    comment.nick,
+                    comment.mailMd5 || comment.mail || '',
+                    comment.created || '',
+                    comment.comment || ''
+                ].join('|');
+            }
+
+            function __mergeCommentsResponse(responses, sort) {
+                var map = {};
+                var merged = [];
+                var totalCount = 0;
+                var hasCount = false;
+                var more = false;
+                var base = {};
+                var accessToken = '';
+                var i;
+                var j;
+
+                for (i = 0; i < responses.length; i++) {
+                    var response = responses[i] || {};
+                    var data = response.data || [];
+                    if (!base.data) base = Object.assign({}, response);
+                    if (typeof response.count === 'number') {
+                        totalCount += response.count;
+                        hasCount = true;
+                    }
+                    more = more || Boolean(response.more);
+                    accessToken = accessToken || response.accessToken || '';
+
+                    for (j = 0; j < data.length; j++) {
+                        var key = __commentKey(data[j]);
+                        if (key && !map[key]) {
+                            map[key] = true;
+                            merged.push(data[j]);
+                        }
+                    }
+                }
+
+                merged.sort(function (a, b) {
+                    var ca = a && a.created ? a.created : 0;
+                    var cb = b && b.created ? b.created : 0;
+                    if (sort === 'oldest') return ca - cb;
+                    return cb - ca;
+                });
+
+                base.data = merged;
+                base.more = more;
+                base.count = hasCount ? Math.max(totalCount, merged.length) : merged.length;
+                base.accessToken = accessToken;
+                return base;
+            }
+
+            // 某些版本/场景下 Twikoo 提交评论可能未复用 init.path，
+            // 这里做两件事：
+            // 1) COMMENT_SUBMIT 强制写入旧路径，避免后续再分流；
+            // 2) COMMENT_GET 同时读取旧链接、新链接和 index.html/完整 URL 变体，并在前端合并。
+            function __patchTwikooRequestPath() {
+                if (!twikooPath) return;
+                var legacyPath = __normalizePath(twikooPath);
+                var currentPath = __normalizePath(window.location.pathname || generatedCurrentPath);
+                var twikooUrlCandidates = __getTwikooUrlCandidates(legacyPath, currentPath);
+
+                function __payloadWithUrl(payload, urlValue) {
+                    return Object.assign({}, payload, { url: urlValue });
+                }
+
+                function __fetchCommentList(originalFetch, reqUrl, init, payload, urlValue) {
+                    var nextPayload = Object.assign({}, payload, { url: urlValue });
+                    var nextInit = Object.assign({}, init, { body: JSON.stringify(nextPayload) });
+                    return originalFetch(reqUrl, nextInit).then(function (response) {
+                        return response.clone().json().catch(function () {
+                            return null;
+                        });
+                    }).catch(function () {
+                        return null;
+                    });
+                }
+
+                if (window.fetch && !twikooPatchedFetch) {
+                    var originalFetch = window.fetch.bind(window);
+                    window.fetch = function (input, init) {
+                        try {
+                            var reqUrl = typeof input === 'string' ? input : (input && input.url);
+                            if (__isTwikooEndpoint(reqUrl) && init && typeof init.body === 'string' && init.body) {
+                                var payload = JSON.parse(init.body);
+                                if (payload && payload.event === 'COMMENT_GET' && twikooUrlCandidates.length > 1) {
+                                    return Promise.all(twikooUrlCandidates.map(function (urlValue) {
+                                        return __fetchCommentList(originalFetch, reqUrl, init, payload, urlValue);
+                                    })).then(function (jsonList) {
+                                        var validResponses = jsonList.filter(Boolean);
+                                        if (!validResponses.length) return originalFetch(input, init);
+                                        var merged = __mergeCommentsResponse(validResponses, payload.sort);
+                                        return new Response(JSON.stringify(merged), {
+                                            status: 200,
+                                            headers: { 'Content-Type': 'application/json' }
+                                        });
+                                    });
+                                }
+                                if (payload && payload.event === 'COMMENT_SUBMIT') {
+                                    payload.url = legacyPath;
+                                    payload.href = __normalizeHref(legacyPath);
+                                    init.body = JSON.stringify(payload);
+                                }
+                            }
+                        } catch (e) {}
+                        return originalFetch(input, init);
+                    };
+                    twikooPatchedFetch = true;
+                }
+
+                if (window.XMLHttpRequest && !twikooPatchedXhr) {
+                    var NativeXMLHttpRequest = window.XMLHttpRequest;
+
+                    function __xhrCommentList(reqUrl, headers, payload, urlValue) {
+                        return new Promise(function (resolve) {
+                            var xhr = new NativeXMLHttpRequest();
+                            xhr.onreadystatechange = function () {
+                                if (xhr.readyState !== 4) return;
+                                if (xhr.status === 200) {
+                                    try {
+                                        resolve(JSON.parse(xhr.responseText));
+                                    } catch (e) {
+                                        resolve(null);
+                                    }
+                                } else {
+                                    resolve(null);
+                                }
+                            };
+                            xhr.onerror = function () {
+                                resolve(null);
+                            };
+                            xhr.open('POST', reqUrl, true);
+                            for (var name in headers) {
+                                if (Object.prototype.hasOwnProperty.call(headers, name)) {
+                                    xhr.setRequestHeader(name, headers[name]);
+                                }
+                            }
+                            xhr.send(JSON.stringify(__payloadWithUrl(payload, urlValue)));
+                        });
+                    }
+
+                    function PatchedXMLHttpRequest() {
+                        this._xhr = new NativeXMLHttpRequest();
+                        this._headers = {};
+                        this._listeners = {};
+                        this._intercepted = false;
+                        this._method = '';
+                        this._url = '';
+                        this._openArgs = null;
+                        this._readyState = 0;
+                        this._status = 0;
+                        this._statusText = '';
+                        this._responseText = '';
+                        this._response = '';
+                        this.onreadystatechange = null;
+                        this.onload = null;
+                        this.onloadend = null;
+                        this.onerror = null;
+                        this.onabort = null;
+                        this.ontimeout = null;
+                    }
+
+                    function __defineXhrGetter(name, fallbackValue) {
+                        Object.defineProperty(PatchedXMLHttpRequest.prototype, name, {
+                            configurable: true,
+                            enumerable: true,
+                            get: function () {
+                                if (this._intercepted) {
+                                    var ownName = '_' + name;
+                                    return this[ownName] === undefined ? fallbackValue : this[ownName];
+                                }
+                                return this._xhr[name];
+                            }
+                        });
+                    }
+
+                    function __fireXhrEvent(xhr, type) {
+                        var event = { type: type, target: xhr, currentTarget: xhr };
+                        var handler = xhr['on' + type];
+                        if (typeof handler === 'function') {
+                            try {
+                                handler.call(xhr, event);
+                            } catch (e) {}
+                        }
+                        var listeners = xhr._listeners[type] || [];
+                        for (var i = 0; i < listeners.length; i++) {
+                            try {
+                                listeners[i].call(xhr, event);
+                            } catch (e) {}
+                        }
+                    }
+
+                    function __completeInterceptedXhr(xhr, status, responseText) {
+                        xhr._intercepted = true;
+                        xhr._readyState = 4;
+                        xhr._status = status;
+                        xhr._statusText = status === 200 ? 'OK' : '';
+                        xhr._responseText = responseText;
+                        xhr._response = responseText;
+                        __fireXhrEvent(xhr, 'readystatechange');
+                        if (status === 200) {
+                            __fireXhrEvent(xhr, 'load');
+                        } else {
+                            __fireXhrEvent(xhr, 'error');
+                        }
+                        __fireXhrEvent(xhr, 'loadend');
+                    }
+
+                    __defineXhrGetter('readyState', 0);
+                    __defineXhrGetter('status', 0);
+                    __defineXhrGetter('statusText', '');
+                    __defineXhrGetter('responseText', '');
+                    __defineXhrGetter('response', '');
+                    __defineXhrGetter('responseURL', '');
+
+                    PatchedXMLHttpRequest.UNSENT = NativeXMLHttpRequest.UNSENT || 0;
+                    PatchedXMLHttpRequest.OPENED = NativeXMLHttpRequest.OPENED || 1;
+                    PatchedXMLHttpRequest.HEADERS_RECEIVED = NativeXMLHttpRequest.HEADERS_RECEIVED || 2;
+                    PatchedXMLHttpRequest.LOADING = NativeXMLHttpRequest.LOADING || 3;
+                    PatchedXMLHttpRequest.DONE = NativeXMLHttpRequest.DONE || 4;
+                    PatchedXMLHttpRequest.prototype.UNSENT = PatchedXMLHttpRequest.UNSENT;
+                    PatchedXMLHttpRequest.prototype.OPENED = PatchedXMLHttpRequest.OPENED;
+                    PatchedXMLHttpRequest.prototype.HEADERS_RECEIVED = PatchedXMLHttpRequest.HEADERS_RECEIVED;
+                    PatchedXMLHttpRequest.prototype.LOADING = PatchedXMLHttpRequest.LOADING;
+                    PatchedXMLHttpRequest.prototype.DONE = PatchedXMLHttpRequest.DONE;
+
+                    PatchedXMLHttpRequest.prototype.open = function () {
+                        this._method = arguments[0];
+                        this._url = arguments[1];
+                        this._openArgs = arguments;
+                        this._readyState = 1;
+                        __fireXhrEvent(this, 'readystatechange');
+                    };
+
+                    PatchedXMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+                        this._headers[name] = value;
+                    };
+
+                    PatchedXMLHttpRequest.prototype.addEventListener = function (type, listener) {
+                        if (!this._listeners[type]) this._listeners[type] = [];
+                        this._listeners[type].push(listener);
+                    };
+
+                    PatchedXMLHttpRequest.prototype.removeEventListener = function (type, listener) {
+                        var listeners = this._listeners[type] || [];
+                        var index = listeners.indexOf(listener);
+                        if (index !== -1) listeners.splice(index, 1);
+                    };
+
+                    PatchedXMLHttpRequest.prototype.dispatchEvent = function (event) {
+                        __fireXhrEvent(this, event && event.type);
+                        return true;
+                    };
+
+                    PatchedXMLHttpRequest.prototype.getResponseHeader = function (name) {
+                        if (this._intercepted) {
+                            return name && name.toLowerCase() === 'content-type' ? 'application/json' : null;
+                        }
+                        return this._xhr.getResponseHeader(name);
+                    };
+
+                    PatchedXMLHttpRequest.prototype.getAllResponseHeaders = function () {
+                        if (this._intercepted) return 'content-type: application/json\r\n';
+                        return this._xhr.getAllResponseHeaders();
+                    };
+
+                    PatchedXMLHttpRequest.prototype.abort = function () {
+                        if (this._intercepted) {
+                            __fireXhrEvent(this, 'abort');
+                            __fireXhrEvent(this, 'loadend');
+                            return;
+                        }
+                        return this._xhr.abort();
+                    };
+
+                    PatchedXMLHttpRequest.prototype.overrideMimeType = function (mimeType) {
+                        if (this._xhr.overrideMimeType) this._xhr.overrideMimeType(mimeType);
+                    };
+
+                    PatchedXMLHttpRequest.prototype.send = function (body) {
+                        var self = this;
+                        var reqUrl = this._url;
+                        var payload = null;
+
+                        try {
+                            if (__isTwikooEndpoint(reqUrl) && typeof body === 'string' && body) {
+                                payload = JSON.parse(body);
+                            }
+                        } catch (e) {}
+
+                        if (payload && payload.event === 'COMMENT_GET' && twikooUrlCandidates.length > 1) {
+                            Promise.all(twikooUrlCandidates.map(function (urlValue) {
+                                return __xhrCommentList(reqUrl, self._headers, payload, urlValue);
+                            })).then(function (jsonList) {
+                                var validResponses = jsonList.filter(Boolean);
+                                var merged = validResponses.length
+                                    ? __mergeCommentsResponse(validResponses, payload.sort)
+                                    : { data: [], more: false, count: 0 };
+                                __completeInterceptedXhr(self, 200, JSON.stringify(merged));
+                            });
+                            return;
+                        }
+
+                        if (payload && payload.event === 'COMMENT_SUBMIT') {
+                            payload.url = legacyPath;
+                            payload.href = __normalizeHref(legacyPath);
+                            body = JSON.stringify(payload);
+                        }
+
+                        this._xhr.onreadystatechange = function () {
+                            __fireXhrEvent(self, 'readystatechange');
+                        };
+                        this._xhr.onload = function () {
+                            __fireXhrEvent(self, 'load');
+                        };
+                        this._xhr.onloadend = function () {
+                            __fireXhrEvent(self, 'loadend');
+                        };
+                        this._xhr.onerror = function () {
+                            __fireXhrEvent(self, 'error');
+                        };
+                        this._xhr.onabort = function () {
+                            __fireXhrEvent(self, 'abort');
+                        };
+                        this._xhr.ontimeout = function () {
+                            __fireXhrEvent(self, 'timeout');
+                        };
+                        this._xhr.open.apply(this._xhr, this._openArgs);
+                        for (var name in this._headers) {
+                            if (Object.prototype.hasOwnProperty.call(this._headers, name)) {
+                                this._xhr.setRequestHeader(name, this._headers[name]);
+                            }
+                        }
+                        this._xhr.send(body);
+                    };
+
+                    window.XMLHttpRequest = PatchedXMLHttpRequest;
+                    twikooPatchedXhr = true;
+                }
+            }
+
+            // 判断某个后代节点是否属于 commentEl 自身（不跨越嵌套的 .tk-comment）
+            function __isOwnDescendant(commentEl, el) {
+                if (!el || !commentEl) return false;
+                var cur = el.parentNode;
+                while (cur && cur !== commentEl) {
+                    if (cur.nodeType === 1 && cur.classList && cur.classList.contains('tk-comment')) {
+                        return false;
+                    }
+                    cur = cur.parentNode;
+                }
+                return cur === commentEl;
+            }
+
+            // 仅在 commentEl 自身范围内查找（排除嵌套子评论）
+            function __ownQueryFirst(commentEl, selector) {
+                var all = commentEl.querySelectorAll(selector);
+                for (var i = 0; i < all.length; i++) {
+                    if (__isOwnDescendant(commentEl, all[i])) return all[i];
+                }
+                return null;
+            }
+
+            function __ownQueryAll(commentEl, selector) {
+                var all = commentEl.querySelectorAll(selector);
+                var own = [];
+                for (var i = 0; i < all.length; i++) {
+                    if (__isOwnDescendant(commentEl, all[i])) own.push(all[i]);
+                }
+                return own;
+            }
+
+            function __ownText(commentEl, selector) {
+                var el = __ownQueryFirst(commentEl, selector);
+                return el ? (el.textContent || '').trim() : '';
+            }
+
+            function __isBloggerComment(commentEl) {
+                if (!commentEl) return false;
+                // tk-admin 类只看自身，不受子回复影响，作为最可信证据
+                if (commentEl.classList.contains('tk-admin')) return true;
+
+                var nickText = __ownText(commentEl, '.tk-nick') || __ownText(commentEl, '.tk-nick-link');
+                if (nickText && nickText === bloggerNick) return true;
+
+                var tagNodes = __ownQueryAll(commentEl, '.tk-tag, .tk-extra, .tk-meta span, .tk-nick + span');
+                for (var i = 0; i < tagNodes.length; i++) {
+                    var text = (tagNodes[i].textContent || '').trim();
+                    if (text === bloggerLabel) return true;
+                }
+                return false;
+            }
+
+            function __replaceAvatar(commentEl) {
+                if (!bloggerAvatar || !__isBloggerComment(commentEl)) return;
+
+                // 头像也必须取自身的，避免拿到嵌套子评论的头像
+                var avatarImg = __ownQueryFirst(commentEl, '.tk-avatar img, .tk-avatar-img');
+                if (!avatarImg) return;
+
+                if (avatarImg.getAttribute('src') !== bloggerAvatar) {
+                    avatarImg.setAttribute('src', bloggerAvatar);
+                }
+                avatarImg.removeAttribute('srcset');
+                avatarImg.setAttribute('data-force-blogger-avatar', 'true');
+            }
+
+            function __applyBloggerAvatar(root) {
+                if (!bloggerAvatar) return;
+                var scope = root || document;
+                var comments = scope.querySelectorAll('.tk-comment');
+                for (var i = 0; i < comments.length; i++) {
+                    __replaceAvatar(comments[i]);
+                }
+            }
+
+            function __watchComments() {
+                var target = document.querySelector('#twikoo, #tcomment, .twikoo');
+                if (!target || observer) return;
+
+                observer = new MutationObserver(function (mutations) {
+                    for (var i = 0; i < mutations.length; i++) {
+                        var mutation = mutations[i];
+                        for (var j = 0; j < mutation.addedNodes.length; j++) {
+                            var node = mutation.addedNodes[j];
+                            if (!node || node.nodeType !== 1) continue;
+                            if (node.matches && node.matches('.tk-comment')) {
+                                __replaceAvatar(node);
+                            } else if (node.querySelectorAll) {
+                                __applyBloggerAvatar(node);
+                            }
+                        }
+                    }
+                });
+                observer.observe(target, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+
+            function __initTwikoo() {
+                if (!window.twikoo) return;
+                __patchTwikooRequestPath();
+                var opts = {
+                    envId: envId,
+                    el: '#tcomment',
+                    lang: lang,
+                    onCommentLoaded: function () {
+                        __applyBloggerAvatar();
+                        __watchComments();
+                    }
+                };
+                if (twikooPath) opts.path = twikooPath;
+                twikoo.init(opts);
+            }
+
+            function __loadTwikoo() {
+                __patchTwikooRequestPath();
+                if (window.twikoo) {
+                    __initTwikoo();
+                    return;
+                }
+                if (twikooScriptLoading) return;
+                twikooScriptLoading = true;
+
+                var script = document.createElement('script');
+                script.src = twikooJsUrl;
+                script.async = true;
+                script.onload = __initTwikoo;
+                script.onerror = function () {
+                    twikooScriptLoading = false;
+                };
+                document.head.appendChild(script);
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', __loadTwikoo);
+            } else {
+                __loadTwikoo();
+            }
+        })();
+    </script>
+</section>
+
+
+    </div>
+</main>
+
+<script>
+    (function () {
+        // 文章有封面图时，将整站背景替换为该封面
+        // 但"关于网站"页面使用主页背景
+        var cover = "/images/webp/bbcd7e7b11bb55ef.webp";
+        var pageTitle = "记梦";
+        
+        if (!cover) return;
+        
+        // 如果是"关于网站"页面，不使用封面图，使用主页背景
+        if (pageTitle === "关于网站") {
+            document.body.style.removeProperty("--page-bg-image");
+            return;
+        }
+
+        // 等待 DOM 就绪后再修改 CSS 变量，避免和首屏样式冲突
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", function () {
+                document.body.style.setProperty("--page-bg-image", "url(" + cover + ")");
+            });
+        } else {
+            document.body.style.setProperty("--page-bg-image", "url(" + cover + ")");
+        }
+    })();
+</script>
+
+    <footer>
+    <div class="wrap min">
+        <section class="widget">
+            <div class="row">
+                <div class="col-m-4">
+                    <h3 class="title-recent">最新文章：</h3>
+                    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/origin/posts/13/">记梦</a></li><li class="post-list-item"><a class="post-list-link" href="/origin/posts/12/">在纸页的内侧消失——《Q君与世界的外侧》评析</a></li><li class="post-list-item"><a class="post-list-link" href="/origin/posts/11/">「主播女孩重度依赖」动画分集浅读</a></li><li class="post-list-item"><a class="post-list-link" href="/origin/posts/10/">2026-02 ~ 2026-04 随笔</a></li><li class="post-list-item"><a class="post-list-link" href="/origin/posts/8/">2026-02-16 除夕</a></li><li class="post-list-item"><a class="post-list-link" href="/origin/posts/7/">1月14日：失败了</a></li></ul>
+                </div>
+                <div class="col-m-4">
+                    <h3 class="title-date">时光机：</h3>
+                    <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/origin/archives/2026/11/">十一月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/origin/archives/2026/06/">六月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/origin/archives/2026/04/">四月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/origin/archives/2026/02/">二月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/origin/archives/2026/01/">一月 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/origin/archives/2025/12/">十二月 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/origin/archives/2025/01/">一月 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/origin/archives/2024/07/">七月 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/origin/archives/2023/10/">十月 2023</a></li></ul>
+                </div>
+                <div class="col-m-4">
+                    <h3 class="title-tags">标签云：</h3>
+                    <a href="/origin/tags/%E5%B0%8F%E8%AF%B4/" style="font-size: 16.67px;">小说</a> <a href="/origin/tags/%E7%89%B9%E6%AE%8A/" style="font-size: 10px;">特殊</a> <a href="/origin/tags/%E8%AF%84%E6%9E%90/" style="font-size: 13.33px;">评析</a> <a href="/origin/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 20px;">随笔</a>
+                </div>
+            </div>
+        </section>
+        <section class="sub-footer">
+            <p>© 2026 <a href="/origin/">Whatasiger</a>. All Rights Reserved. Theme By <a href="https://github.com/Dreamer-Paul/Hingle" target="_blank" rel="nofollow">Hingle</a>.</p>
+        </section>
+    </div>
+</footer>
+
+<div class="buttons">
+    <button class="to-top" href="#"></button>
+</div>
+
+
+<script src="/origin/static/kico.js"></script>
+<script src="/origin/static/hingle.js"></script>
+
+
+<script>var hingle = new Paul_Hingle({"copyright":false,"night":true});</script>
+<script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const toTopBtn = document.querySelector('.to-top');
+        if (toTopBtn) {
+          toTopBtn.addEventListener('click', function(e) {
+            e.preventDefault(); // 阻止默认行为
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // 平滑滚动到顶部
+          });
+        }
+      });
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const searchBox = document.querySelector('.head-search');
+        const searchBtn = document.querySelector('.search-btn');
+
+        if (searchBox && searchBtn) {
+          // 监听整个网页的点击事件
+          document.addEventListener('click', function(event) {
+            // 如果搜索框当前是展开状态 (active)
+            if (searchBox.classList.contains('active')) {
+              // 且手指点击的位置既不在搜索框内部，也不在放大镜图标上
+              if (!searchBox.contains(event.target) && !searchBtn.contains(event.target)) {
+                // 移除 active 状态，触发 CSS 动画收回搜索框
+                searchBox.classList.remove('active');
+              }
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
