@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Whatasiger</title>
+
+    
+    <link rel="icon" href="/static/img/icon.png" sizes="512x512" type="image/png">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="canonical" href="https://whatasiger.xyz/">
+
+    <!-- 基本 SEO -->
+    <meta name="description" content="Whatasiger 的个人博客 —— 小说、随笔、日记、二次元杂谈。">
+    <meta name="keywords" content="Whatasiger,个人博客,小说,随笔,日记,二次元,Galgame,Bangumi">
+    <meta name="author" content="Whatasiger">
+    <meta name="theme-color" content="#0e0e10">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="Whatasiger">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://whatasiger.xyz/">
+    <meta property="og:title" content="Whatasiger">
+    <meta property="og:description" content="Whatasiger 的个人博客 —— 小说、随笔、日记、二次元杂谈。">
+    <meta property="og:image" content="https://whatasiger.xyz/images/webp/44ccd674949c189c.webp">
+    
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Whatasiger">
+    <meta name="twitter:description" content="Whatasiger 的个人博客 —— 小说、随笔、日记、二次元杂谈。">
+    <meta name="twitter:image" content="https://whatasiger.xyz/images/webp/44ccd674949c189c.webp">
+
+    <!-- RSS / Atom（hexo-generator-feed 启用后可用） -->
+    <link rel="alternate" type="application/atom+xml" title="Whatasiger" href="/atom.xml"><link rel="alternate" type="application/rss+xml" title="Whatasiger" href="/rss2.xml">
+
+    <link rel="alternate" type="application/atom+xml" title="CARRiER WAVE." href="/carrier_wave/atom.xml">
+
+    <!-- Sitemap（hexo-generator-sitemap 启用后可用） -->
+    
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    
+
+    <!-- 主题样式 -->
+    
+    <link rel="stylesheet" href="/static/kico.css?v=3e44f412">
+    <link rel="stylesheet" href="/static/glint.css?v=f2ea9f49">
+    
+    <link rel="stylesheet" href="/static/fa/fa.css?v=5e5a2803">
+
+    
+    
+    <style id="bg-base">body{ --page-bg-image: url(/images/webp/44ccd674949c189c.webp) }</style>
+    
+    
+    
+    <script>
+        (function () {
+            try {
+                var choices = {"sunset":"/images/webp/44ccd674949c189c.webp","blue-night":"/images/webp/124089112_p0.webp","ice-bloom":"/images/webp/118435175_p0.webp","summer-cloud":"/images/webp/144486189_p0.webp","dusk-field":"/images/webp/21315033_p0.webp","checker-hall":"/images/webp/6095368_p0.webp","twilight-rail":"/images/webp/81829877_p0.webp"};
+                var id = localStorage.getItem('whatasiger_home_bg'); // 与 glint.js setupBgSwitch 的 BG_KEY 一致
+                if (id === '@daily') {    // 每日轮换：按本地日期在各张之间轮换，算法与 glint.js todayId() 一致
+                    var ids = Object.keys(choices), d = new Date();
+                    id = ids[Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 864e5) % ids.length];
+                }
+                var src = id && Object.prototype.hasOwnProperty.call(choices, id) ? choices[id] : '';
+                if (!src || src === "/images/webp/44ccd674949c189c.webp") return;
+                var st = document.createElement('style');
+                st.id = 'bg-choice';
+                st.textContent = 'body{--page-bg-image:url("' + src + '")}';
+                document.head.appendChild(st);
+            } catch (err) {}
+        })();
+    </script>
+    
+    
+
+    <!-- 顶栏固定文字的思源黑体子集，内联，首帧即可用 -->
+    
+<style>@font-face{font-family:"Glint UI";font-style:normal;font-weight:600;font-display:block;src:url(data:font/woff2;base64,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) format("woff2")}</style>
+
+    <!-- 思源黑体（Noto Sans SC）：国内镜像优先 + 本机字体名回退 -->
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="preload" as="style" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet"
+          href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+          media="print" onload="this.media='all'; this.onload=null;" id="font-css">
+    
+    
+    
+
+<script src="/static/vt-flip.js?v=fddc1e66"></script>
+
+    
+    
+<script>
+    (function () {
+        var root = document.documentElement;
+        function norm(u) {
+            try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+        }
+        window.takeTitleHop = function (e) {
+            var el = window.glintTitleHopEl;
+            window.glintTitleHopEl = null;
+            var to = e.activation && e.activation.entry && e.activation.entry.url;
+            if (!el || !to || !e.viewTransition) return false;
+            var hop = null;
+            try { hop = JSON.parse(sessionStorage.getItem('title-hop')); } catch (err) {}
+            if (!hop || hop.to !== norm(to) || Date.now() - hop.t > 10000) return false;
+            var r = el.getBoundingClientRect();
+            if (!r.width || r.bottom <= 0 || r.top >= innerHeight) return false;
+            el.classList.add('vt-hop-src');
+            el.style.viewTransitionName = 'post-title';
+            root.classList.add('title-leaving');
+            return true;
+        };
+        // 通用接入：带 data-title-hop 的链接（文末「继续阅读」等），标题元素写 data-hop-title
+        document.addEventListener('click', function (e) {
+            var a = e.target.closest && e.target.closest('a[data-title-hop]');
+            if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            try { sessionStorage.setItem('title-hop', JSON.stringify({ to: norm(a.href), t: Date.now() })); } catch (err) {}
+            window.glintTitleHopEl = a.querySelector('[data-hop-title]') || a;
+        });
+        // 从往返缓存回来：撤掉离场时挂的名字
+        window.addEventListener('pageshow', function () {
+            root.classList.remove('title-leaving');
+            [].forEach.call(document.querySelectorAll('.vt-hop-src'), function (el) {
+                el.classList.remove('vt-hop-src');
+                el.style.viewTransitionName = '';
+            });
+        });
+    })();
+</script>
+
+
+    
+    <!-- 卡片标题用内联的子集字体，不再外链 Cormorant Garamond -->
+    
+<style>@font-face{font-family:"CW Title";font-style:normal;font-weight:300;font-display:block;src:url(data:font/woff2;base64,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) format("woff2");}</style>
+
+    
+<style>@font-face{font-family:"CW Soon";font-style:normal;font-weight:400;font-display:block;src:url(data:font/woff2;base64,d09GMgABAAAAAARMAA4AAAAABswAAAP8AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbbhwqBmAAXBEICocMhhIBNgIkAyQLFAAEIAUGByAbRwVRlDBKAcRHQm6i9TdiKoOI4sLTfP5/s7wPPGST0WRUfJmyJgKtw7oIPVT9SyUN8B/OdOhm2th21gCJE0oDTmhsywoLyxaNRZZ5uKzfYg/0og+G/zavVzYvN5UrmlEDAWAHEFEgAgSQM4ANMcgCVVPXIsMxbvC0CXCAAYAvozF2+JQJEABHBQwoIMVrvcAAoBGEGCSBgAYFGjwoMJ4fcZ4fEHAgIGA9v2+ojEMCGTDAMgUPWQYWoC5ROoBFao58jCz8zRhCTnCoZ3eNjApEYCqt/7caaJ0aSwOfUbeyCFDAgOnMDzSIChg0HHVAAAUOEajGSIzGREz1BC5k/Cd6V9vUxta1GgEkBMTj4QQjYsEHgASQYoCsAPSyBxdiXgpEv3+sWCS4SzPcAh/Zd5XRbH0pGVBNUzZNqJJhla81oPpdMk2bTjTlVM4abapuypZlEW3oWgMwW2TZxCabrlnJykYruNqt2Z7pmmVZBlRTJ5r7ombTTaiGlZy+1lgNWbGUD1erh/Q12tHutQZgpE8syVCZuWKrp+LSbC0qNdR95irVh0db9ZODzBZouuquEbb6JtFCuWWVLdJupt+caNY166ZmM8+Zu87dsIimyy7rYZ6ZJRmrE8aKocT2yHXoUeh6ZYN21bgMtWJ13Entik1X35VVo3pP2qVyfytTP6CtNfZLhqXpfgmul8FrJUPdZKqSpdSMzf1s+pu2C/3S3OHG1E9nj43u6D/0aGHHiMJ36m+scQps9ucNydOT8hYMnr795j8njrtK8oufbRo+uV/EpTGTB7gc1u0eZuepQe1D72qlryy95fzZ6ZuV0XP2gKEnGocfO+rrGEVta0stbpRrR2S1h/g15Xsz3DR3sk/KplXhYmhtmv/2Oq/z7Ky9K/tVxlfm46vUg67nrk3ev/V9c5rI0cwU5VXFOzQgdOg2t3dQ36mBDv+NTZlfYNrhINbfHlYzghGOGTGBZeUduUKPs28FSX7K0GDW/TqnSRz94mhWaIBfYSvPbpns5DdwPnt2syzHvzne/aDHGUfsmf1gd8hfkZFUucNG9ytNbitf6HDYHfmNuY0ixXeVlNUVhIc7bZOWSPxH2wL4B6x99Js+gXpTxpedw+wcLnUXtJYxgzvrhYxtfwbEddfVXaqwStfGFjZkzP6yMcs7uiG8Tm72y5l2uOoqcndPk3iqpeLA5LTPXFdsEyR34OBY1vtO2efLBkq87Zlrqg9bm9RaDgAAAUCA5Qkbtwx0lvwmSPR3APDgj7x+APCt3+fNnv0/gLpFXQUggAIAEOA5B+Q+Afpu+tGlIu4BE00Ofc1Ez3AJ4eQ+JPIqcvAtONwFAwJARCloAAABBA401DynZQE=) format("woff2")}</style>
+
+    <!-- 预渲染目录页：指针停在卡片上（或按下）时就在后台把它完整加载好，点击即刻切换、过渡立即开始，不必等网络与字体 -->
+    
+    <script type="speculationrules">{"prerender": [{"urls": ["/carrier_wave/soon/"], "eagerness": "moderate"}]}</script>
+    <!-- 文章卡片同样预渲染（指针停留 / 按下即开始）：点击后过渡立即开始，不必等文章页下载、解析、出首帧
+         预渲染会执行文章页脚本，所以不蒜子等页面真正打开才加载计数（footer.ejs），评论等过渡结束（post-vt.ejs 的 vtSettled） -->
+    <script type="speculationrules">{"prerender": [{"source": "document", "where": {"selector_matches": "a.post-item.card-style:not(.cw-card)"}, "eagerness": "moderate"}]}</script>
+    <!-- 卡片文章页的 HTML 先预取下来（只下载、不执行）：预渲染没来得及跑完就点下去时，也不必再等网络（实测 0.5–1.7s → 0.2–0.3s）；
+         悬停 / 按下开始的预渲染同样直接用这份响应。
+         只预取「看得到或快滚到」的卡片（视口上下各一屏内）：读者只能点屏幕上的卡片，而滚到下一张远比下载一篇慢，手感与全部预取相同，流量按实际浏览走。
+         省流量（Save-Data）/ 2G 时不预取。触屏没有悬停、按下才开始预渲染太晚：滚动停下后，完整停在屏幕中央附近超过 0.6s 的那张卡片先预渲染（同时只留一张） -->
+    <script>
+        (function () {
+            var SEL = 'a.post-item.card-style:not(.cw-card)';
+            if (!window.HTMLScriptElement || !HTMLScriptElement.supports || !HTMLScriptElement.supports('speculationrules')) return;
+            var conn = navigator.connection;
+            if (conn && (conn.saveData || /(^|-)2g$/.test(conn.effectiveType || ''))) return;
+            function rules(kind, urls) {
+                var s = document.createElement('script');
+                s.type = 'speculationrules';
+                var r = {};
+                r[kind] = [{ urls: urls, eagerness: 'immediate' }];
+                s.textContent = JSON.stringify(r);
+                document.head.appendChild(s);
+                return s;
+            }
+            document.addEventListener('DOMContentLoaded', function () {
+                var cards = [].slice.call(document.querySelectorAll(SEL));
+                if (!cards.length) return;
+                var done = {};
+                if (window.IntersectionObserver) {
+                    var io = new IntersectionObserver(function (entries) {
+                        var urls = [];
+                        entries.forEach(function (en) {
+                            if (!en.isIntersecting) return;
+                            io.unobserve(en.target);
+                            var u = en.target.href;
+                            if (!done[u]) { done[u] = 1; urls.push(u); }
+                        });
+                        if (urls.length) rules('prefetch', urls);
+                    }, { rootMargin: '100% 0px' });
+                    cards.forEach(function (c) { io.observe(c); });
+                } else {
+                    rules('prefetch', cards.map(function (c) { return c.href; }));
+                }
+
+                if (!matchMedia('(pointer: coarse)').matches) return;
+                var dwell = null, dwellUrl = '', timer = 0;
+                function pick() {
+                    var mid = innerHeight / 2, best = null, bestD = Infinity;
+                    cards.forEach(function (c) {
+                        var r = c.getBoundingClientRect();
+                        if (!r.height || r.top < 0 || r.bottom > innerHeight) return;   // 只认完整在屏上的
+                        var d = Math.abs((r.top + r.bottom) / 2 - mid);
+                        if (d < bestD) { bestD = d; best = c; }
+                    });
+                    if (!best || best.href === dwellUrl) return;
+                    if (dwell) dwell.remove();      // 撤掉上一条规则即取消那次预渲染
+                    dwellUrl = best.href;
+                    dwell = rules('prerender', [dwellUrl]);
+                }
+                function arm() {
+                    clearTimeout(timer);
+                    if (!document.hidden && !document.documentElement.classList.contains('home-zen')) timer = setTimeout(pick, 600);
+                }
+                window.addEventListener('scroll', arm, { passive: true });
+                window.addEventListener('load', arm);
+            });
+        })();
+    </script>
+    <!-- 卡片副题「载波·短篇辑」与目录页同用思源宋体；只取这几个字，字体文件很小 -->
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@300&text=%E8%BD%BD%E6%B3%A2%E7%9F%AD%E7%AF%87%E8%BE%91&display=swap">
+    <!-- 跨页面过渡只用于「首页 ↔ CARRiER WAVE.」「首页 → CW 预告页」「首页 → 文章」（文章卡片一镜到底）与「首页 → Gizmo」（叶片一镜到底），其余跳转一律跳过 -->
+    <style>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
+    <script>
+        (function () {
+            var root = document.documentElement;
+            var target = '/carrier_wave/';
+            var gizmo = '/gizmo/';
+            var soon = '/carrier_wave/soon/';
+            function norm(u) {
+                try { return new URL(u, location.href).pathname.replace(/index\.html$/, ''); } catch (err) { return ''; }
+            }
+            window.addEventListener('pageswap', function (e) {
+                var to = e.activation && e.activation.entry && e.activation.entry.url;
+                // 给目录页留一份来源记录：它拿不到 navigation.activation.from 时据此判断是否从首页来
+                try { sessionStorage.setItem('cw-vt-hop', JSON.stringify({ from: norm(location.href), to: to ? norm(to) : '', t: Date.now() })); } catch (err) {}
+                if (!e.viewTransition) return;
+                if (takeTitleHop(e)) return;     // 从搜索结果点进文章：标题飞过去（_partial/title-hop.ejs）
+                if (to && norm(to) === gizmo && leaveToGizmo()) return;
+                if (to && norm(to) === soon && leaveToSoon()) return;
+                if (to && norm(to) !== target && leaveToPost(norm(to))) return;
+                if (!to || norm(to) !== target) { e.viewTransition.skipTransition(); return; }
+                // 快照前把卡片收回静止状态：悬停时标题字距变宽、载波鼓起变色，与目录页首屏对不上，交叉淡化时会出现重影
+                root.classList.add('cw-leaving');
+                alignWave();
+            });
+            // 卡片载波对准目录页的画布载波：形变时卡片被横向拉伸到首屏宽度，拉伸后的波长须等于画布波长（cw.js 中 58 / 窄屏 46），
+            // 再平移到某个波峰，把它在新页中的横坐标交给目录页，画布按此定相位，两条波交接时严丝合缝
+            function alignWave() {
+                var box = document.querySelector('.cw-card-wave-box');
+                var svg = box && box.querySelector('.cw-card-wave');
+                var main = svg && svg.querySelector('.cw-card-strand:not(.is-ghost)');
+                if (!main) return;
+                var boxW = box.getBoundingClientRect().width;
+                // 目录页首屏的载波轴：视口去掉滚动条，左右各留 24px（.cw-hero 的内边距）
+                var axisL = 24, axisW = document.documentElement.clientWidth - 48;
+                if (!boxW || axisW <= 0) return;
+                var narrow = innerWidth < 640;
+                var period = (narrow ? 46 : 58) * boxW / axisW;    // 卡片里应有的波长
+                var width = period * 40;                           // SVG 共 40 个周期
+                if (width < boxW + period) return;                 // 卡片过宽、平移后盖不满时放弃对齐
+                // 第一个向上的波峰在路径的 10/1600（即 1/4 周期）处，左移 1/4 周期让它正对盒子左缘，形变后即落在载波轴左端
+                svg.style.cssText = 'animation:none;width:' + width + 'px;transform:translateX(' + (-period / 4) + 'px)';
+                main.style.transform = 'scaleY(' + ((narrow ? 4 : 5.5) / 3.6) + ')'; // 卡片振幅约 3.6px，放大到画布振幅
+                try { sessionStorage.setItem('cw-wave-hop', JSON.stringify({ x: axisL, t: Date.now() })); } catch (err) {}
+            }
+            // 文章卡片一镜到底：只给被点的那张卡片挂名（名字须唯一），卡片放大成文章页的背景、标题飞到正文标题处
+            // 卡片不在视口内（如用键盘从屏外聚焦后回车）就不做；样式见 glint.css「文章卡片一镜到底」
+            function leaveToPost(path) {
+                var cards = document.querySelectorAll('a.post-item.card-style:not(.cw-card)');
+                for (var i = 0; i < cards.length; i++) {
+                    if (norm(cards[i].href) !== path) continue;
+                    var r = cards[i].getBoundingClientRect();
+                    if (r.bottom <= 0 || r.top >= innerHeight) return false;
+                    var title = cards[i].querySelector('.post-card-title span');
+                    cards[i].classList.add('vt-active');
+                    // 倾斜摆正（快照按平面形变；最多 2.5°，被放大的动作盖住看不出来）
+                    cards[i].style.transform = '';
+                    cards[i].style.viewTransitionName = 'post-cover';
+                    if (title) title.style.viewTransitionName = 'post-title';
+                    root.classList.add('post-leaving');
+                    return true;
+                }
+                return false;
+            }
+            // Gizmo 叶片一镜到底：叶片飞到 Gizmo 页标题处（落点与过渡编排见 _partial/gizmo-vt.ejs）
+            // 叶片隐藏（导航收起、从导航卡片进去）或不在视口内就不做；留一份记录，Gizmo 页据此决定是否等叶片落定再显示内容
+            function leaveToGizmo() {
+                var leaf = document.querySelector('.gizmo-leaf.is-landed');
+                var r = leaf && leaf.getClientRects()[0];
+                if (!r || r.bottom <= 0 || r.top >= innerHeight) return false;
+                leaf.querySelector('.gizmo-leaf-body').style.viewTransitionName = 'gizmo-leaf';
+                root.classList.add('gizmo-leaving');
+                try { sessionStorage.setItem('gizmo-leaf-hop', String(Date.now())); } catch (err) {}
+                return true;
+            }
+            // CW 预告卡片一镜到底：卡片沉成预告页拼贴里的夜空底片，胶带、载波、标题、手写字各自飞到对应位置（落点与编排见 _partial/soon-vt.ejs）
+            // 卡片不在视口内就不做；留一份记录，预告页据此决定是否接过渡
+            function leaveToSoon() {
+                var card = document.querySelector('.post-item.cw-card.is-soon');
+                var r = card && card.getBoundingClientRect();
+                if (!r || r.bottom <= 0 || r.top >= innerHeight) return false;
+                root.classList.add('soon-leaving');
+                try { sessionStorage.setItem('soon-hop', String(Date.now())); } catch (err) {}
+                return true;
+            }
+            function resetGizmoLeaf() {
+                root.classList.remove('gizmo-leaving');
+                var body = document.querySelector('.gizmo-leaf-body');
+                if (body) body.style.viewTransitionName = '';
+            }
+            function resetPostCard() {
+                root.classList.remove('post-leaving');
+                var card = document.querySelector('.post-item.vt-active');
+                if (!card) return;
+                card.classList.remove('vt-active');
+                card.style.viewTransitionName = '';
+                var title = card.querySelector('.post-card-title span');
+                if (title) title.style.viewTransitionName = '';
+            }
+            function resetWave() {
+                var svg = document.querySelector('.cw-card-wave');
+                if (svg) svg.style.cssText = '';
+                var main = document.querySelector('.cw-card-strand:not(.is-ghost)');
+                if (main) main.style.transform = '';
+            }
+            // 从目录页回来：整屏收回成卡片；卡片不在视口内（如恢复了滚动位置）就不做
+            // 只在从往返缓存恢复时做：全新加载要等首页渲染，旧画面会先冻住，首帧布局也未定型，形变起止对不上
+            var revealed = false;
+            window.addEventListener('pagereveal', function (e) {
+                var restored = revealed;
+                revealed = true;
+                root.classList.remove('cw-back', 'cw-leaving', 'soon-leaving');
+                resetWave();
+                resetPostCard();
+                resetGizmoLeaf();
+                if (!e.viewTransition) return;
+                if (!restored) { e.viewTransition.skipTransition(); return; }
+                var act = window.navigation && navigation.activation;
+                var from = act && act.from && act.from.url;
+                var card = document.querySelector('.post-item.cw-card');
+                var r = card && card.getBoundingClientRect();
+                if (!from || norm(from) !== target || !r || r.bottom <= 0 || r.top >= innerHeight) {
+                    e.viewTransition.skipTransition();
+                    return;
+                }
+                // cw-came-back 不随过渡结束移除：卡片的入场动画一旦恢复就会重播，造成落定后再闪一下
+                root.classList.add('cw-back', 'cw-came-back');
+                // 形变改为只动 transform，交给合成线程（见 _partial/vt-flip.ejs）
+                vtFlip(e.viewTransition, {
+                    'cw-stage': { el: '.post-item.cw-card' },
+                    'cw-hero-wave': { el: '.cw-card-wave-box' },
+                    'cw-hero-title': { old: 'auto', new: 'auto', el: '.cw-card-title' },
+                    'cw-hero-sub': { old: 'auto', new: 'auto', el: '.cw-card-sub' }
+                });
+                e.viewTransition.finished.finally(function () { root.classList.remove('cw-back'); });
+            });
+
+            // 预取目录页及其阻塞渲染的字体样式表：跨页面过渡要求新页面在约 4 秒内完成首帧，否则浏览器静默放弃
+            // 首页加载完后空闲时预取；首页还没加载完时，指针移上、按下或聚焦卡片就提前预取
+            // 字体地址须与 _partial/carrier-wave-head.ejs 中的保持一致，否则预取的缓存用不上
+            var warmed = false;
+            function warm() {
+                if (warmed) return;
+                warmed = true;
+                [target, 'https://fonts.loli.net/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Noto+Serif+SC:wght@300;400;500&display=swap']
+                    .forEach(function (href) {
+                        var l = document.createElement('link');
+                        l.rel = 'prefetch';
+                        l.href = href;
+                        document.head.appendChild(l);
+                    });
+            }
+            // 按下即有回应（所有卡片）：卡片微沉；文章卡片同时开始放大、模糊（触屏没有悬停），离场快照从这里接续
+            // 抬起后保持按下状态直到离开本页；移出卡片、触摸转为滚动、带修饰键（新标签页打开）、从往返缓存回来时复原
+            function pressable(card) {
+                function release() { card.classList.remove('is-pressed'); }
+                card.addEventListener('pointerdown', function (e) {
+                    if (e.button === 0) card.classList.add('is-pressed');
+                });
+                // 触摸抬起时也会触发 pointerleave，只认鼠标
+                card.addEventListener('pointerleave', function (e) {
+                    if (e.pointerType === 'mouse') release();
+                });
+                card.addEventListener('pointercancel', release);
+                card.addEventListener('click', function (e) {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) release();
+                });
+                window.addEventListener('pageshow', release);
+            }
+            document.addEventListener('DOMContentLoaded', function () {
+                Array.prototype.forEach.call(document.querySelectorAll('a.post-item.card-style:not(.cw-card)'), pressable);
+                var card = document.querySelector('.post-item.cw-card');
+                if (!card) return;
+                // 预告卡片（CW 暂时隐藏时）只要按下的回应，不预取目录页
+                if (card.classList.contains('is-soon')) { pressable(card); return; }
+                ['pointerenter', 'pointerdown', 'touchstart', 'focus'].forEach(function (t) {
+                    card.addEventListener(t, warm, { once: true, passive: true });
+                });
+                // CW 卡片按下时标题与载波还从悬停状态回落，与目录页首屏一致
+                pressable(card);
+                window.addEventListener('load', function () {
+                    if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 3000 });
+                    else setTimeout(warm, 1000);
+                });
+            });
+        })();
+    </script>
+    
+
+<script>try { if (localStorage.getItem('cw-vt-debug') === '1') document.write('<script src="/static/vt-debug.js?v=d83fe7bd"><\/script>'); } catch (err) {}</script>
+
+    
+    
+    
+    
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
+    </noscript>
+
+    <!-- 结构化数据：让搜索引擎更准确地理解文章 -->
+    
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Whatasiger","url":"https://whatasiger.xyz","description":"Whatasiger 的个人博客 —— 小说、随笔、日记、二次元杂谈。","author":{"@type":"Person","name":"Whatasiger"}}</script>
+    
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+  
+  <body class="dark-theme ">
+    <script>
+    (function() {
+        // 核心修复：把普通的博客文章 (is_post) 和独立页面 (is_page) 都视为"阅读界面"
+        var isArticle = false; // Gizmo 陈列页不算阅读界面（与 layout.ejs 一致）
+        var isFromArticle = sessionStorage.getItem("is_from_article") === "true";
+        var theme = sessionStorage.getItem("theme");
+
+        // 手机端锁定背景层高度（glint.css 的 --bg-lock-h），首帧前就定好：工具栏伸缩只改视口高度，
+        // Via 这类 WebView 浏览器连 100lvh 也会跟着变，背景随之重算 cover 就会上下跳。
+        // 同一宽度下取 100lvh、视口高度、屏幕高度中的最大者、只增不减（算上屏幕高度，工具栏第一次收起时也不必再长高）；宽度变化（转屏）时重新取
+        try {
+            if (window.matchMedia("(pointer: coarse)").matches && CSS.supports("height", "100lvh")) {
+                var lockRoot = document.documentElement, lockWidth = -1, lockHeight = 0;
+                var lockBgHeight = function () {
+                    if (window.innerWidth !== lockWidth) {
+                        lockWidth = window.innerWidth;
+                        lockRoot.style.removeProperty("--bg-lock-h");
+                        var sw = screen.width || 0, sh = screen.height || 0;
+                        lockHeight = window.innerWidth < window.innerHeight ? Math.max(sw, sh) : Math.min(sw, sh);
+                    }
+                    var h = Math.max(lockHeight, window.innerHeight, parseFloat(getComputedStyle(document.body, "::before").height) || 0);
+                    if (h === lockHeight && lockRoot.style.getPropertyValue("--bg-lock-h")) return;
+                    lockHeight = h;
+                    lockRoot.style.setProperty("--bg-lock-h", h + "px");
+                };
+                lockBgHeight();
+                window.addEventListener("resize", lockBgHeight);
+            }
+        } catch (e) {}
+
+        // 0. 立即应用字体设置，避免字体闪烁
+        try {
+            var SETTINGS_KEY = "whatasiger_reader_settings";
+            var savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+            var fontChoice = (savedSettings && savedSettings.fontFamily) ? savedSettings.fontFamily : "noto-sans-sc";
+            var sourceHanFontStack = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
+            var systemFontStack = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
+            document.body.style.fontFamily = fontChoice === "noto-sans-sc" ? sourceHanFontStack : systemFontStack;
+            if (fontChoice !== "noto-sans-sc") document.documentElement.classList.add("font-system"); // 顶栏不用内联的 Glint UI
+            if (savedSettings && savedSettings.hideTodo) document.body.classList.add("hide-todo");
+            // 阅读排版（行距 / 段距 / 行宽 / 缩进 / 宋体）：阅读页首帧前就按设置排好，glint.js 载入后照同样的值接管
+            if (isArticle && savedSettings) {
+                var bs = document.body.style;
+                if (typeof savedSettings.lineHeight === "number") bs.setProperty("--reader-line-height", String(savedSettings.lineHeight));
+                if (typeof savedSettings.paraSpacing === "number") bs.setProperty("--reader-para", savedSettings.paraSpacing + "em");
+                if (typeof savedSettings.readWidth === "number") bs.setProperty("--reader-width", savedSettings.readWidth + "em");
+                if (savedSettings.indent) bs.setProperty("--reader-indent", "2em");
+                if (savedSettings.bodyFont === "serif") document.body.classList.add("reader-serif");
+            }
+            // 主题色：首帧前挂到 html 上，避免先闪一下默认的蓝
+            if (savedSettings && savedSettings.accent && savedSettings.accent !== "blue") {
+                document.documentElement.setAttribute("data-accent", savedSettings.accent);
+            }
+        } catch (e) {
+            document.body.style.fontFamily = '"Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "Noto Sans CJK SC", "思源黑体", "思源黑体 CN", "Microsoft YaHei", sans-serif';
+        }
+
+        // 0.1 背景可见度：与设置面板共用唯一数据源 whatasiger_reader_settings.bgOpacity
+        var targetBgOpacity = 0.55; // 与 glint.js defaultSettings.bgOpacity=55 一致
+        try {
+            var readerSettings = JSON.parse(localStorage.getItem("whatasiger_reader_settings"));
+            if (readerSettings && typeof readerSettings.bgOpacity === "number") {
+                var v = readerSettings.bgOpacity;
+                if (v >= 0 && v <= 100) targetBgOpacity = v / 100;
+            }
+        } catch (e) {
+            // 忽略错误，使用默认 0.55
+        }
+
+        // 0.2 背景模糊度：设置里分两项——阅读页 bgBlur（默认桌面 4.5px / 手机 8px，CW 预告页也用它）与首页 homeBlur（默认 0，首页、归档等其余页面）
+        var DEFAULT_ARTICLE_BLUR = matchMedia("(min-width: 600px)").matches ? 4.5 : 8; // 与 glint.js defaultSettings.bgBlur 一致
+        var savedBlur = DEFAULT_ARTICLE_BLUR, homeBlur = 0;
+        try {
+            if (readerSettings && typeof readerSettings.bgBlur === "number") {
+                var bv = readerSettings.bgBlur;
+                if (bv >= 0 && bv <= 20) savedBlur = bv;
+            }
+            if (readerSettings && typeof readerSettings.homeBlur === "number") {
+                var hv = readerSettings.homeBlur;
+                if (hv >= 0 && hv <= 20) homeBlur = hv;
+            }
+        } catch (e) {}
+        var isBlurPage = isArticle || false;   // 用阅读页模糊度的页面
+        var targetBgBlur = isBlurPage ? savedBlur : homeBlur;
+        // 初始（瞬间）模糊度：阅读页首帧就是最终模糊度（载入时主线程忙，过渡会被硬切）；
+        // 其余页面从上一页的模糊度（sessionStorage glint-bg-blur）开始、两帧后过渡到自己的值：从阅读页回首页时变清晰，从首页进 CW 预告页时变模糊
+        var lastBgBlur = NaN;
+        try { lastBgBlur = parseFloat(sessionStorage.getItem("glint-bg-blur")); } catch (e) {}
+        if (!(lastBgBlur >= 0 && lastBgBlur <= 20)) lastBgBlur = isFromArticle ? savedBlur : targetBgBlur;
+        var initialBgBlur = isArticle ? savedBlur : lastBgBlur;
+        try { sessionStorage.setItem("glint-bg-blur", String(targetBgBlur)); } catch (e) {}
+
+        // 1. 初始状态：全面封印动画，防止页面刚加载时的任何闪烁
+        document.body.classList.add("no-bg-transition");
+
+        // 1.1 立即设置背景可见度和模糊度（封印状态，无动画）
+        document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
+        document.body.style.setProperty("--bg-blur", initialBgBlur + "px");
+
+        // 2. 瞬间敲定日夜模式：本次浏览中点过日月按钮（sessionStorage theme-pick）就照它；否则按设置里的「日夜」
+        //    （whatasiger_reader_settings.themeMode：dark 夜间，默认 / light 白天 / auto 跟随系统）。
+        //    结果仍写回 sessionStorage theme，一叶等独立页面照旧读它；手机地址栏颜色（theme-color）跟着换
+        try {
+            var themeMode = (savedSettings && savedSettings.themeMode) || "dark";
+            var themePick = sessionStorage.getItem("theme-pick");
+            var isDark = themePick ? themePick !== "light"
+                : themeMode === "auto" ? !window.matchMedia("(prefers-color-scheme: light)").matches
+                : themeMode !== "light";
+            theme = isDark ? "dark" : "light";
+        } catch (e) {}
+        document.body.classList.toggle("dark-theme", theme !== "light");
+        try { sessionStorage.setItem("theme", theme === "light" ? "light" : "dark"); } catch (e) {}
+        var themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) themeMeta.setAttribute("content", theme === "light" ? "#e9eff7" : "#0e0e10");
+
+        // 3. 敲定刚进网页瞬间的背景状态
+        if (isArticle) {
+            // 阅读页：首帧即淡化（不论从哪来）。原先从主页来时在 rAF 里才挂、靠 0.5s 过渡变淡，
+            // 但页面载入时主线程常被排版 / 脚本占住，过渡时间线照走，等能出下一帧时已走完，看起来就是亮背景硬切成灰
+            document.body.classList.add("bg-faded");
+        } else if (!isArticle && isFromArticle) {
+            // 阅读页跳主页：必须先瞬间淡化，为后面的淡出动画做准备
+            document.body.classList.add("bg-faded");
+        }
+
+        // 4. 更新记忆，留给下一次跳转使用
+        sessionStorage.setItem("is_from_article", isArticle ? "true" : "false");
+
+        // 5. 释放封印，并触发需要的丝滑动画
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                // 解除动画封印
+                document.body.classList.remove("no-bg-transition");
+
+                // 背景可见度：与设置面板统一，不再在跳转时覆盖为固定值，保持当前 targetBgOpacity 即可
+                document.body.style.setProperty("--bg-opacity", String(targetBgOpacity));
+
+                // 背景模糊度：设置目标值，触发平滑过渡
+                // 文章→文章时 initialBgBlur == targetBgBlur，此处赋值无变化，不触发动画
+                document.body.style.setProperty("--bg-blur", targetBgBlur + "px");
+
+                // 触发跨界面的过渡动画
+                if (!isArticle && isFromArticle) {
+                    // 阅读页跳主页：此时开始平滑变清晰
+                    document.body.classList.remove("bg-faded");
+                }
+            });
+        });
+    })();
+</script>
+<header>
+    <a href="/" class="header-logo"><span class="header-logo-name">Whatasiger</span><span class="header-logo-ver">Ciel</span></a>
+    <div class="head-title">
+        <a href="/" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
+            <h4>Whatasiger</h4>
+        </a>
+    </div>
+    <div class="head-action">
+        <button type="button" class="toggle-btn" aria-label="导航" aria-controls="header-menu" aria-expanded="false"></button>
+        <button type="button" class="light-btn" aria-label="切换日夜模式"></button>
+        <button type="button" class="settings-btn" aria-label="阅读设置" aria-controls="reader-settings-panel" aria-expanded="false"></button>
+        <button type="button" class="search-btn" aria-label="搜索文章" aria-controls="header-search" aria-expanded="false"></button>
+    </div>
+
+    
+    <div class="head-search" id="header-search">
+        <label class="sr-only" for="local-search-input">搜索文章、CARRiER WAVE. 与页面（空格分隔多个词）</label>
+        <input type="search" id="local-search-input" name="s" placeholder="标题 / 标签 / 正文" autocomplete="off" enterkeyhint="search"
+               role="combobox" aria-autocomplete="list" aria-controls="local-search-result" aria-expanded="false">
+    </div>
+</header>
+
+<div class="search-panel" id="search-panel" inert aria-hidden="true">
+    <div class="search-panel-inner">
+        <div class="search-empty">
+            <div class="search-empty-title"><i class="fa fa-tags" aria-hidden="true"></i>按标签浏览</div>
+            <div class="search-chips">
+                <a class="search-chip" href="/tags/%E5%B0%8F%E8%AF%B4/">#小说<small>5</small></a><a class="search-chip" href="/tags/%E7%89%B9%E6%AE%8A/">#特殊<small>1</small></a><a class="search-chip" href="/tags/%E8%AF%84%E6%9E%90/">#评析<small>2</small></a><a class="search-chip" href="/tags/%E9%9A%8F%E7%AC%94/">#随笔<small>6</small></a>
+                <a class="search-chip is-archive" href="/archives/"><i class="fa fa-archive" aria-hidden="true"></i>全部归档</a>
+            </div>
+            <p class="search-empty-tip">可搜文章、CARRiER WAVE.、页面与 Gizmo；空格分隔多个词，须全部命中</p>
+        </div>
+        <div class="search-status" role="status" aria-live="polite"></div>
+        <div class="search-results" id="local-search-result" role="listbox" aria-label="搜索结果"><span class="search-pill" aria-hidden="true"></span></div>
+        <div class="search-foot" aria-hidden="true">
+            <span><kbd>↑</kbd><kbd>↓</kbd>选择</span><span><kbd>↵</kbd>打开</span><span><kbd>Esc</kbd>关闭</span><span class="search-foot-key"><kbd>/</kbd>随时唤起</span>
+        </div>
+    </div>
+</div>
+
+<div class="settings-panel" id="reader-settings-panel" inert aria-hidden="true">
+    <div class="settings-panel-inner">
+        
+        <div class="settings-panel-header">
+            <i class="fa fa-sliders"></i>
+            <span class="settings-panel-title">阅读设置</span>
+            <button type="button" id="setting-reset-btn" class="settings-reset-btn" title="恢复默认" aria-label="恢复默认"><i class="fa fa-undo"></i></button>
+        </div>
+        
+        <div class="settings-tabs" role="tablist" aria-label="设置分类" data-tab="look">
+            <button type="button" role="tab" id="st-tab-look" data-tab="look" aria-controls="st-pane-look" aria-selected="true">外观</button>
+            <button type="button" role="tab" id="st-tab-read" data-tab="read" aria-controls="st-pane-read" aria-selected="false">阅读</button>
+        </div>
+        <div class="settings-panes">
+            <div class="settings-pane" id="st-pane-look" role="tabpanel" aria-labelledby="st-tab-look" data-pane="look">
+                <div class="settings-group">
+                    
+                    <div class="settings-row">
+                        <i class="fa fa-adjust"></i>
+                        <span>日夜</span>
+                        <div class="settings-segment is-three" id="setting-theme-mode" data-value="dark" role="radiogroup" aria-label="日夜">
+                            <button type="button" role="radio" data-value="dark" aria-checked="true">夜间</button>
+                            <button type="button" role="radio" data-value="light" aria-checked="false">白天</button>
+                            <button type="button" role="radio" data-value="auto" aria-checked="false" title="跟随系统">自动</button>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <i class="fa fa-font"></i>
+                        <span>字体</span>
+                        <div class="settings-segment" id="setting-font-family" role="radiogroup" aria-label="字体">
+                            <button type="button" role="radio" data-value="noto-sans-sc">思源黑体</button>
+                            <button type="button" role="radio" data-value="system-default">系统默认</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-chips">
+                    <label class="settings-chip"><input type="checkbox" id="setting-immersive"><i class="fa fa-expand"></i>沉浸模式</label>
+                    <label class="settings-chip"><input type="checkbox" id="setting-hide-todo"><i class="fa fa-list-ul"></i>隐藏首页 TODO</label>
+                </div>
+                <div class="settings-tiles">
+                    <label class="settings-tile is-wide">
+                        <span class="settings-tile-label"><i class="fa fa-eye"></i>背景可见度</span>
+                        <input type="range" id="setting-bg-opacity" min="0" max="50" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-tint"></i>背景模糊<small>首页</small></span>
+                        <input type="range" id="setting-home-blur" min="0" max="20" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-tint"></i>背景模糊<small>阅读页</small></span>
+                        <input type="range" id="setting-bg-blur" min="0" max="20" step="any">
+                    </label>
+                </div>
+                
+                
+                <div class="settings-group settings-accent-group">
+                    <div class="settings-accent-head"><span>主题色</span><small id="setting-accent-name">天青</small></div>
+                    <div class="settings-accent" id="setting-accent" role="radiogroup" aria-label="主题色">
+                        
+                            <button type="button" role="radio" data-value="blue" data-name="天青" aria-label="天青" title="天青" style="--sw: #8bb4e0"></button>
+                        
+                            <button type="button" role="radio" data-value="lavender" data-name="藤紫" aria-label="藤紫" title="藤紫" style="--sw: oklch(0.756 0.078 300)"></button>
+                        
+                            <button type="button" role="radio" data-value="sakura" data-name="樱粉" aria-label="樱粉" title="樱粉" style="--sw: oklch(0.756 0.078 355)"></button>
+                        
+                            <button type="button" role="radio" data-value="mikan" data-name="蜜柑" aria-label="蜜柑" title="蜜柑" style="--sw: oklch(0.756 0.078 62)"></button>
+                        
+                            <button type="button" role="radio" data-value="wakakusa" data-name="若草" aria-label="若草" title="若草" style="--sw: oklch(0.756 0.078 135)"></button>
+                        
+                            <button type="button" role="radio" data-value="mint" data-name="薄荷" aria-label="薄荷" title="薄荷" style="--sw: oklch(0.756 0.078 185)"></button>
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="settings-pane" id="st-pane-read" role="tabpanel" aria-labelledby="st-tab-read" data-pane="read">
+                <div class="settings-group">
+                    
+                    <div class="settings-row">
+                        <i class="fa fa-paragraph"></i>
+                        <span>正文</span>
+                        <div class="settings-segment" id="setting-body-font" role="radiogroup" aria-label="正文字体">
+                            <button type="button" role="radio" data-value="sans">黑体</button>
+                            <button type="button" role="radio" data-value="serif">宋体</button>
+                        </div>
+                        <label class="settings-chip is-small"><input type="checkbox" id="setting-indent"><i class="fa fa-indent"></i>缩进</label>
+                    </div>
+                </div>
+                <div class="settings-tiles">
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-bold"></i>字重</span>
+                        <input type="range" id="setting-font-weight" min="1" max="5" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-text-height"></i>字号</span>
+                        <input type="range" id="setting-font-size" min="90" max="130" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-text-width"></i>字间距</span>
+                        <input type="range" id="setting-letter-spacing" min="-2" max="8" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-align-justify"></i>行距</span>
+                        <input type="range" id="setting-line-height" min="1.5" max="2.4" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-arrows-v"></i>段距</span>
+                        <input type="range" id="setting-para-spacing" min="0" max="2" step="any">
+                    </label>
+                    <label class="settings-tile">
+                        <span class="settings-tile-label"><i class="fa fa-arrows-h"></i>行宽</span>
+                        <input type="range" id="setting-read-width" min="36" max="60" step="any">
+                    </label>
+                </div>
+                <p class="settings-note">只在文章与独立页面对正文生效</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav class="head-menu" id="header-menu" aria-label="主导航">
+    <span class="head-menu-pill" aria-hidden="true"></span>
+    <a href="/" class="current"><i class="fa fa-home"></i><span>首页</span></a>
+    
+        <a href="/about-me/"><i class="fa fa-user"></i><span>关于我</span></a>
+    
+        <a href="/about-website/"><i class="fa fa-info-circle"></i><span>关于网站</span></a>
+    
+        <a href="/comments/"><i class="fa fa-comments"></i><span>留言板</span></a>
+    
+        <a href="/archives/" class="head-menu-wide"><i class="fa fa-archive"></i><span>归档</span><small>所有文章 · 标签</small></a>
+    
+    
+    <a href="/gizmo/" class="head-menu-gizmo"><i class="fa fa-leaf"></i><span>Gizmo</span><small>随手做的小玩意</small></a>
+    
+    
+    <div class="head-menu-bg">
+        <div class="head-menu-bg-title"><i class="fa fa-picture-o"></i><span>首页背景</span></div>
+        <div class="bg-tiles" role="radiogroup" aria-label="首页背景">
+
+    <button type="button" class="bg-tile is-daily" role="radio" aria-checked="false" aria-label="每日轮换" data-bg-id="@daily">
+        <span class="bg-tile-img" aria-hidden="true"><i class="fa fa-calendar-o"></i></span>
+        <span class="bg-tile-name">每日轮换</span>
+    </button>
+
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="Afterglow" data-bg-id="sunset" data-bg-src="/images/webp/44ccd674949c189c.webp" data-bg-thumb="/images/webp/thumb/44ccd674949c189c.webp" data-bg-name="Afterglow" data-bg-default>
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">Afterglow</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="蓝夜" data-bg-id="blue-night" data-bg-src="/images/webp/124089112_p0.webp" data-bg-thumb="/images/webp/thumb/124089112_p0.webp" data-bg-name="蓝夜" data-bg-artist="画师JW" data-bg-link="https://www.pixiv.net/artworks/124089112">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">蓝夜</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="冰花" data-bg-id="ice-bloom" data-bg-src="/images/webp/118435175_p0.webp" data-bg-thumb="/images/webp/thumb/118435175_p0.webp" data-bg-name="冰花" data-bg-artist="コーラ" data-bg-link="https://www.pixiv.net/artworks/118435175">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">冰花</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="夏云" data-bg-id="summer-cloud" data-bg-src="/images/webp/144486189_p0.webp" data-bg-thumb="/images/webp/thumb/144486189_p0.webp" data-bg-name="夏云" data-bg-artist="画师JW" data-bg-link="https://www.pixiv.net/artworks/144486189">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">夏云</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="晚霞" data-bg-id="dusk-field" data-bg-src="/images/webp/21315033_p0.webp" data-bg-thumb="/images/webp/thumb/21315033_p0.webp" data-bg-name="晚霞" data-bg-artist="磯部トースト" data-bg-link="https://www.pixiv.net/artworks/21315033">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">晚霞</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="回廊" data-bg-id="checker-hall" data-bg-src="/images/webp/6095368_p0.webp" data-bg-thumb="/images/webp/thumb/6095368_p0.webp" data-bg-name="回廊" data-bg-artist="磯部トースト" data-bg-link="https://www.pixiv.net/artworks/6095368">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">回廊</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="暮色" data-bg-id="twilight-rail" data-bg-src="/images/webp/81829877_p0.webp" data-bg-thumb="/images/webp/thumb/81829877_p0.webp" data-bg-name="暮色" data-bg-artist="画师JW" data-bg-link="https://www.pixiv.net/artworks/81829877">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">暮色</span>
+    </button>
+
+</div>
+    </div>
+    
+    
+    
+    <button type="button" class="head-menu-zen zen-switch" aria-pressed="false"><i class="fa fa-expand"></i><span>沉浸：只留背景</span></button>
+    
+</nav>
+<script>
+    // 拖动选择（顶栏导航、设置面板的二选一与分页共用，glint.js 也用它）：在一排选项上按住拖动，强调框跟着指针走，
+    // 松手时选中指针下最近的那一项；只是点一下照旧走各自的 click。拖动过后紧跟着的那次 click 会被吞掉，免得重复触发
+    //   o.items()        → 可选的元素（按从左到右）
+    //   o.move(x, item)  → 拖动中：x 是指针的 clientX，item 是离它最近的一项
+    //   o.end(item)      → 松手（pointercancel 时 item 为 null，表示放弃）
+    //   o.enabled()      → 可选；返回 false 时不接管
+    window.glintDragPick = function (box, o) {
+        var id = null, sx = 0, moved = false, swallowUntil = 0;
+        function nearest(x) {          // 指针落在哪一项上就是哪一项，落在空隙里取中心最近的
+            var best = null, bd = Infinity;
+            o.items().forEach(function (el) {
+                var r = el.getBoundingClientRect();
+                if (!r.width) return;
+                var d = x >= r.left && x <= r.right ? -1 : Math.abs(x - (r.left + r.right) / 2);
+                if (d < bd) { bd = d; best = el; }
+            });
+            return best;
+        }
+        box.addEventListener("pointerdown", function (e) {
+            if ((e.pointerType === "mouse" && e.button !== 0) || (o.enabled && !o.enabled())) return;
+            id = e.pointerId; sx = e.clientX; moved = false;
+        });
+        box.addEventListener("pointermove", function (e) {
+            if (e.pointerId !== id) return;
+            if (!moved) {
+                if (Math.abs(e.clientX - sx) < 6) return;
+                moved = true;
+                try { box.setPointerCapture(id); } catch (err) {}
+                box.classList.add("is-dragging");
+            }
+            o.move(e.clientX, nearest(e.clientX));
+        });
+        function finish(e, cancel) {
+            if (e.pointerId !== id) return;
+            id = null;
+            if (!moved) return;
+            moved = false;
+            box.classList.remove("is-dragging");
+            swallowUntil = performance.now() + 350;
+            o.end(cancel ? null : nearest(e.clientX));
+        }
+        box.addEventListener("pointerup", function (e) { finish(e, false); });
+        box.addEventListener("pointercancel", function (e) { finish(e, true); });
+        box.addEventListener("click", function (e) {
+            if (performance.now() < swallowUntil && e.isTrusted) { e.preventDefault(); e.stopPropagation(); swallowUntil = 0; }
+        }, true);
+        box.addEventListener("dragstart", function (e) { e.preventDefault(); });   // 链接默认可拖出，会打断指针事件
+    };
+
+    // 顶栏导航是否收起：按钮居中排开时若会碰到左侧 Logo 或右侧搜索框 / 按钮，就收进汉堡菜单（html.nav-collapsed）
+    // 紧跟在 nav 后同步执行，首帧即为正确布局；按钮宽度用 canvas 量文字算出，不必来回切换布局
+    (function () {
+        var root = document.documentElement;
+        var nav = document.querySelector(".head-menu");
+        var ctx = document.createElement("canvas").getContext("2d");
+        var GAP = 24; // 与两侧元素至少留出的间距（px）
+        var PAD = 0.85, SPACE = 0.15; // 与 glint.css 中 .head-menu > a 的左右 padding / margin-right 一致（em）
+
+        function update() {
+            var collapse = window.innerWidth < 600; // 手机端始终收起
+            if (!collapse) {
+                // 桌面端导航宽度：各按钮文字宽 + 胶囊左右留白 + 按钮间距
+                var cs = getComputedStyle(nav);
+                var fontSize = parseFloat(cs.fontSize);
+                ctx.font = "600 " + cs.fontSize + " " + cs.fontFamily;
+                var labels = nav.querySelectorAll(":scope > a:not(.head-menu-gizmo) span"); // Gizmo 不在横排导航里
+                var width = (labels.length * PAD * 2 + (labels.length - 1) * SPACE) * fontSize;
+                for (var i = 0; i < labels.length; i++) width += ctx.measureText(labels[i].textContent).width;
+
+                var vw = root.clientWidth;
+                var left = (vw - width) / 2, right = (vw + width) / 2;
+
+                // 左侧 Logo 展开态位于 left: 1.5em（收起态会右移，故按展开态计算）
+                var logo = document.querySelector(".header-logo");
+                var logoRight = logo ? 1.5 * parseFloat(getComputedStyle(logo).fontSize) + logo.getBoundingClientRect().width : 0;
+
+                // 右侧最靠左的元素（搜索框 / 日夜 / 设置按钮）
+                var rightLimit = vw;
+                var obstacles = document.querySelectorAll("header .head-search, header .light-btn, header .settings-btn");
+                for (var j = 0; j < obstacles.length; j++) {
+                    var r = obstacles[j].getBoundingClientRect();
+                    if (r.width) rightLimit = Math.min(rightLimit, r.left);
+                }
+                collapse = left < logoRight + GAP || right > rightLimit - GAP;
+            }
+            if (root.classList.contains("nav-collapsed") !== collapse) {
+                // 切换形态时直接跳到结果，不播放磁贴 ↔ 文字的过渡（字体加载后可能改判）
+                root.classList.add("nav-switching");
+                root.classList.toggle("nav-collapsed", collapse);
+                if (!collapse) nav.classList.remove("active");
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () { root.classList.remove("nav-switching"); });
+                });
+            }
+            // 布局或字体变了：强调框直接跳到位，不播放滑动
+            if (!collapse) place(target, true);
+        }
+
+        // 桌面端导航强调框：平时停在当前页，悬停 / 聚焦时滑到所指项，离开后滑回（无当前页则淡出）
+        var pill = nav.querySelector(".head-menu-pill");
+        var current = nav.querySelector(":scope > a.current:not(.head-menu-gizmo)"); // Gizmo 长条在横排导航里是隐藏的，不能当强调框的落点
+        var target = current;
+        var leaveTimer = 0;
+
+        function place(a, instant) {
+            target = a;
+            if (!a) { pill.classList.remove("is-on"); return; }
+            // 从隐藏状态出现时原地浮现，不从上一次的位置滑过来
+            if (instant || !pill.classList.contains("is-on")) {
+                pill.classList.add("no-glide");
+                instant = true;
+            }
+            pill.style.setProperty("--pill-x", a.offsetLeft + "px");
+            pill.style.setProperty("--pill-w", a.offsetWidth + "px");
+            pill.classList.toggle("is-current", a === current);
+            pill.classList.add("is-on");
+            if (instant) {
+                void pill.offsetWidth;
+                pill.classList.remove("no-glide");
+            }
+        }
+
+        [].forEach.call(nav.querySelectorAll(":scope > a"), function (a) {
+            a.addEventListener("pointerenter", function () {
+                clearTimeout(leaveTimer);
+                place(a);
+            });
+            // 两项之间有空隙，稍等一下再滑回，免得划过空隙时先回到当前页再折返
+            a.addEventListener("pointerleave", function () {
+                clearTimeout(leaveTimer);
+                leaveTimer = setTimeout(function () { place(current); }, 90);
+            });
+            a.addEventListener("focus", function () { place(a); });
+            a.addEventListener("blur", function () { place(current); });
+        });
+
+        // 拖动选择：按住在各项上拖，强调框跟着指针走（宽度随最近的一项），松手即前往那一项（收起成卡片时不接管）
+        var items = [].slice.call(nav.querySelectorAll(":scope > a:not(.head-menu-gizmo)"));
+        window.glintDragPick(nav, {
+            items: function () { return items; },
+            enabled: function () { return !root.classList.contains("nav-collapsed"); },
+            move: function (x, a) {
+                clearTimeout(leaveTimer);
+                var navLeft = nav.getBoundingClientRect().left;
+                var w = a ? a.offsetWidth : pill.offsetWidth;
+                pill.classList.add("is-on");
+                pill.classList.toggle("is-current", a === current);
+                pill.style.setProperty("--pill-w", w + "px");
+                pill.style.setProperty("--pill-x", Math.max(0, Math.min(nav.clientWidth - w, x - navLeft - w / 2)) + "px");
+            },
+            end: function (a) {
+                if (!a) { place(current); return; }
+                place(a);
+                if (a !== current) a.click();
+            }
+        });
+
+        update();
+        window.addEventListener("resize", update);
+        // 字体加载完成或在设置里切换字体后，文字宽度会变
+        if (document.fonts) {
+            document.fonts.ready.then(update);
+            document.fonts.addEventListener("loadingdone", update);
+        }
+        // 设置里切换字体时写的是 body 的内联 font-family；body 的 style 还会被滑动条（--bg-blur、--reader-* 等）逐帧改写，
+        // 只比对字体这一项的字符串（不触发样式计算），真的变了才重新量，拖滑动条时不再每帧强制重排
+        var lastFont = document.body.style.fontFamily;
+        new MutationObserver(function () {
+            var f = document.body.style.fontFamily;
+            if (f === lastFont) return;
+            lastFont = f;
+            update();
+        }).observe(document.body, { attributes: true, attributeFilter: ["style"] });
+    })();
+</script>
+
+    
+<script>try { if (sessionStorage.getItem("glint-home-zen") === "1") document.documentElement.classList.add("home-zen", "home-zen-done"); } catch (e) {}</script>
+
+<main class="home-main">
+    <div class="wrap min">
+        
+        
+        <section class="home-title home-hero">
+            <a href="/about-me/" class="home-profile-link">
+                <span class="home-avatar-ring"><img src="/images/webp/40df5751567c0aeb.webp" alt="Author Avatar" class="home-avatar"></span>
+                <h1 class="home-name">Whatasiger</h1>
+            </a>
+
+            
+            <a class="home-motto" href="https://music.163.com/#/song?id=3330074495" target="_blank" rel="noopener" aria-label="二人には夢があった 今は凍りついた花。（在网易云音乐中收听）">
+                <span class="home-motto-ghost" aria-hidden="true">二人には夢があった 今は凍りついた花。</span>
+                <span class="home-motto-text" aria-hidden="true"></span>
+            </a>
+
+            <script>
+                (function() {
+                    var text = "二人には夢があった 今は凍りついた花。";
+                    var container = document.querySelector(".home-motto-text");
+                    var i = 0;
+                    function typeWriter() {
+                        if (i < text.length) {
+                            container.textContent += text.charAt(i);
+                            i++;
+                            setTimeout(typeWriter, 120);
+                        } else {
+                            container.classList.add("is-done");
+                        }
+                    }
+                    setTimeout(typeWriter, 900); // 等入场动画走到座右铭再开始
+                })();
+            </script>
+
+            
+    <div class="home-social">
+        <span class="home-social-pill" aria-hidden="true"></span>
+        <span class="home-social-tip" aria-hidden="true"></span>
+    
+        <a target="_blank" rel="noopener" href="https://bgm.tv/user/whatasiger" aria-label="Bangumi" data-title="Bangumi">
+        
+            <i class="fa fa-bgm-icon"></i>
+        
+        </a>
+    
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/355133306" aria-label="BiliBili" data-title="BiliBili">
+        
+            <i class="fa fa-bili-icon"></i>
+        
+        </a>
+    
+        <a target="_blank" rel="noopener" href="https://music.163.com/#/user/home?id=1929899165" aria-label="网易云音乐" data-title="网易云音乐">
+        
+            <i class="fa fa-netease-icon"></i>
+        
+        </a>
+    
+        <a target="_blank" rel="noopener" href="https://steamcommunity.com/id/whatasiger" aria-label="Steam" data-title="Steam">
+        
+            <i class="fa fa-steam-icon"></i>
+        
+        </a>
+    
+        <a target="_blank" rel="noopener" href="https://github.com/Whatasiger" aria-label="GitHub" data-title="GitHub">
+        
+            <i class="fa fa-github-icon"></i>
+        
+        </a>
+    
+        <a target="_blank" rel="noopener" href="https://www.douban.com/people/205865290" aria-label="豆瓣" data-title="豆瓣">
+        
+            <i class="fa fa-douban-icon"></i>
+        
+        </a>
+    
+        <a href="/images/wechat-qrcode.jpg" aria-label="微信" data-title="微信">
+        
+            <i class="fa fa-wechat-icon"></i>
+        
+        </a>
+    
+        <a href="mailto:g25811pr@gmail.com" aria-label="Email" data-title="Email">
+        
+            <i class="fa fa-email-icon"></i>
+        
+        </a>
+    
+    </div>
+    <script>
+        // 社交栏：悬停时一枚强调框带回弹地滑到所指图标，上方的名称标签随之滑动换字；
+        // 移出整栏后两者淡出，再次进入时原地浮现，不从上一次的位置滑来（与顶栏导航强调框同一套做法）
+        (function () {
+            var dock = document.currentScript.previousElementSibling;
+            var pill = dock.querySelector(".home-social-pill");
+            var tip = dock.querySelector(".home-social-tip");
+            var leaveTimer = 0;
+
+            function place(a) {
+                var instant = !dock.classList.contains("is-pointing");
+                if (instant) dock.classList.add("no-glide");
+                dock.style.setProperty("--x", a.offsetLeft + "px");
+                dock.style.setProperty("--w", a.offsetWidth + "px");
+                tip.textContent = a.getAttribute("data-title");
+                dock.classList.add("is-pointing");
+                if (instant) {
+                    void dock.offsetWidth;
+                    dock.classList.remove("no-glide");
+                }
+            }
+
+            [].forEach.call(dock.querySelectorAll("a"), function (a) {
+                a.addEventListener("pointerenter", function (e) {
+                    if (e.pointerType === "touch") return;
+                    clearTimeout(leaveTimer);
+                    dock.classList.remove("tip-off");
+                    place(a);
+                });
+                a.addEventListener("focus", function () {
+                    clearTimeout(leaveTimer);
+                    // 键盘聚焦不出名称标签；鼠标点击带来的聚焦照旧（悬停时已显示）
+                    var keyboard = true;
+                    try { keyboard = a.matches(":focus-visible"); } catch (e) {}
+                    if (keyboard) dock.classList.add("tip-off");
+                    place(a);
+                });
+            });
+            // 图标之间有空隙，稍等再收起，免得划过空隙时闪一下
+            function leave() {
+                clearTimeout(leaveTimer);
+                leaveTimer = setTimeout(function () { dock.classList.remove("is-pointing"); }, 120);
+            }
+            dock.addEventListener("pointerleave", leave);
+            dock.addEventListener("focusout", function (e) {
+                if (dock.contains(e.relatedTarget)) return;
+                leave();
+            });
+            dock.addEventListener("pointerenter", function () { clearTimeout(leaveTimer); });
+        })();
+    </script>
+
+
+        </section>
+        <section class="home-posts">
+    
+    
+        
+        <a class="post-item card-style cw-card is-soon" href="/carrier_wave/soon/">
+            <span class="cw-soon-tape" aria-hidden="true"></span>
+            <div class="cw-card-wave-box" aria-hidden="true">
+                <svg class="cw-card-wave" viewBox="0 0 1600 100" preserveAspectRatio="none">
+                    <path class="cw-card-strand is-ghost" d="M0 50 Q10 38 20 50 T40 50 Q50 38 60 50 T80 50 Q90 38 100 50 T120 50 Q130 38 140 50 T160 50 Q170 38 180 50 T200 50 Q210 38 220 50 T240 50 Q250 38 260 50 T280 50 Q290 38 300 50 T320 50 Q330 38 340 50 T360 50 Q370 38 380 50 T400 50 Q410 38 420 50 T440 50 Q450 38 460 50 T480 50 Q490 38 500 50 T520 50 Q530 38 540 50 T560 50 Q570 38 580 50 T600 50 Q610 38 620 50 T640 50 Q650 38 660 50 T680 50 Q690 38 700 50 T720 50 Q730 38 740 50 T760 50 Q770 38 780 50 T800 50 Q810 38 820 50 T840 50 Q850 38 860 50 T880 50 Q890 38 900 50 T920 50 Q930 38 940 50 T960 50 Q970 38 980 50 T1000 50 Q1010 38 1020 50 T1040 50 Q1050 38 1060 50 T1080 50 Q1090 38 1100 50 T1120 50 Q1130 38 1140 50 T1160 50 Q1170 38 1180 50 T1200 50 Q1210 38 1220 50 T1240 50 Q1250 38 1260 50 T1280 50 Q1290 38 1300 50 T1320 50 Q1330 38 1340 50 T1360 50 Q1370 38 1380 50 T1400 50 Q1410 38 1420 50 T1440 50 Q1450 38 1460 50 T1480 50 Q1490 38 1500 50 T1520 50 Q1530 38 1540 50 T1560 50 Q1570 38 1580 50 T1600 50"/>
+                    <path class="cw-card-strand" d="M0 50 Q10 38 20 50 T40 50 Q50 38 60 50 T80 50 Q90 38 100 50 T120 50 Q130 38 140 50 T160 50 Q170 38 180 50 T200 50 Q210 38 220 50 T240 50 Q250 38 260 50 T280 50 Q290 38 300 50 T320 50 Q330 38 340 50 T360 50 Q370 38 380 50 T400 50 Q410 38 420 50 T440 50 Q450 38 460 50 T480 50 Q490 38 500 50 T520 50 Q530 38 540 50 T560 50 Q570 38 580 50 T600 50 Q610 38 620 50 T640 50 Q650 38 660 50 T680 50 Q690 38 700 50 T720 50 Q730 38 740 50 T760 50 Q770 38 780 50 T800 50 Q810 38 820 50 T840 50 Q850 38 860 50 T880 50 Q890 38 900 50 T920 50 Q930 38 940 50 T960 50 Q970 38 980 50 T1000 50 Q1010 38 1020 50 T1040 50 Q1050 38 1060 50 T1080 50 Q1090 38 1100 50 T1120 50 Q1130 38 1140 50 T1160 50 Q1170 38 1180 50 T1200 50 Q1210 38 1220 50 T1240 50 Q1250 38 1260 50 T1280 50 Q1290 38 1300 50 T1320 50 Q1330 38 1340 50 T1360 50 Q1370 38 1380 50 T1400 50 Q1410 38 1420 50 T1440 50 Q1450 38 1460 50 T1480 50 Q1490 38 1500 50 T1520 50 Q1530 38 1540 50 T1560 50 Q1570 38 1580 50 T1600 50"/>
+                </svg>
+            </div>
+            <div class="cw-card-body">
+                <h2 class="cw-card-title">CARRiER WAVE.</h2>
+                <p class="cw-soon-hand">Coming soon</p>
+            </div>
+        </a>
+    
+    
+    
+        
+        <a class="post-item card-style" href="/posts/14/">
+            
+            <span class="post-card-shadow" aria-hidden="true"></span>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" style="background-image: url('/images/webp/card/88440202_p0.webp'); background-image: image-set(url('/images/webp/card/88440202_p0.webp') 1x, url('/images/webp/card/88440202_p0@2x.webp') 2x);" data-cover="/images/webp/88440202_p0.webp"></div>
+                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/card/88440202_p0.webp'); background-image: image-set(url('/images/webp/card/88440202_p0.webp') 1x, url('/images/webp/card/88440202_p0@2x.webp') 2x);"></div>
+                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/card/88440202_p0.webp'); background-image: image-set(url('/images/webp/card/88440202_p0.webp') 1x, url('/images/webp/card/88440202_p0@2x.webp') 2x);"></div>
+                </div>
+            </div>
+
+            <div class="post-card-overlay">
+                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
+                <h2 class="post-card-title">
+                    <span>『树上的X爵』</span>
+                </h2>
+
+                <div class="post-card-info">
+                    <p class="post-card-description">
+                        我也不太知道为什么要倒吊在树上。
+                    </p>
+                    <div class="post-card-meta">
+                        <span class="meta-date">2026-11-21</span>
+                        
+                            <span class="meta-tags">
+                                
+                                    #小说
+                                
+                            </span>
+                        
+                    </div>
+                </div>
+            </div>
+        </a>
+    
+        
+        <a class="post-item card-style" href="/posts/13/">
+            
+            <span class="post-card-shadow" aria-hidden="true"></span>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" style="background-image: url('/images/webp/card/bbcd7e7b11bb55ef.webp'); background-image: image-set(url('/images/webp/card/bbcd7e7b11bb55ef.webp') 1x, url('/images/webp/bbcd7e7b11bb55ef.webp') 2x);" data-cover="/images/webp/bbcd7e7b11bb55ef.webp"></div>
+                    <div class="post-card-img post-card-soft" style="background-image: url('/images/webp/card/bbcd7e7b11bb55ef.webp'); background-image: image-set(url('/images/webp/card/bbcd7e7b11bb55ef.webp') 1x, url('/images/webp/bbcd7e7b11bb55ef.webp') 2x);"></div>
+                    <div class="post-card-img post-card-blur" style="background-image: url('/images/webp/card/bbcd7e7b11bb55ef.webp'); background-image: image-set(url('/images/webp/card/bbcd7e7b11bb55ef.webp') 1x, url('/images/webp/bbcd7e7b11bb55ef.webp') 2x);"></div>
+                </div>
+            </div>
+
+            <div class="post-card-overlay">
+                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
+                <h2 class="post-card-title">
+                    <span>记梦</span>
+                </h2>
+
+                <div class="post-card-info">
+                    <p class="post-card-description">
+                        近一年多有记录的梦境合集。
+                    </p>
+                    <div class="post-card-meta">
+                        <span class="meta-date">2026-11-15</span>
+                        
+                            <span class="meta-tags">
+                                
+                                    #随笔
+                                
+                            </span>
+                        
+                    </div>
+                </div>
+            </div>
+        </a>
+    
+        
+        <a class="post-item card-style" href="/posts/10/">
+            
+            <span class="post-card-shadow" aria-hidden="true"></span>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" data-bg-style="background-image: url('/images/webp/1517c17bafc5c814.webp');" data-cover="/images/webp/1517c17bafc5c814.webp"></div>
+                    <div class="post-card-img post-card-soft" data-bg-style="background-image: url('/images/webp/1517c17bafc5c814.webp');"></div>
+                    <div class="post-card-img post-card-blur" data-bg-style="background-image: url('/images/webp/1517c17bafc5c814.webp');"></div>
+                </div>
+            </div>
+
+            <div class="post-card-overlay">
+                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
+                <h2 class="post-card-title">
+                    <span>2026-02 ~ 2026-04 随笔</span>
+                </h2>
+
+                <div class="post-card-info">
+                    <p class="post-card-description">
+                        有病呻吟。
+                    </p>
+                    <div class="post-card-meta">
+                        <span class="meta-date">2026-02-23</span>
+                        
+                            <span class="meta-tags">
+                                
+                                    #随笔
+                                
+                            </span>
+                        
+                    </div>
+                </div>
+            </div>
+        </a>
+    
+        
+        <a class="post-item card-style" href="/posts/8/">
+            
+            <span class="post-card-shadow" aria-hidden="true"></span>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" data-bg-style="background-image: url('/images/webp/card/f910d16ced734b76.webp'); background-image: image-set(url('/images/webp/card/f910d16ced734b76.webp') 1x, url('/images/webp/f910d16ced734b76.webp') 2x);" data-cover="/images/webp/f910d16ced734b76.webp"></div>
+                    <div class="post-card-img post-card-soft" data-bg-style="background-image: url('/images/webp/card/f910d16ced734b76.webp'); background-image: image-set(url('/images/webp/card/f910d16ced734b76.webp') 1x, url('/images/webp/f910d16ced734b76.webp') 2x);"></div>
+                    <div class="post-card-img post-card-blur" data-bg-style="background-image: url('/images/webp/card/f910d16ced734b76.webp'); background-image: image-set(url('/images/webp/card/f910d16ced734b76.webp') 1x, url('/images/webp/f910d16ced734b76.webp') 2x);"></div>
+                </div>
+            </div>
+
+            <div class="post-card-overlay">
+                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
+                <h2 class="post-card-title">
+                    <span>2026-02-16 除夕</span>
+                </h2>
+
+                <div class="post-card-info">
+                    <p class="post-card-description">
+                        最有纪念意义的一年除夕。
+                    </p>
+                    <div class="post-card-meta">
+                        <span class="meta-date">2026-02-16</span>
+                        
+                            <span class="meta-tags">
+                                
+                                    #随笔
+                                
+                            </span>
+                        
+                    </div>
+                </div>
+            </div>
+        </a>
+    
+        
+        <a class="post-item card-style" href="/posts/7/">
+            
+            <span class="post-card-shadow" aria-hidden="true"></span>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" data-bg-style="background-image: url('/images/webp/card/010219a9ecd02464.webp'); background-image: image-set(url('/images/webp/card/010219a9ecd02464.webp') 1x, url('/images/webp/card/010219a9ecd02464@2x.webp') 2x);" data-cover="/images/webp/010219a9ecd02464.webp"></div>
+                    <div class="post-card-img post-card-soft" data-bg-style="background-image: url('/images/webp/card/010219a9ecd02464.webp'); background-image: image-set(url('/images/webp/card/010219a9ecd02464.webp') 1x, url('/images/webp/card/010219a9ecd02464@2x.webp') 2x);"></div>
+                    <div class="post-card-img post-card-blur" data-bg-style="background-image: url('/images/webp/card/010219a9ecd02464.webp'); background-image: image-set(url('/images/webp/card/010219a9ecd02464.webp') 1x, url('/images/webp/card/010219a9ecd02464@2x.webp') 2x);"></div>
+                </div>
+            </div>
+
+            <div class="post-card-overlay">
+                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
+                <h2 class="post-card-title">
+                    <span>1月14日：失败了</span>
+                </h2>
+
+                <div class="post-card-info">
+                    <p class="post-card-description">
+                        本文发表于班级日志，为博方阳王一笑。
+                    </p>
+                    <div class="post-card-meta">
+                        <span class="meta-date">2026-01-14</span>
+                        
+                            <span class="meta-tags">
+                                
+                                    #随笔
+                                
+                            </span>
+                        
+                    </div>
+                </div>
+            </div>
+        </a>
+    
+        
+        <a class="post-item card-style" href="/posts/6/">
+            
+            <span class="post-card-shadow" aria-hidden="true"></span>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" data-bg-style="background-image: url('/images/webp/card/b2b8c739cc0476f3.webp'); background-image: image-set(url('/images/webp/card/b2b8c739cc0476f3.webp') 1x, url('/images/webp/card/b2b8c739cc0476f3@2x.webp') 2x);" data-cover="/images/webp/b2b8c739cc0476f3.webp"></div>
+                    <div class="post-card-img post-card-soft" data-bg-style="background-image: url('/images/webp/card/b2b8c739cc0476f3.webp'); background-image: image-set(url('/images/webp/card/b2b8c739cc0476f3.webp') 1x, url('/images/webp/card/b2b8c739cc0476f3@2x.webp') 2x);"></div>
+                    <div class="post-card-img post-card-blur" data-bg-style="background-image: url('/images/webp/card/b2b8c739cc0476f3.webp'); background-image: image-set(url('/images/webp/card/b2b8c739cc0476f3.webp') 1x, url('/images/webp/card/b2b8c739cc0476f3@2x.webp') 2x);"></div>
+                </div>
+            </div>
+
+            <div class="post-card-overlay">
+                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
+                <h2 class="post-card-title">
+                    <span>我们的时间从什么时候起停下来了</span>
+                </h2>
+
+                <div class="post-card-info">
+                    <p class="post-card-description">
+                        本文首发于班级日志，于年末补充改编而成。
+                    </p>
+                    <div class="post-card-meta">
+                        <span class="meta-date">2025-12-31</span>
+                        
+                            <span class="meta-tags">
+                                
+                                    #随笔
+                                
+                            </span>
+                        
+                    </div>
+                </div>
+            </div>
+        </a>
+    
+        
+        <a class="post-item card-style" href="/posts/5/">
+            
+            <span class="post-card-shadow" aria-hidden="true"></span>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" data-bg-style="background-image: url('/images/webp/card/0c3f4b2439c160b9.webp'); background-image: image-set(url('/images/webp/card/0c3f4b2439c160b9.webp') 1x, url('/images/webp/0c3f4b2439c160b9.webp') 2x);" data-cover="/images/webp/0c3f4b2439c160b9.webp"></div>
+                    <div class="post-card-img post-card-soft" data-bg-style="background-image: url('/images/webp/card/0c3f4b2439c160b9.webp'); background-image: image-set(url('/images/webp/card/0c3f4b2439c160b9.webp') 1x, url('/images/webp/0c3f4b2439c160b9.webp') 2x);"></div>
+                    <div class="post-card-img post-card-blur" data-bg-style="background-image: url('/images/webp/card/0c3f4b2439c160b9.webp'); background-image: image-set(url('/images/webp/card/0c3f4b2439c160b9.webp') 1x, url('/images/webp/0c3f4b2439c160b9.webp') 2x);"></div>
+                </div>
+            </div>
+
+            <div class="post-card-overlay">
+                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
+                <h2 class="post-card-title">
+                    <span>『Q君与世界的外侧』</span>
+                </h2>
+
+                <div class="post-card-info">
+                    <p class="post-card-description">
+                        Q君的存在从宇宙的尺度上说是一个极小概率事件，但他本人对此并不感到幸运。
+                    </p>
+                    <div class="post-card-meta">
+                        <span class="meta-date">2025-12-12</span>
+                        
+                            <span class="meta-tags">
+                                
+                                    #小说
+                                
+                            </span>
+                        
+                    </div>
+                </div>
+            </div>
+        </a>
+    
+        
+        <a class="post-item card-style" href="/posts/3/">
+            
+            <span class="post-card-shadow" aria-hidden="true"></span>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" data-bg-style="background-image: url('/images/webp/card/9a359fe1fd267021.webp'); background-image: image-set(url('/images/webp/card/9a359fe1fd267021.webp') 1x, url('/images/webp/9a359fe1fd267021.webp') 2x);" data-cover="/images/webp/9a359fe1fd267021.webp"></div>
+                    <div class="post-card-img post-card-soft" data-bg-style="background-image: url('/images/webp/card/9a359fe1fd267021.webp'); background-image: image-set(url('/images/webp/card/9a359fe1fd267021.webp') 1x, url('/images/webp/9a359fe1fd267021.webp') 2x);"></div>
+                    <div class="post-card-img post-card-blur" data-bg-style="background-image: url('/images/webp/card/9a359fe1fd267021.webp'); background-image: image-set(url('/images/webp/card/9a359fe1fd267021.webp') 1x, url('/images/webp/9a359fe1fd267021.webp') 2x);"></div>
+                </div>
+            </div>
+
+            <div class="post-card-overlay">
+                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
+                <h2 class="post-card-title">
+                    <span>『Shamrock』</span>
+                </h2>
+
+                <div class="post-card-info">
+                    <p class="post-card-description">
+                        希望你能找到自己的四叶草。
+                    </p>
+                    <div class="post-card-meta">
+                        <span class="meta-date">2025-01-30</span>
+                        
+                            <span class="meta-tags">
+                                
+                                    #小说
+                                
+                            </span>
+                        
+                    </div>
+                </div>
+            </div>
+        </a>
+    
+        
+        <a class="post-item card-style" href="/posts/2/">
+            
+            <span class="post-card-shadow" aria-hidden="true"></span>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" data-bg-style="background-image: url('/images/webp/card/b090dd5e0a7e6958.webp'); background-image: image-set(url('/images/webp/card/b090dd5e0a7e6958.webp') 1x, url('/images/webp/b090dd5e0a7e6958.webp') 2x);" data-cover="/images/webp/b090dd5e0a7e6958.webp"></div>
+                    <div class="post-card-img post-card-soft" data-bg-style="background-image: url('/images/webp/card/b090dd5e0a7e6958.webp'); background-image: image-set(url('/images/webp/card/b090dd5e0a7e6958.webp') 1x, url('/images/webp/b090dd5e0a7e6958.webp') 2x);"></div>
+                    <div class="post-card-img post-card-blur" data-bg-style="background-image: url('/images/webp/card/b090dd5e0a7e6958.webp'); background-image: image-set(url('/images/webp/card/b090dd5e0a7e6958.webp') 1x, url('/images/webp/b090dd5e0a7e6958.webp') 2x);"></div>
+                </div>
+            </div>
+
+            <div class="post-card-overlay">
+                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
+                <h2 class="post-card-title">
+                    <span>『末班花火』</span>
+                </h2>
+
+                <div class="post-card-info">
+                    <p class="post-card-description">
+                        一次漫长，但转瞬即逝的旅程。
+                    </p>
+                    <div class="post-card-meta">
+                        <span class="meta-date">2024-07-12</span>
+                        
+                            <span class="meta-tags">
+                                
+                                    #小说
+                                
+                            </span>
+                        
+                    </div>
+                </div>
+            </div>
+        </a>
+    
+        
+        <a class="post-item card-style" href="/posts/1/">
+            
+            <span class="post-card-shadow" aria-hidden="true"></span>
+            
+            
+            <div class="post-card-bg">
+                <div class="post-card-zoom">
+                    <div class="post-card-img" data-bg-style="background-image: url('/images/webp/card/7d359b54eaa343ca.webp'); background-image: image-set(url('/images/webp/card/7d359b54eaa343ca.webp') 1x, url('/images/webp/7d359b54eaa343ca.webp') 2x);" data-cover="/images/webp/7d359b54eaa343ca.webp"></div>
+                    <div class="post-card-img post-card-soft" data-bg-style="background-image: url('/images/webp/card/7d359b54eaa343ca.webp'); background-image: image-set(url('/images/webp/card/7d359b54eaa343ca.webp') 1x, url('/images/webp/7d359b54eaa343ca.webp') 2x);"></div>
+                    <div class="post-card-img post-card-blur" data-bg-style="background-image: url('/images/webp/card/7d359b54eaa343ca.webp'); background-image: image-set(url('/images/webp/card/7d359b54eaa343ca.webp') 1x, url('/images/webp/7d359b54eaa343ca.webp') 2x);"></div>
+                </div>
+            </div>
+
+            <div class="post-card-overlay">
+                <span class="post-card-light" aria-hidden="true"><span class="post-card-sheen"></span></span>
+                <h2 class="post-card-title">
+                    <span>『原点』</span>
+                </h2>
+
+                <div class="post-card-info">
+                    <p class="post-card-description">
+                        初心之作。
+                    </p>
+                    <div class="post-card-meta">
+                        <span class="meta-date">2023-10-12</span>
+                        
+                            <span class="meta-tags">
+                                
+                                    #小说
+                                
+                                    #特殊
+                                
+                            </span>
+                        
+                    </div>
+                </div>
+            </div>
+        </a>
+    
+</section>
+
+<script>
+    (function () {
+        var els = [].slice.call(document.querySelectorAll(".home-posts [data-bg-style]"));
+        if (!els.length) return;
+        function show(el) {
+            var v = el.getAttribute("data-bg-style");
+            if (v === null) return;     // 模糊层已由 glint.js 烤好换上
+            el.setAttribute("style", v);
+            el.removeAttribute("data-bg-style");
+        }
+        var near = innerHeight * 2.5, io = window.IntersectionObserver && new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+                if (!en.isIntersecting) return;
+                io.unobserve(en.target);
+                show(en.target);
+            });
+        }, { rootMargin: "150% 0px" });
+        els.forEach(function (el) {
+            if (!io || el.getBoundingClientRect().top < near) show(el);
+            else io.observe(el);
+        });
+    })();
+</script>
+<script>
+    (function () {
+        var card = document.querySelector(".cw-card[data-cw-tracks]");
+        if (!card) return;
+        var seen = null;
+        try { seen = JSON.parse(localStorage.getItem("whatasiger_cw_seen")); } catch (e) {}
+        if (!Array.isArray(seen)) return;
+        var fresh = card.getAttribute("data-cw-tracks").split(",").filter(function (s) { return s && seen.indexOf(s) === -1; });
+        if (!fresh.length) return;
+        card.classList.add("has-new");
+        card.setAttribute("aria-label", "CARRiER WAVE.（有 " + fresh.length + " 篇新接收的信号）");
+    })();
+</script>
+
+        <section class="page-navigator">
+            <span class="page-number current">1</span>
+        </section>
+    </div>
+</main>
+
+<script>[].forEach.call(document.querySelectorAll(".home-main a, .home-main img"), function (el) { el.draggable = false; });</script>
+
+
+
+<div class="todo-drawer">
+
+<aside class="todo-sidebar" id="todo-sidebar" aria-label="TO DO" inert data-bgm-user="whatasiger">
+    <div class="todo-head">
+        <h2>TO DO</h2>
+        <button class="todo-close" type="button" aria-label="收起"><i class="fa fa-angle-left" aria-hidden="true"></i></button>
+    </div>
+
+    <section class="todo-block">
+        <h3>
+            <a href="https://bgm.tv/user/whatasiger" target="_blank" rel="noopener"><i class="fa fa-television" aria-hidden="true"></i><span>Bangumi</span></a>
+        </h3>
+        <div class="todo-bgm">
+            
+                
+                <p class="todo-sub">在看</p>
+                <ul class="todo-list">
+                    
+                    <li style="--i: 0">
+                        <a href="https://bgm.tv/subject/282433" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/5f/18/282433_9wDx9.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">别对映像研出手！</span>
+                                
+                                <span class="todo-meta">0 / 12</span>
+                                <span class="todo-progress" style="--p: 0.000"></span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 1">
+                        <a href="https://bgm.tv/subject/484623" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/15/5f/484623_6EWej.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">彻夜之歌 第二季</span>
+                                
+                                <span class="todo-meta">0 / 12</span>
+                                <span class="todo-progress" style="--p: 0.000"></span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 2">
+                        <a href="https://bgm.tv/subject/248175" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/2a/f7/248175_2w4zT.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">辉夜大小姐想让我告白～天才们的恋爱头脑战～</span>
+                                
+                                <span class="todo-meta">0 / 12</span>
+                                <span class="todo-progress" style="--p: 0.000"></span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 3">
+                        <a href="https://bgm.tv/subject/502499" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/f4/fc/502499_oxoci.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">GROTESQQQUE -怪异-</span>
+                                
+                                <span class="todo-meta">1 / 3</span>
+                                <span class="todo-progress" style="--p: 0.333"></span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 4">
+                        <a href="https://bgm.tv/subject/493016" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/fe/bf/493016_Qqmf5.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">异国日记</span>
+                                
+                                <span class="todo-meta">3 / 13</span>
+                                <span class="todo-progress" style="--p: 0.231"></span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 5">
+                        <a href="https://bgm.tv/subject/10440" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/6c/e8/10440_8HP6O.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">我们仍未知道那天所看见的花的名字。</span>
+                                
+                                <span class="todo-meta">0 / 11</span>
+                                <span class="todo-progress" style="--p: 0.000"></span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 6">
+                        <a href="https://bgm.tv/subject/606263" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/8d/c7/606263_cpB1P.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">主播女孩重度依赖</span>
+                                
+                                <span class="todo-meta">4 / 13</span>
+                                <span class="todo-progress" style="--p: 0.308"></span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 7">
+                        <a href="https://bgm.tv/subject/493724" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/bd/33/493724_V6lXx.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">淡岛百景</span>
+                                
+                                <span class="todo-meta">0 / 12</span>
+                                <span class="todo-progress" style="--p: 0.000"></span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                </ul>
+                
+                <p class="todo-sub">在玩</p>
+                <ul class="todo-list">
+                    
+                    <li style="--i: 0">
+                        <a href="https://bgm.tv/subject/7978" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/3e/51/7978_hc6iN.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">最果てのイマ</span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 1">
+                        <a href="https://bgm.tv/subject/2723" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/c3/15/2723_RWt07.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">KIRA☆KIRA 煌煌舞台</span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 2">
+                        <a href="https://bgm.tv/subject/465493" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/cc/5d/465493_e3A48.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">anemoi -アネモイ-</span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 3">
+                        <a href="https://bgm.tv/subject/295957" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/ab/76/295957_PsQ80.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">夏日口袋 REFLECTION BLUE</span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <li style="--i: 4">
+                        <a href="https://bgm.tv/subject/845" target="_blank" rel="noopener">
+                            <img data-src="https://lain.bgm.tv/r/200/pic/cover/l/b8/6e/845_u43XO.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                            <span class="todo-text">
+                                <span class="todo-title">Little Busters! EX</span>
+                                
+                            </span>
+                        </a>
+                    </li>
+                    
+                </ul>
+                
+            
+        </div>
+    </section>
+
+    <section class="todo-block">
+        <h3>
+            <a href="https://music.163.com/#/user/songs/rank?id=1929899165" target="_blank" rel="noopener"><i class="fa fa-music" aria-hidden="true"></i><span>本周听歌 Top 10</span></a>
+        </h3>
+        <ol class="todo-list todo-music" data-time="2026-11-21T11:04:12.275Z">
+            
+                
+                <li style="--i: 0">
+                    <a href="https://music.163.com/#/song?id=26405133" target="_blank" rel="noopener">
+                        <span class="todo-rank">1</span>
+                        <img data-src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">Girl meets NUMBER GIRL</span>
+                            <span class="todo-meta">きのこ帝国</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 1">
+                    <a href="https://music.163.com/#/song?id=3403370101" target="_blank" rel="noopener">
+                        <span class="todo-rank">2</span>
+                        <img data-src="https://p2.music.126.net/M48j0d0xH9UId5PHppUabw==/109951173526626603.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">Hearts Glow</span>
+                            <span class="todo-meta">Hana Hope</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 2">
+                    <a href="https://music.163.com/#/song?id=3399354456" target="_blank" rel="noopener">
+                        <span class="todo-rank">3</span>
+                        <img data-src="https://p2.music.126.net/03f62cL15udLnY-NxtW0aw==/109951173476435541.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">さよならララ</span>
+                            <span class="todo-meta">いきものがかり</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 3">
+                    <a href="https://music.163.com/#/song?id=2722426126" target="_blank" rel="noopener">
+                        <span class="todo-rank">4</span>
+                        <img data-src="https://p2.music.126.net/Xe4VfKSkHYkIO1dQNXp-rQ==/109951171402189439.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">おとぎ</span>
+                            <span class="todo-meta">RAY</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 4">
+                    <a href="https://music.163.com/#/song?id=438580725" target="_blank" rel="noopener">
+                        <span class="todo-rank">5</span>
+                        <img data-src="https://p2.music.126.net/9kgIXjxfcDR335N4Hljnjg==/17918740998092311.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">死がふたりをわかつまで</span>
+                            <span class="todo-meta">きのこ帝国</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 5">
+                    <a href="https://music.163.com/#/song?id=438580723" target="_blank" rel="noopener">
+                        <span class="todo-rank">6</span>
+                        <img data-src="https://p2.music.126.net/9kgIXjxfcDR335N4Hljnjg==/17918740998092311.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">雨上がり</span>
+                            <span class="todo-meta">きのこ帝国</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 6">
+                    <a href="https://music.163.com/#/song?id=2111740365" target="_blank" rel="noopener">
+                        <span class="todo-rank">7</span>
+                        <img data-src="https://p2.music.126.net/19xlS-oxqi3yG7890PEehA==/109951173986849987.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">itsuka</span>
+                            <span class="todo-meta">ひとひら</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 7">
+                    <a href="https://music.163.com/#/song?id=438580724" target="_blank" rel="noopener">
+                        <span class="todo-rank">8</span>
+                        <img data-src="https://p2.music.126.net/9kgIXjxfcDR335N4Hljnjg==/17918740998092311.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">畦道で</span>
+                            <span class="todo-meta">きのこ帝国</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 8">
+                    <a href="https://music.163.com/#/song?id=26405131" target="_blank" rel="noopener">
+                        <span class="todo-rank">9</span>
+                        <img data-src="https://p2.music.126.net/4O2l1Fu4KzWbUFgM74rUXg==/109951163560123951.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">スクールフィクション</span>
+                            <span class="todo-meta">きのこ帝国</span>
+                        </span>
+                    </a>
+                </li>
+                
+                <li style="--i: 9">
+                    <a href="https://music.163.com/#/song?id=2066755272" target="_blank" rel="noopener">
+                        <span class="todo-rank">10</span>
+                        <img data-src="https://p2.music.126.net/cGIdZW4EEtPhd3rB775SaQ==/109951168857920159.jpg?param=80y80" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span class="todo-text">
+                            <span class="todo-title">飞松</span>
+                            <span class="todo-meta">陈粒</span>
+                        </span>
+                    </a>
+                </li>
+                
+            
+        </ol>
+        
+            
+            <p class="todo-note" data-time="2026-11-21T11:04:12.275Z" title="2026-11-21">更新于 2026-11-21</p>
+        
+    </section>
+</aside>
+<button class="todo-toggle" type="button" aria-controls="todo-sidebar" aria-expanded="false" title="TO DO">
+    <i class="fa fa-list-ul" aria-hidden="true"></i>
+    <span>TO DO</span>
+</button>
+</div>
+
+<script src="/static/todo-sidebar.js?v=3cfd3a03"></script>
+
+<script src="/static/water-ripple.js?v=fbd9f35d"></script>
+
+<a class="gizmo-leaf" draggable="false" href="/gizmo/" aria-label="Gizmo：随手做的小玩意">
+    <span class="gizmo-leaf-float">
+        <span class="gizmo-leaf-body">
+            
+<svg viewBox="0 0 64 40" aria-hidden="true">
+    <defs>
+        <linearGradient id="gizmo-leaf-fill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" class="gizmo-leaf-stop-a"/>
+            <stop offset="1" class="gizmo-leaf-stop-b"/>
+        </linearGradient>
+    </defs>
+    <path class="gizmo-leaf-blade" d="M4 21C14 6 40 2 62 18C42 34 16 36 4 21Z" fill="url(#gizmo-leaf-fill)"/>
+    <path class="gizmo-leaf-gloss" d="M11 15C21 7.5 38 5.5 54 12.5"/>
+    <path class="gizmo-leaf-vein" d="M0 23.5Q2.5 22 4.5 21Q32 19.5 60 18.2M16 20.6Q20 14 26 11M28 20Q33 13 39 10.5M40 19.4Q45 14 50 13M18 20.6Q23 26 30 28.5M31 20Q36 25 42 26.5"/>
+</svg>
+
+        </span>
+    </span>
+    <span class="gizmo-leaf-tag">Gizmo</span>
+</a>
+<script src="/static/gizmo-leaf.js?v=ef64170c"></script>
+
+<div class="bg-dock" role="group" aria-label="首页背景与沉浸">
+    
+    <button type="button" class="bg-switch" aria-label="切换首页背景" aria-controls="bg-picker" aria-expanded="false"></button>
+    
+    <button type="button" class="zen-switch" aria-label="沉浸：只留背景" aria-pressed="false"></button>
+</div>
+
+
+
+<div class="bg-picker corner-morph" id="bg-picker" inert aria-hidden="true">
+    <div class="corner-morph-inner">
+        <div class="bg-tiles" role="radiogroup" aria-label="首页背景">
+
+    <button type="button" class="bg-tile is-daily" role="radio" aria-checked="false" aria-label="每日轮换" data-bg-id="@daily">
+        <span class="bg-tile-img" aria-hidden="true"><i class="fa fa-calendar-o"></i></span>
+        <span class="bg-tile-name">每日轮换</span>
+    </button>
+
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="Afterglow" data-bg-id="sunset" data-bg-src="/images/webp/44ccd674949c189c.webp" data-bg-thumb="/images/webp/thumb/44ccd674949c189c.webp" data-bg-name="Afterglow" data-bg-default>
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">Afterglow</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="蓝夜" data-bg-id="blue-night" data-bg-src="/images/webp/124089112_p0.webp" data-bg-thumb="/images/webp/thumb/124089112_p0.webp" data-bg-name="蓝夜" data-bg-artist="画师JW" data-bg-link="https://www.pixiv.net/artworks/124089112">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">蓝夜</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="冰花" data-bg-id="ice-bloom" data-bg-src="/images/webp/118435175_p0.webp" data-bg-thumb="/images/webp/thumb/118435175_p0.webp" data-bg-name="冰花" data-bg-artist="コーラ" data-bg-link="https://www.pixiv.net/artworks/118435175">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">冰花</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="夏云" data-bg-id="summer-cloud" data-bg-src="/images/webp/144486189_p0.webp" data-bg-thumb="/images/webp/thumb/144486189_p0.webp" data-bg-name="夏云" data-bg-artist="画师JW" data-bg-link="https://www.pixiv.net/artworks/144486189">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">夏云</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="晚霞" data-bg-id="dusk-field" data-bg-src="/images/webp/21315033_p0.webp" data-bg-thumb="/images/webp/thumb/21315033_p0.webp" data-bg-name="晚霞" data-bg-artist="磯部トースト" data-bg-link="https://www.pixiv.net/artworks/21315033">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">晚霞</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="回廊" data-bg-id="checker-hall" data-bg-src="/images/webp/6095368_p0.webp" data-bg-thumb="/images/webp/thumb/6095368_p0.webp" data-bg-name="回廊" data-bg-artist="磯部トースト" data-bg-link="https://www.pixiv.net/artworks/6095368">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">回廊</span>
+    </button>
+
+    
+    <button type="button" class="bg-tile" role="radio" aria-checked="false" aria-label="暮色" data-bg-id="twilight-rail" data-bg-src="/images/webp/81829877_p0.webp" data-bg-thumb="/images/webp/thumb/81829877_p0.webp" data-bg-name="暮色" data-bg-artist="画师JW" data-bg-link="https://www.pixiv.net/artworks/81829877">
+        <span class="bg-tile-img"></span>
+        <span class="bg-tile-name">暮色</span>
+    </button>
+
+</div>
+        
+        <p class="bg-credit" aria-live="polite"></p>
+    </div>
+</div>
+
+
+    <footer>
+    <div class="wrap min">
+        
+        
+        <section class="widget">
+            <div class="footer-grid">
+                <div class="footer-card">
+                    <h3 class="footer-card-title title-recent">最新文章<span class="footer-card-sub">Recent</span></h3>
+                    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/posts/14/">『树上的X爵』</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/13/">记梦</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/12/">在纸页的内侧消失——《Q君与世界的外侧》评析</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/11/">「主播女孩重度依赖」动画分集浅读</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/10/">2026-02 ~ 2026-04 随笔</a></li><li class="post-list-item"><a class="post-list-link" href="/posts/8/">2026-02-16 除夕</a></li></ul>
+                </div>
+                <div class="footer-card">
+                    <h3 class="footer-card-title title-date">时光机<span class="footer-card-sub">Archive</span></h3>
+                    <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/11/">2026 年 11 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/06/">2026 年 6 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/04/">2026 年 4 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/02/">2026 年 2 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/01/">2026 年 1 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/12/">2025 年 12 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/01/">2025 年 1 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/07/">2024 年 7 月</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">2023 年 10 月</a></li></ul>
+                </div>
+                <div class="footer-card">
+                    <h3 class="footer-card-title title-tags">标签云<span class="footer-card-sub">Tags</span></h3>
+                    <div class="footer-tags"><a href="/tags/%E5%B0%8F%E8%AF%B4/" style="font-size: 15.67px;">小说</a> <a href="/tags/%E7%89%B9%E6%AE%8A/" style="font-size: 13px;">特殊</a> <a href="/tags/%E8%AF%84%E6%9E%90/" style="font-size: 14.33px;">评析</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 17px;">随笔</a></div>
+                    <p class="footer-card-note"><a href="/stats/" title="写作统计">共 13 篇文章 · 4 个标签<i class="fa fa-angle-right" aria-hidden="true"></i></a></p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="sub-footer">
+            <p>© 2026 <a href="/">Whatasiger</a>. All Rights Reserved. Theme Glint, based on <a href="https://github.com/Dreamer-Paul/Hingle" target="_blank" rel="nofollow">Hingle</a>.</p>
+        </section>
+    </div>
+</footer>
+
+
+<div class="buttons"></div>
+
+
+<script>window.GLINT_RELEASE = {"name":"Ciel","date":"2026-10-27","url":"/about-website/"};</script>
+<script src="/static/kico.js?v=e374dc09"></script>
+<script src="/static/glint.js?v=7f43e512"></script>
+
+<script>var glint = new Glint({"copyright":false,"night":true});</script>
+
+<script>
+    (function () {
+        function load() {
+            var s = document.createElement('script');
+            s.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
+            s.async = true;
+            document.body.appendChild(s);
+        }
+        if (document.prerendering) document.addEventListener('prerenderingchange', load, { once: true });
+        else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
+        else load();
+    })();
+</script>
+  </body>
+</html>
